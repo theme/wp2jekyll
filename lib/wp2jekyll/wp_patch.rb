@@ -11,8 +11,8 @@ module Wp2jekyll
     def initialize(fp = '')
       @fp = fp # file path
       @logger = Logger.new(STDERR)
-      @logger.level = Logger::INFO
-      # @logger.level = Logger::DEBUG
+      # @logger.level = Logger::INFO
+      @logger.level = Logger::DEBUG
       # DEBUG < INFO < WARN < ERROR < FATAL < UNKNOWN
     end
 
@@ -116,6 +116,7 @@ module Wp2jekyll
       p = URI(url).path
       e = File.extname(p)
       b = File.basename(p, e) # base name
+      return b
     end
 
     def img_md_from_xml(img_xml)
@@ -139,8 +140,10 @@ module Wp2jekyll
       img_md
     end
 
-    def p_el_img(txt) # reduce xml img element to markdown format
-      @logger.debug 'p_el_img'
+    # TODO
+    # [<img ...>](xxx) -> [![img]()](xxx)
+    def patch_md_img(txt)
+      @logger.debug 'patch_md_img'
       frag = Nokogiri::XML::DocumentFragment.parse(txt) do |config|
         config.nonet.recover
       end
@@ -153,38 +156,49 @@ module Wp2jekyll
       return txt
     end
 
-    def p_el_figure(txt)
-      # split by <figure></figure> #TODO
-      @logger.debug 'p_el_figure'
+    def xml_figure_to_md_s(txt)
       frag = Nokogiri::XML::DocumentFragment.parse(txt) do |config|
         config.nonet.recover
       end
 
+      md_s = []
       frag.css("figure").each do |fig|
+        @logger.debug 'xml_figure_to_md_s'
         cap = fig.css("figcaption").text
         img = fig.css("img").first
         img_path = URI(img['src']).path
 
         figure_md  = "![#{cap}]({{ \"#{img_path}\" | relative_url }})"
         @logger.debug figure_md
-        fig_xml = fig.to_xml.gsub(/\s*\/>/, ' />') # hack
-        txt.gsub!(fig_xml, figure_md)
+
+        md_s.append(figure_md)
       end
-      return txt
+      return md_s.join("\n")
     end
 
     def patch_xml_leftovers(txt)
-      # for each xml elements
       # pair tag
-      txt.scan(%r{<(\w+)\b[^>]*>.*?</\1>}m).each do |tag|
-        patched_tag = p_el_figure(tag[0])
-        txt.gsub!(tag[0], patched_tag)
+      txt.scan(%r{(<(\w+)\b[^>]*>.*</\2>)}m).each do |tag|
+        case tag[1]
+        when 'figure' then
+          patched_tag = xml_figure_to_md_s(tag[0])
+          txt.gsub!(tag[0], patched_tag)
+        else
+          @logger.debug "unknown el pair : #{tag[0]}"
+        end
       end
-      # single tag
-      txt.scan(%r{<(\w+)\b.*?/>}m).each do |tag|
-        patched_tag = p_el_img(tag[0])
-        txt.gsub!(tag[0], patched_tag)
+      # img in md link
+      txt.scan(%r{(\[<(\w+)\b.*?/>\]\((.*?)\))}m).each do |tag|
+      #xt.scan(%r{(---(---)-----------(---)--)}m).each do |tag|
+        case tag[1]
+        when 'img' then
+          patched_tag = img_md_from_xml(tag[0])
+          txt.gsub!(tag[0], patched_tag)
+        else
+          @logger.debug "unknown el single : #{tag[0]}"
+        end
       end
+
       return txt
     end
 
