@@ -7,7 +7,8 @@ require "logger"
 #
 
 class TestPatchingRegex < MiniTest::Test
-  # include PrettyDiffs
+  make_my_diffs_pretty!
+  include PrettyDiffs
   include Wp2jekyll
     def test_patch_code
         # a invisible character is there, DO NOT FORMAT
@@ -290,7 +291,7 @@ EOS
       end
       tmp = wm.str_patch_group(tmp) # xml elements
 
-      assert_equal(md_patched, tmp)
+      assert_equal(md_patched.inspect, tmp.inspect)
       # assert_equal(md_patched, WordpressMarkdown.new.patch_xml_leftovers(md))
       logger.debug "############ end test_whole_md ##############"
     end
