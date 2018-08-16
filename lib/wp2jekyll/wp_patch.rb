@@ -210,6 +210,8 @@ module Wp2jekyll
         case tag[1]
         when 'img' then
           txt.gsub!(tag[0], img_md_from_xml(tag[0]))
+        when 'br' then
+          txt.gsub!(tag[0], "\n\n")
         end
       end
 
