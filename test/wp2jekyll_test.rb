@@ -5,7 +5,7 @@ class Wp2jekyllTest < Minitest::Test
     refute_nil ::Wp2jekyll::VERSION
   end
 
-  def test_it_does_something_useful
-    assert false
-  end
+  # def test_it_does_something_useful
+  #   assert false
+  # end
 end
