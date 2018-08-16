@@ -140,7 +140,6 @@ module Wp2jekyll
       img_md
     end
 
-    # TODO
     # [<img ...>](xxx) -> [![img]()](xxx)
     def patch_all_md_img(txt)
       @logger.debug 'patch_all_md_img'
@@ -150,9 +149,8 @@ module Wp2jekyll
 
         new_md_url = md_url
         if md_url.include?(p) then
-          new_md_url = p
+          new_md_url = "{{ \"#{p}\" | relative_url }}"
         end
-
 
         new_md = "[#{img_md_from_xml(img_xml)}](#{new_md_url})"
         txt.gsub!(md_ln, new_md)
