@@ -130,7 +130,7 @@ module Wp2jekyll
         basen = fname_in_url(img["src"])
         alt = img["alt"]
 
-        if alt.include? basen then
+        if !!alt && alt.include?(basen) then
           alt = basen # hack
         end
 
@@ -141,8 +141,8 @@ module Wp2jekyll
     end
 
     # [<img ...>](xxx) -> [![img]()](xxx)
-    def patch_all_md_img(txt)
-      @logger.debug 'patch_all_md_img'
+    def p_md_ln_img(txt)
+      @logger.debug 'p_md_ln_img'
       txt.scan(%r{(\[(<img\ .*?>)\]\((.*?)\))}m).each do |md_ln, img_xml, md_url|
       #xt.scan(%r{\[((----------)\]\((---)\))}m).each do |md_ln, img_xml, md_url|
         p = URI(md_url).path
@@ -178,20 +178,40 @@ module Wp2jekyll
       return md_s.join("\n")
     end
 
-    def patch_xml_leftovers(txt)
+    def patch_xml_leftovers(txt, embed_lv = 0)
       # pair tag
-      txt.scan(%r{(<(\w+)\b[^>]*>.*</\2>)}m).each do |tag|
+      txt.scan(%r{(<(\w+)\b[^>]*>(.*)</\2>)}m).each do |tag|
+      #xt.scan(%r{(<(---)------->(--)</-->)}m).each do |tag|
+      #xt.scan(%r{0<1---1------->2--2</-->0}m).each do |tag|
         case tag[1]
         when 'figure' then
           patched_tag = xml_figure_to_md_s(tag[0])
           txt.gsub!(tag[0], patched_tag)
+        when 'p' then
+          @logger.debug '<p>...</p>'
+          patched_tag = patch_xml_leftovers(tag[2], embed_lv + 1)
+          txt.gsub!(tag[0], patched_tag)
+          @logger.debug txt
+        when 'div' then
+          @logger.debug '<div>...</div>'
+          patched_tag = patch_xml_leftovers(tag[2], embed_lv + 1)
+          txt.gsub!(tag[0], patched_tag)
+          @logger.debug txt
         else
           @logger.debug "unknown el pair : #{tag[0]}"
         end
       end
 
       # img in md link
-      txt = patch_all_md_img(txt)
+      txt = p_md_ln_img(txt)
+
+      # other single <img/>
+      txt.scan(%r{(<(\w+)\b[^>]*/>)}m).each do |tag|
+        case tag[1]
+        when 'img' then
+          txt.gsub!(tag[0], img_md_from_xml(tag[0]))
+        end
+      end
 
       return txt
     end
@@ -210,28 +230,30 @@ module Wp2jekyll
       return txt
     end
 
-    def p_unfold_divs(txt)
-      div_re = %r{(<div.*?>(.*?)</div>)}m
-      #iv_re = %r{0-----1----------}m
-
-      loop do
-        match = txt.scan(div_re)
-        if 0 == match.length then
-          break
-        end
-
-        for m in match do 
-          txt.gsub!(m[0], m[1])
-        end
-
-      end
-      return compress_blank_lines(txt)
-    end
+    # def p_unfold_divs(txt)
+    #   @logger.debug 'p_unfold_divs'
+    #   div_re = %r{(<div.*?>(.*?)</div>)}m
+    #   #iv_re = %r{0-----1----------}m
+    #
+    #   loop do
+    #     match = txt.scan(div_re)
+    #     if 0 == match.length then
+    #       break
+    #     end
+    #
+    #     for m in match do 
+    #       txt.gsub!(m[0], m[1])
+    #     end
+    #
+    #   end
+    #   @logger.debug txt
+    #   return compress_blank_lines(txt)
+    # end
 
     def str_patch_group(dst_string) # helper func
       # patch leftover xml pieces
       dst_string = patch_xml_leftovers(dst_string) # xml
-      dst_string = p_unfold_divs(dst_string)
+      # dst_string = p_unfold_divs(dst_string)
 
       # mardown link
       dst_string = rm_bug_img(dst_string)

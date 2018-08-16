@@ -147,12 +147,12 @@ some other text
       assert_equal(s2, WordpressMarkdown.new.xml_figure_to_md_s(s1))
     end
 
-    def test_patch_md_img
+    def test_p_md_ln_img
         s1 = '''[<img class="aligncenter size-full wp-image-1153" src="http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" alt="screenshot-from-2016-12-01-22-43-26" width="659" height="367" srcset="http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png 659w, http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261-300x167.png 300w" sizes="(max-width: 709px) 85vw, (max-width: 909px) 67vw, (max-width: 984px) 61vw, (max-width: 1362px) 45vw, 600px" />](http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png)'''
 
         s2 = '[![screenshot-from-2016-12-01-22-43-26]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})'
 
-        assert_equal(s2, WordpressMarkdown.new.patch_all_md_img(s1))
+        assert_equal(s2, WordpressMarkdown.new.p_md_ln_img(s1))
     end
 
     def test_rm_bug_img
@@ -208,7 +208,7 @@ some other text
       assert_equal(s2, WordpressMarkdown.new.line_patch_group(s1))
     end
 
-    def test_p_unfold_div
+    def test_p_unfold_divs
       s1 = '''
       <div id="some id" class="bvMsg">
   <div>
@@ -227,7 +227,7 @@ some other text
         passage 2
 
 '''
-      assert_equal(s2, WordpressMarkdown.new.p_unfold_divs(s1))
+      assert_equal(s2, WordpressMarkdown.new.patch_xml_leftovers(s1))
     end
 
     def test_whole_md
