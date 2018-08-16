@@ -7,7 +7,7 @@ require "logger"
 #
 
 class TestPatchingRegex < MiniTest::Test
-  include PrettyDiffs
+  # include PrettyDiffs
   include Wp2jekyll
     def test_patch_code
         # a invisible character is there, DO NOT FORMAT
@@ -151,7 +151,7 @@ some other text
 
         s2 = '''[![screenshot-from-2016-12-01-22-43-26]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})](/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png)'''
 
-        assert_equal(s2, WordpressMarkdown.new.patch_md_img(s1))
+        assert_equal(s2, WordpressMarkdown.new.patch_all_md_img(s1))
     end
 
     def test_rm_bug_img
@@ -270,7 +270,6 @@ categories:
 tags:
   - Littlewitch
 ---
-
 ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})
 
 会想到 Littlewitch 吧

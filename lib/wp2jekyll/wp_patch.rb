@@ -142,16 +142,20 @@ module Wp2jekyll
 
     # TODO
     # [<img ...>](xxx) -> [![img]()](xxx)
-    def patch_md_img(txt)
-      @logger.debug 'patch_md_img'
-      frag = Nokogiri::XML::DocumentFragment.parse(txt) do |config|
-        config.nonet.recover
-      end
-      frag.css("img").each do |img|
-        img_md = img_md_from_xml(img.to_xml)
-        # @logger.debug img_md
-        img_xml = img.to_xml.gsub(/\s*\/>/, ' />') # hack
-        txt.gsub!(img_xml, img_md)
+    def patch_all_md_img(txt)
+      @logger.debug 'patch_all_md_img'
+      txt.scan(%r{(\[(<img\ .*?>)\]\((.*?)\))}m).each do |md_ln, img_xml, md_url|
+      #xt.scan(%r{\[((----------)\]\((---)\))}m).each do |md_ln, img_xml, md_url|
+        p = URI(md_url).path
+
+        new_md_url = md_url
+        if md_url.include?(p) then
+          new_md_url = p
+        end
+
+
+        new_md = "[#{img_md_from_xml(img_xml)}](#{new_md_url})"
+        txt.gsub!(md_ln, new_md)
       end
       return txt
     end
@@ -187,17 +191,9 @@ module Wp2jekyll
           @logger.debug "unknown el pair : #{tag[0]}"
         end
       end
+
       # img in md link
-      txt.scan(%r{(\[<(\w+)\b.*?/>\]\((.*?)\))}m).each do |tag|
-      #xt.scan(%r{(---(---)-----------(---)--)}m).each do |tag|
-        case tag[1]
-        when 'img' then
-          patched_tag = img_md_from_xml(tag[0])
-          txt.gsub!(tag[0], patched_tag)
-        else
-          @logger.debug "unknown el single : #{tag[0]}"
-        end
-      end
+      txt = patch_all_md_img(txt)
 
       return txt
     end
