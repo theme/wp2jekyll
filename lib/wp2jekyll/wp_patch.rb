@@ -4,8 +4,44 @@ require 'uri'
 require 'logger'
 
 require 'nokogiri'
+require 'colorize'
 
 module Wp2jekyll
+  class MarkdownLink
+    @cap = ''
+    @link = ''
+    @title = ''
+    @is_img = false
+    RE = %r{((\!)?\[(.*)\]\(([^"]*?)("([^"]*?)")?\)(\{.*?\})?)}m
+    #E = %r{12--2---3--3----4------45-6------6-5---7-------7-1}m
+    @init_valid = false
+    attr_accessor :cap
+    attr_accessor :title
+    attr_accessor :link
+    attr_accessor :is_img
+    attr_accessor :re
+    def initialize(str)
+      @logger = Logger.new(STDERR)
+      @logger.level = Logger::DEBUG
+      if m = RE.match(str)
+        @cap = !!m[3] ? m[3] : ''
+        @link = !!m[4] ? m[4] : ''
+        @title = !!m[6] ? m[6] : ''
+        @is_img = ('!' == m[2]) ? true : false
+        @init_valid = true
+        @tail = m[7] ? m[7] : ''
+        @logger.debug "#{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} #{@title.blue})#{@tail.magenta}"
+      end
+    end
+
+    def to_s
+      if !@link || @link.empty?
+        return ''
+      else
+        return "#{@is_img ? '!' : ''}[#{@cap}](#{@link})" 
+      end
+    end
+  end
   
   class JekyllMarkdown
     def initialize(fp = '')
@@ -28,10 +64,43 @@ module Wp2jekyll
   end
 
   class WordpressMarkdown < JekyllMarkdown
+    attr_accessor :suspicious_url_contains
+    attr_accessor :relative_url_contains
     def initialize(fp = '')
       super(fp)
       @@code_cnt = 0
+      @suspicious_url_contains = [ '/home/theme' ]
+      @relative_url_contains = ['wp-content']
     end
+
+    def is_url_suspicious?(ln)
+      # @logger.debug 'suspicious? ' + ln
+      for s in @suspicious_url_contains do
+        if ln.include? s then
+          return true
+        end
+      end
+      false
+    end
+
+    def should_url_relative?(ln)
+      # @logger.debug 'relative? ' + ln
+      for r in @relative_url_contains do
+        if ln.include? r then
+          return true
+        end
+      end
+      false
+    end
+
+    def url_to_relative(ln)
+      return URI(ln).path
+    end
+
+    def url_to_liquid(url)
+      return "{{ \"#{url_to_relative(url)}\" | relative_url }}" 
+    end
+    
     ####
     # the wordpress exported md is got by the following ruby script ,
     # exported md will have some bug for jekyll, so I have to patch it.
@@ -99,19 +168,6 @@ module Wp2jekyll
     end
 
 
-    def rm_bug_img(txt)
-      txt.gsub(%r{!\[\]\(.*?/home/theme/.*?\)}m, '')
-    end
-
-    def patch_link_bug(txt) # [](){.xxxx} -> []()
-      match_li = txt.scan(%r|((\[.*?\]\(.*?\)){.*?})|m)
-      #atch_li = txt.scan(%r|01--------------)-----)|m)
-      match_li.each do |m|
-        txt.gsub!(m[0], m[1])
-      end
-      return txt
-    end
-
     def fname_in_url(url)
       p = URI(url).path
       e = File.extname(p)
@@ -120,11 +176,10 @@ module Wp2jekyll
     end
 
     def img_md_from_xml(img_xml)
-      @logger.debug 'img_md_from_xml'
-      img = Nokogiri::XML::DocumentFragment.parse(img_xml).css('img')[0]
-
-      img_md  = "![#{img['alt']}](#{wp_to_jekyll_url(img['src'])})"
-      @logger.debug img_md
+      img = Nokogiri::XML::DocumentFragment.parse(img_xml).css('img').first
+      cap = xml_to_md(img['alt'])
+      img_md  = '!' + md_link(cap, img['src'])
+      @logger.debug 'img_md: ' + img_md
       img_md
     end
 
@@ -133,33 +188,20 @@ module Wp2jekyll
         config.nonet.recover
       end
 
-      md_s = []
-      frag.css("figure").each do |fig|
-        @logger.debug 'xml_figure_to_md_s'
+      fig = frag.css("figure").first
         cap = fig.css("figcaption").text
         img = fig.css("img").first
-        img_path = URI(img['src']).path
-
-        figure_md  = "![#{cap}]({{ \"#{img_path}\" | relative_url }})"
-        @logger.debug figure_md
-
-        md_s.append(figure_md)
-      end
-      return md_s.join("\n")
-    end
-
-    def wp_to_jekyll_url(uri, contains = ['wp-content'])
-      for inner in contains do
-        if uri.include?(inner) then
-          return URI(uri).path
-        else
-          return uri
-        end
-      end
+        figure_md  = '!' + md_link(cap, img['src'])
+        @logger.debug 'xml_figure ' + figure_md
+        return figure_md
     end
 
     def md_link(cap, url) # a mark down link
-      "[#{cap}](#{url})"
+      if !should_url_relative?(url) then
+        return "[#{cap}](#{url})"
+      else
+        return "[#{cap}]({{ \"#{url_to_relative(url)}\" | relative_url }})"
+      end
     end
 
     def xml_to_md(txt, embed_lv = 0, expand_match = true)
@@ -182,7 +224,7 @@ module Wp2jekyll
 
           a_cap_md = xml_to_md(tag[2], embed_lv + 1, false)
 
-          a_md = md_link(a_cap_md, wp_to_jekyll_url(a_ng['href']))
+          a_md = md_link(a_cap_md, a_ng['href'])
 
           txt.gsub!(tag[0],a_md)
 
@@ -230,6 +272,41 @@ module Wp2jekyll
       return txt
     end
 
+    def is_uri?(str)
+      begin
+        URI(str)
+        return true
+      rescue
+        return false
+      end
+    end
+
+    def md_modify_link(txt)
+      txt.scan(MarkdownLink::RE).each do |m|
+        @logger.debug '========== md_modify_link ============'
+        ln = m[0]
+        mdlk = MarkdownLink.new(m[0])
+        if is_url_suspicious?(mdlk.link) then
+          @logger.warn 'suspicious: ' + mdlk.link.red
+          txt.gsub!(ln, '') # delete to prevent being published
+          next
+        end
+
+        # relative
+        if is_uri?(mdlk.link) and should_url_relative?(mdlk.link) then
+          @logger.debug 'url should be relative: ' + mdlk.link.green
+          mdlk.link = url_to_liquid(mdlk.link)
+          txt.gsub!(ln, mdlk.to_s)
+        end
+
+        # drop tail {}
+        txt.gsub!(ln, mdlk.to_s)
+
+      end
+        @logger.debug '^^^^^^^^^^ modify link ^^^^^^^^^^^^'
+      return txt
+    end
+
     def compress_blank_lines(txt)
       # leading 2 line
       txt.gsub!(/^(\s*?\n)+/m, "\n\n")
@@ -247,25 +324,26 @@ module Wp2jekyll
     def str_patch_group(dst_string) # helper func
       # patch leftover xml pieces
       dst_string = xml_to_md(dst_string) # xml
-      # dst_string = p_unfold_divs(dst_string)
-      @logger.debug dst_string
 
       # mardown link
-      dst_string = rm_bug_img(dst_string)
-      dst_string = patch_link_bug(dst_string)
-
-      # markdown quote
-      dst_string = patch_quote(dst_string)
-      # markdown list
-      dst_string = patch_list_like(dst_string, '*', true)
-
-      # pre formatted
-      dst_string = patch_code(dst_string)
-
-      # section titles
+      dst_string = md_modify_link(dst_string)
+      # @logger.debug ('dst_string: ' + dst_string).yellow
+      # @logger.debug '^^^^^^^^^^ str_patch_group: md_modify_link ^^^^^^^^^^^^'
+      #
+      # # markdown quote
+      # dst_string = patch_quote(dst_string)
+      # # markdown list
+      # dst_string = patch_list_like(dst_string, '*', true)
+      #
+      # # pre formatted
+      # dst_string = patch_code(dst_string)
+      #
+      # # section titles
       dst_string = patch_unescape_xml_char(dst_string)
-      dst_string = patch_h1h2_space(dst_string)
+      # dst_string = patch_h1h2_space(dst_string)
 
+      @logger.debug dst_string.cyan
+      dst_string
     end
 
     def line_patch_group(line) # helper func
