@@ -121,41 +121,11 @@ module Wp2jekyll
 
     def img_md_from_xml(img_xml)
       @logger.debug 'img_md_from_xml'
-      frag = Nokogiri::XML::DocumentFragment.parse(img_xml) do |config|
-        config.nonet.recover
-      end
-      img_md = ''
-      frag.css("img").each do |img|
-        img_path = URI(img["src"]).path
-        basen = fname_in_url(img["src"])
-        alt = img["alt"]
+      img = Nokogiri::XML::DocumentFragment.parse(img_xml).css('img')[0]
 
-        if !!alt && alt.include?(basen) then
-          alt = basen # hack
-        end
-
-        img_md  = "![#{alt}]({{ \"#{img_path}\" | relative_url }})"
-        @logger.debug img_md
-      end
+      img_md  = "![#{img['alt']}](#{wp_to_jekyll_url(img['src'])})"
+      @logger.debug img_md
       img_md
-    end
-
-    # [<img ...>](xxx) -> [![img]()](xxx)
-    def p_md_ln_img(txt)
-      @logger.debug 'p_md_ln_img'
-      txt.scan(%r{(\[(<img\ .*?>)\]\((.*?)\))}m).each do |md_ln, img_xml, md_url|
-      #xt.scan(%r{\[((----------)\]\((---)\))}m).each do |md_ln, img_xml, md_url|
-        p = URI(md_url).path
-
-        new_md_url = md_url
-        if md_url.include?(p) then
-          new_md_url = "{{ \"#{p}\" | relative_url }}"
-        end
-
-        new_md = "[#{img_md_from_xml(img_xml)}](#{new_md_url})"
-        txt.gsub!(md_ln, new_md)
-      end
-      return txt
     end
 
     def xml_figure_to_md_s(txt)
@@ -178,37 +148,79 @@ module Wp2jekyll
       return md_s.join("\n")
     end
 
-    def patch_xml_leftovers(txt, embed_lv = 0)
+    def wp_to_jekyll_url(uri, contains = ['wp-content'])
+      for inner in contains do
+        if uri.include?(inner) then
+          return URI(uri).path
+        else
+          return uri
+        end
+      end
+    end
+
+    def md_link(cap, url) # a mark down link
+      "[#{cap}](#{url})"
+    end
+
+    def xml_to_md(txt, embed_lv = 0, expand_match = true)
+      if expand_match then
+        xml_re = %r{(<(\w+)\b[^>]*>(.*)</\2>)}m
+      else
+        xml_re = %r{(<(\w+)\b[^>]*>(.*?)</\2>)}m
+      end
       # pair tag
-      txt.scan(%r{(<(\w+)\b[^>]*>(.*)</\2>)}m).each do |tag|
-      #xt.scan(%r{(<(---)------->(--)</-->)}m).each do |tag|
-      #xt.scan(%r{0<1---1------->2--2</-->0}m).each do |tag|
+      txt.scan(xml_re).each do |tag|
         case tag[1]
         when 'figure' then
-          patched_tag = xml_figure_to_md_s(tag[0])
-          txt.gsub!(tag[0], patched_tag)
+          txt.gsub!(tag[0], xml_figure_to_md_s(tag[0]))
+
         when 'p' then
           @logger.debug '<p>...</p>'
-          patched_tag = patch_xml_leftovers(tag[2], embed_lv + 1)
-          txt.gsub!(tag[0], patched_tag)
-          @logger.debug txt
-        when 'div' then
+          txt.gsub!(tag[0], xml_to_md(tag[2], embed_lv + 1, false))
+        when 'a' then
+          a_ng = Nokogiri::XML::DocumentFragment.parse(tag[0]).css("a")[0]
+
+          a_cap_md = xml_to_md(tag[2], embed_lv + 1, false)
+
+          a_md = md_link(a_cap_md, wp_to_jekyll_url(a_ng['href']))
+
+          txt.gsub!(tag[0],a_md)
+
+        when 'div' then # TODO is indentation needed ?
           @logger.debug '<div>...</div>'
-          patched_tag = patch_xml_leftovers(tag[2], embed_lv + 1)
-          txt.gsub!(tag[0], patched_tag)
-          @logger.debug txt
+          txt.gsub!(tag[0], xml_to_md(tag[2], embed_lv + 1, false))
+
+        when 'table' then
+          table_ng = Nokogiri::XML::DocumentFragment.parse(tag[2])
+          table_md = ''
+          table_ng.css('tr').each do |tr|
+            rowdata_a = []
+            tr.css('td').each do |td|
+              rowdata_a.append(xml_to_md(td.inner_html).gsub!("\n", ' ')) # better no newline in markdown table cell
+            end
+            table_md += '| ' + rowdata_a.join(' | ') + " |\n"
+          end
+          @logger.debug table_md
+          txt.gsub!(tag[0], table_md )
+        when 'span' then
+          @logger.debug '<span>...</span>'
+          span_txt = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
+          txt.gsub!(tag[0], span_txt )
+        when 'del' then
+          @logger.debug '<del>...</del>'
+          patched_tag = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
+
+          txt.gsub!(tag[0], '~~' + patched_tag + '~~')
         else
           @logger.debug "unknown el pair : #{tag[0]}"
         end
       end
 
-      # img in md link
-      txt = p_md_ln_img(txt)
-
       # other single <img/>
       txt.scan(%r{(<(\w+)\b[^>]*/>)}m).each do |tag|
         case tag[1]
         when 'img' then
+          # [<img ...>](xxx) -> [![img]()](xxx)
           txt.gsub!(tag[0], img_md_from_xml(tag[0]))
         when 'br' then
           txt.gsub!(tag[0], "\n\n")
@@ -232,30 +244,11 @@ module Wp2jekyll
       return txt
     end
 
-    # def p_unfold_divs(txt)
-    #   @logger.debug 'p_unfold_divs'
-    #   div_re = %r{(<div.*?>(.*?)</div>)}m
-    #   #iv_re = %r{0-----1----------}m
-    #
-    #   loop do
-    #     match = txt.scan(div_re)
-    #     if 0 == match.length then
-    #       break
-    #     end
-    #
-    #     for m in match do 
-    #       txt.gsub!(m[0], m[1])
-    #     end
-    #
-    #   end
-    #   @logger.debug txt
-    #   return compress_blank_lines(txt)
-    # end
-
     def str_patch_group(dst_string) # helper func
       # patch leftover xml pieces
-      dst_string = patch_xml_leftovers(dst_string) # xml
+      dst_string = xml_to_md(dst_string) # xml
       # dst_string = p_unfold_divs(dst_string)
+      @logger.debug dst_string
 
       # mardown link
       dst_string = rm_bug_img(dst_string)

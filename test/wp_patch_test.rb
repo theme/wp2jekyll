@@ -152,7 +152,7 @@ some other text
 
         s2 = '[![screenshot-from-2016-12-01-22-43-26]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})'
 
-        assert_equal(s2, WordpressMarkdown.new.p_md_ln_img(s1))
+        assert_equal(s2, WordpressMarkdown.new.xml_to_md(s1))
     end
 
     def test_rm_bug_img
@@ -227,7 +227,7 @@ some other text
         passage 2
 
 '''
-      assert_equal(s2, WordpressMarkdown.new.patch_xml_leftovers(s1))
+      assert_equal(s2, WordpressMarkdown.new.xml_to_md(s1))
     end
 
     def test_whole_md
@@ -292,8 +292,40 @@ EOS
       tmp = wm.str_patch_group(tmp) # xml elements
 
       assert_equal(md_patched.inspect, tmp.inspect)
-      # assert_equal(md_patched, WordpressMarkdown.new.patch_xml_leftovers(md))
+      # assert_equal(md_patched, WordpressMarkdown.new.xml_to_md(md))
       logger.debug "############ end test_whole_md ##############"
+    end
+
+    def test_xml_table_a_img
+      xml = <<EOS
+    CLANNAD的图：
+    
+    <table cellspacing="0" border="0">
+      <tr>
+        <td>
+        </td>
+      </tr>
+      
+      <tr>
+        <td valign="top">
+          <a href="http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU" target="_blank" rel="WLPP;url=http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU;cnsid=cns&#033;61AD2A9245CB7941&#033;476"><img src="http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgKJiLCjb5pTGW5H7oVR85NNxTi8Y-XtMitykXZ6KiV_cQS5gkjpzuz8" border="0" /></a>
+        </td>
+        
+        <td width="15">
+        </td>
+        
+        <td valign="top">
+          <a href="http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A" target='_blank' rel="WLPP;url=http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A;cnsid=cns&#033;61AD2A9245CB7941&#033;477"><img src="http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-LxobLZDNk3ngbFhU69Eu3RAGD8TeHISQMbvuerQ6snf5AcNuKCGvCc" border="0" /></a>
+        </td>
+      </tr>
+    </table>
+EOS
+    md = <<EOS
+    CLANNAD的图：
+    | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgKJiLCjb5pTGW5H7oVR85NNxTi8Y-XtMitykXZ6KiV_cQS5gkjpzuz8)](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU) | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-LxobLZDNk3ngbFhU69Eu3RAGD8TeHISQMbvuerQ6snf5AcNuKCGvCc)](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A) 
+EOS
+    assert_equal(md, WordpressMarkdown.new.xml_to_md(xml))
+
     end
 
 end
