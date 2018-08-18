@@ -12,8 +12,8 @@ module Wp2jekyll
     @link = ''
     @title = ''
     @is_img = false
-    RE = %r{((\!)?\[(.*)\]\(([^"]*?)("([^"]*?)")?\)(\{.*?\})?)}m
-    #E = %r{12--2---3--3----4------45-6------6-5---7-------7-1}m
+    RE = %r{((\!)?\[(.*?)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}m
+    #E = %r{12--2--[3--3--]-(   4--------4  5"6------6"5--)7-{----}7-1}m
     @init_valid = false
     attr_accessor :cap
     attr_accessor :title
@@ -30,15 +30,17 @@ module Wp2jekyll
         @is_img = ('!' == m[2]) ? true : false
         @init_valid = true
         @tail = m[7] ? m[7] : ''
-        @logger.debug "#{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} #{@title.blue})#{@tail.magenta}"
+        @logger.debug 'MarkdownLink: ' + "#{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} \"#{@title.blue}\")#{@tail.magenta}"
       end
     end
 
     def to_s
       if !@link || @link.empty?
         return ''
-      else
+      elsif @title.empty?
         return "#{@is_img ? '!' : ''}[#{@cap}](#{@link})" 
+      elsif !!@title and !@title.empty? #TODO
+        return "#{@is_img ? '!' : ''}[#{@cap}](#{@link} \"#{title}\")" 
       end
     end
   end
@@ -192,11 +194,13 @@ module Wp2jekyll
         cap = fig.css("figcaption").text
         img = fig.css("img").first
         figure_md  = '!' + md_link(cap, img['src'])
-        @logger.debug 'xml_figure ' + figure_md
+        @logger.debug 'xml_figure ' + figure_md.light_cyan
         return figure_md
     end
 
     def md_link(cap, url) # a mark down link
+      return '' if nil == url
+      @logger.debug 'md_link: '.green + url
       if !should_url_relative?(url) then
         return "[#{cap}](#{url})"
       else
@@ -204,7 +208,8 @@ module Wp2jekyll
       end
     end
 
-    def xml_to_md(txt, embed_lv = 0, expand_match = true)
+    def xml_to_md(txt, embed_lv = 0, expand_match = false)
+      return '' if nil == txt
       if expand_match then
         xml_re = %r{(<(\w+)\b[^>]*>(.*)</\2>)}m
       else
@@ -253,13 +258,18 @@ module Wp2jekyll
           patched_tag = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
 
           txt.gsub!(tag[0], '~~' + patched_tag + '~~')
+        when 'font' then
+          @logger.debug '<del>...</del>'
+          patched_tag = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
+
+          txt.gsub!(tag[0], '__' + patched_tag + '__')
         else
           @logger.debug "unknown el pair : #{tag[0]}"
         end
       end
 
       # other single <img/>
-      txt.scan(%r{(<(\w+)\b[^>]*/>)}m).each do |tag|
+      txt.scan(%r{(<(\w+)\b[^>]*?/>)}m).each do |tag|
         case tag[1]
         when 'img' then
           # [<img ...>](xxx) -> [![img]()](xxx)
@@ -283,8 +293,8 @@ module Wp2jekyll
 
     def md_modify_link(txt)
       txt.scan(MarkdownLink::RE).each do |m|
-        @logger.debug '========== md_modify_link ============'
         ln = m[0]
+        @logger.debug "========== md_modify_link #{ln} ============"
         mdlk = MarkdownLink.new(m[0])
         if is_url_suspicious?(mdlk.link) then
           @logger.warn 'suspicious: ' + mdlk.link.red
@@ -303,7 +313,7 @@ module Wp2jekyll
         txt.gsub!(ln, mdlk.to_s)
 
       end
-        @logger.debug '^^^^^^^^^^ modify link ^^^^^^^^^^^^'
+      @logger.debug '^^^^^^^^^^ modify link ^^^^^^^^^^^^'
       return txt
     end
 
@@ -331,18 +341,18 @@ module Wp2jekyll
       # @logger.debug '^^^^^^^^^^ str_patch_group: md_modify_link ^^^^^^^^^^^^'
       #
       # # markdown quote
-      # dst_string = patch_quote(dst_string)
+      dst_string = patch_quote(dst_string)
       # # markdown list
-      # dst_string = patch_list_like(dst_string, '*', true)
+      dst_string = patch_list_like(dst_string, '*', true)
       #
       # # pre formatted
-      # dst_string = patch_code(dst_string)
+      dst_string = patch_code(dst_string)
       #
       # # section titles
       dst_string = patch_unescape_xml_char(dst_string)
-      # dst_string = patch_h1h2_space(dst_string)
+      dst_string = patch_h1h2_space(dst_string)
 
-      @logger.debug dst_string.cyan
+      @logger.debug dst_string.white
       dst_string
     end
 
