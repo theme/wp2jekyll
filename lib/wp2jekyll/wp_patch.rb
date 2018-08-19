@@ -210,7 +210,7 @@ module Wp2jekyll
       for n in frag.children
         case n.type
         when Nokogiri::XML::Node::TEXT_NODE
-          md_pieces.append n.content
+          md_pieces.append n
           @logger.debug n.text.yellow
         when Nokogiri::XML::Node::ELEMENT_NODE
           @logger.debug "<#{n.name}>".yellow
@@ -226,118 +226,22 @@ module Wp2jekyll
             n.css('tr').each do |tr|
               rowdata_a = []
               tr.css('td').each do |td|
-                # @logger.debug 'td.inner_html '.red + td.inner_html
                 rowdata_a.append(parse_xml_to_md_array(td).join('')) # better no newline in markdown table cell
               end
-              # @logger.debug 'talbe rowdata'.red
-              # @logger.debug rowdata_a
-              table_md += '| ' + rowdata_a.join(' | ') + " |\n" if !rowdata_a.empty?
+              table_md += '| ' + rowdata_a.join(' | ') + " |\n"
             end
             md_pieces.append table_md
+          when 'a'
+            a_cap = parse_xml_to_md_array(n.inner_html).join()
+            a_link = n['href'] || ''
+            a_md = "[#{a_cap}](#{a_link})"
+            md_pieces.append a_md
           else
             md_pieces.append parse_xml_to_md_array(n.inner_html.strip)
           end
         end
       end
       return md_pieces
-    end
-
-    def xml_to_md(txt, embed_lv = 0)
-      if nil == txt
-        @logger.warn 'xml_to_md() empty txt'.yellow
-      end
-
-      # pair tag allows nesting
-      pair_re = %r{(<(\w+)\b[^>]*>(.*)</\2>)}m    # paired tags that allows nesting
-      # pair_re = %r{(<(\w+)\b[^>]*>(.*?)</\2>)}m
-      txt.scan(pair_re).each do |tag|
-        case tag[1]
-        when 'p' then
-          @logger.debug '<p>...</p>'.yellow
-          p_ng = Nokogiri::XML::DocumentFragment.parse(tag[0])#.css("p")[0] #TODO
-          @logger.debug 'p_ng'.yellow
-          @logger.debug p_ng
-          txt.gsub!(tag[0], xml_to_md(tag[2], embed_lv + 1))
-
-        when 'a' then
-          a_ng = Nokogiri::XML::DocumentFragment.parse(tag[0]).css("a")[0]
-          a_cap_md = xml_to_md(tag[2], embed_lv + 1)
-          a_md = md_link(a_cap_md, a_ng['href'])
-          txt.gsub!(tag[0],a_md)
-
-        when 'div' then # TODO is indentation needed ?
-          # TODO get text between divs, inorder to parse all div pairs, what regex can not catch
-          div_ng = Nokogiri::XML::DocumentFragment.parse(tag[0]).css("div")[0]
-          @logger.debug ('<div>...</div>' + 'lv ' + embed_lv.to_s).yellow
-          @logger.debug div_ng
-          txt.gsub!(tag[0], xml_to_md(div_ng.inner_html, embed_lv + 1))
-
-        when 'table' then
-          table_ng = Nokogiri::XML::DocumentFragment.parse(tag[0]).css('table')[0]
-          table_md = ''
-          table_ng.css('tr').each do |tr|
-            rowdata_a = []
-            tr.css('td').each do |td|
-              @logger.debug 'td.inner_html '.red + td.inner_html
-              rowdata_a.append(xml_to_md(td.inner_html).gsub!("\n", ' ')) # better no newline in markdown table cell
-            end
-            table_md += '| ' + rowdata_a.join(' | ') + " |\n"
-          end
-          @logger.debug table_md
-          txt.gsub!(tag[0], table_md )
-
-        else
-          @logger.debug "unknown possible nesting el pair : #{tag[0]}"
-          
-        end
-      end
-
-      # paired tags that does not allow nesting
-      pair_re_nonest = %r{(<(\w+)\b[^>]*>(.*?)</\2>)}m
-      txt.scan(pair_re_nonest).each do |tag|
-        case tag[1]
-        when 'figure' then # should not embedded in case : wordpress exprted
-          txt.gsub!(tag[0], xml_figure_to_md_s(tag[0]))
-        when 'span' then
-          @logger.debug '<span>...</span>'
-          span_txt = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
-          txt.gsub!(tag[0], span_txt )
-
-        when 'del' then
-          @logger.debug '<del>...</del>'
-          patched_tag = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
-          txt.gsub!(tag[0], '~~' + patched_tag + '~~')
-
-        when 'font' then
-          @logger.debug '<del>...</del>'
-          patched_tag = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
-          txt.gsub!(tag[0], '__' + patched_tag + '__')
-        else
-          @logger.debug "unknown non-nesting el pair : #{tag[0]}"
-          
-        end
-      end
-
-      # other single <img/>
-      txt.scan(%r{(<(\w+)\b[^>]*?/>)}m).each do |tag|
-        case tag[1]
-        when 'img' then
-          # [<img ...>](xxx) -> [![img]()](xxx)
-          img = Nokogiri::XML::DocumentFragment.parse(tag[0]).css('img').first
-          cap = xml_to_md(img['alt'])
-          img_md  = '!' + md_link(cap, img['src'])
-          txt.gsub!(tag[0], img_md)
-          @logger.debug '<img /> md: '.red + img_md
-
-        when 'br' then
-          txt.gsub!(tag[0], "\n\n")
-
-        else
-          @logger.debug "unknown el : #{tag[0]}"
-        end
-      end
-
-      return txt
     end
 
     def is_uri?(str)
@@ -408,14 +312,14 @@ module Wp2jekyll
     end
 
     # TODO
-    def line_patch_group(line) # helper func
-      line.gsub!('{{}}', '{ {} }') # liquid template engine of jekyll
-      line.gsub!('&#8211;', '-') # the original text is mangled by wp
-      line.gsub!('&#8212;', '--')
-      line.gsub!('&#8212;', '--')
-      line.gsub!(/^\s*?&nbsp;\s*?$/, '') # a blank line
-      line.gsub!('&nbsp;', ' ')
-      return line
+    def patch_char(txt) # helper func
+      txt.gsub!('{{}}', '{ {} }') # liquid template engine of jekyll
+      txt.gsub!('&#8211;', '-') # the original text is mangled by wp
+      txt.gsub!('&#8212;', '--')
+      txt.gsub!('&#8212;', '--')
+      txt.gsub!(/^\s*?&nbsp;\s*?$/, '') # a blank txt
+      txt.gsub!('&nbsp;', ' ')
+      return txt
     end
 
     def process_md_header(header)
@@ -455,7 +359,8 @@ module Wp2jekyll
 
       @logger.debug 'body_str: ' + body_str
       body_str = process_md_body(body_str) if !!body_str
-      '' + yaml_front_matter + body_str
+
+      patch_char(yaml_front_matter + body_str)
     end
 
     def wp_2_jekyll_md_file(i, o)

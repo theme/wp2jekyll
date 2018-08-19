@@ -181,20 +181,20 @@ some other text
       s2 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
 
       assert_equal(s2, WordpressMarkdown.new.process_md(s1))
-      assert_equal(s2, WordpressMarkdown.new.line_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.patch_char(s1))
     end
 
     def test_patch_body_seimi_jekyll_code
       s1 = 'some body text 1 = {{}} is axiom set'
       s2 = 'some body text 1 = { {} } is axiom set'
 
-      assert_equal(s2, WordpressMarkdown.new.line_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.patch_char(s1))
     end
 
     def test_patch_xml_escape_char
       s1 = '&nbsp;'
       s2 = ''
-      assert_equal(s2, WordpressMarkdown.new.line_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.patch_char(s1))
     end
 
     def test_patch_xml_escape_char2
@@ -205,7 +205,7 @@ some other text
       s2 = '''passage
 
       passage2'''
-      assert_equal(s2, WordpressMarkdown.new.line_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.patch_char(s1))
     end
 
     def test_p_unfold_divs
@@ -285,7 +285,7 @@ EOS
       wm = WordpressMarkdown.new
       tmp = ''
       md.each_line do |line|
-        tmp += wm.line_patch_group(line) # special chars
+        tmp += wm.patch_char(line) # special chars
       end
       tmp = wm.process_md(tmp) # xml elements
 
@@ -347,7 +347,7 @@ EOS
     
     PATH=/d/bin:$PATH
 EOS
-    assert_equal(md, WordpressMarkdown.new.process_md(txt))
+    assert_equal(md, WordpressMarkdown.new.patch_code(txt))
     end
 end
 
