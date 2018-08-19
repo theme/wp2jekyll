@@ -12,7 +12,7 @@ module Wp2jekyll
     @link = ''
     @title = ''
     @is_img = false
-    RE = %r{((\!)?\[(.*?)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}m
+    RE = %r{((\!)?\[([^\n]*?)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}m
     #E = %r{12--2--[3--3--]-(   4--------4  5"6------6"5--)7-{----}7-1}m
     @init_valid = false
     attr_accessor :cap
@@ -52,7 +52,7 @@ module Wp2jekyll
       @fp = fp # file path
       @logger = Logger.new(STDERR)
       # @logger.level = Logger::INFO
-      @logger.level = Logger::DEBUG
+      @logger.level = Logger::WARN
       # DEBUG < INFO < WARN < ERROR < FATAL < UNKNOWN
     end
 
