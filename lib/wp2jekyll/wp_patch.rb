@@ -219,6 +219,8 @@ module Wp2jekyll
             md_pieces.append xml_figure_to_md_s(n.to_s)
           when "img"
             md_pieces.append '!' + md_link(n['alt'], n['src'])
+          when 'pre'
+            md_pieces.append "\n```\n" + n + "\n```\n"
           else
             md_pieces.append parse_xml_to_md_array(n.inner_html.strip)
           end
