@@ -222,6 +222,7 @@ module Wp2jekyll
           when 'pre'
             md_pieces.append "\n```\n" + n + "\n```\n"
           when 'table'
+            table_md = ''
             n.css('tr').each do |tr|
               rowdata_a = []
               tr.css('td').each do |td|
