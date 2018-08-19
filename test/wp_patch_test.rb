@@ -8,7 +8,7 @@ require "logger"
 
 class TestPatchingRegex < MiniTest::Test
   make_my_diffs_pretty!
-  include PrettyDiffs
+  # include PrettyDiffs
   include Wp2jekyll
     def test_patch_code
         # a invisible character is there, DO NOT FORMAT
@@ -210,20 +210,20 @@ some other text
 
     def test_p_unfold_divs
       s1 = '''
-      <div id="some id" class="bvMsg">
+<div id="some id" class="bvMsg">
   <div>
-        passage 1
+      passage 1
   </div>
-  
-  <div>
-        passage 2
-  </div>
-</div> '''
 
+  <div>
+      passage 2
+  </div>
+</div>
+'''
       s2 ='''
-        passage 1
+passage 1
 
-        passage 2
+passage 2
 '''
       assert_equal(s2, WordpressMarkdown.new.process_md(s1))
     end
@@ -297,7 +297,6 @@ EOS
     def test_xml_table_a_img
       xml = <<EOS
     CLANNAD的图：
-    
     <table cellspacing="0" border="0">
       <tr>
         <td>
@@ -320,7 +319,10 @@ EOS
 EOS
     md = <<EOS
     CLANNAD的图：
-    | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgKJiLCjb5pTGW5H7oVR85NNxTi8Y-XtMitykXZ6KiV_cQS5gkjpzuz8)](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU) | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-LxobLZDNk3ngbFhU69Eu3RAGD8TeHISQMbvuerQ6snf5AcNuKCGvCc)](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A) 
+    
+|  |
+| [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgKJiLCjb5pTGW5H7oVR85NNxTi8Y-XtMitykXZ6KiV_cQS5gkjpzuz8)](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU) | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-LxobLZDNk3ngbFhU69Eu3RAGD8TeHISQMbvuerQ6snf5AcNuKCGvCc)](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A) |
+
 EOS
     # txt =  WordpressMarkdown.new.xml_to_md(xml)
     # txt2 = WordpressMarkdown.new.md_modify_link(txt)

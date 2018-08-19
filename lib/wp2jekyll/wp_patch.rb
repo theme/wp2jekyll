@@ -222,22 +222,23 @@ module Wp2jekyll
           when 'pre'
             md_pieces.append "\n```\n" + n + "\n```\n"
           when 'table'
-            table_md = ''
+            trs_md = []
             n.css('tr').each do |tr|
               rowdata_a = []
               tr.css('td').each do |td|
-                rowdata_a.append(parse_xml_to_md_array(td).join('')) # better no newline in markdown table cell
+                td_md = parse_xml_to_md_array(td).join('')
+                rowdata_a.append(td_md) if !td_md.empty?
               end
-              table_md += '| ' + rowdata_a.join(' | ') + " |\n"
+              trs_md.append ('| ' + rowdata_a.join(' | ') + " |")
             end
-            md_pieces.append table_md
+            md_pieces.append "\n" + trs_md.join("\n") + "\n"
           when 'a'
             a_cap = parse_xml_to_md_array(n.inner_html).join()
             a_link = n['href'] || ''
             a_md = "[#{a_cap}](#{a_link})"
             md_pieces.append a_md
           else
-            md_pieces.append parse_xml_to_md_array(n.inner_html.strip)
+            md_pieces.append parse_xml_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join()
           end
         end
       end
@@ -354,10 +355,10 @@ module Wp2jekyll
       yaml_front_matter  = m[1] || ''
       body_str = m[2] || ''
 
-      @logger.debug 'yaml_front_matter: ' + yaml_front_matter
+      # @logger.debug 'yaml_front_matter: ' + yaml_front_matter
       yaml_front_matter = process_md_header(yaml_front_matter) if !!yaml_front_matter
 
-      @logger.debug 'body_str: ' + body_str
+      # @logger.debug 'body_str: ' + body_str
       body_str = process_md_body(body_str) if !!body_str
 
       patch_char(yaml_front_matter + body_str)
