@@ -8,7 +8,7 @@ require "logger"
 
 class TestPatchingRegex < MiniTest::Test
   make_my_diffs_pretty!
-  # include PrettyDiffs
+  include PrettyDiffs
   include Wp2jekyll
     def test_patch_code
         # a invisible character is there, DO NOT FORMAT

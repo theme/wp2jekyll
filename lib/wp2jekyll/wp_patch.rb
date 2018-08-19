@@ -24,23 +24,25 @@ module Wp2jekyll
       @logger = Logger.new(STDERR)
       @logger.level = Logger::DEBUG
       if m = RE.match(str)
-        @cap = !!m[3] ? m[3] : ''
-        @link = !!m[4] ? m[4] : ''
-        @title = !!m[6] ? m[6] : ''
+        @cap = m[3] || ''
+        @link = m[4] || ''
+        @title = m[6] || ''
         @is_img = ('!' == m[2]) ? true : false
         @init_valid = true
-        @tail = m[7] ? m[7] : ''
+        @tail = m[7] || ''
         @logger.debug 'MarkdownLink: ' + "#{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} \"#{@title.blue}\")#{@tail.magenta}"
       end
     end
 
     def to_s
-      if !@link || @link.empty?
-        return ''
-      elsif @title.empty?
-        return "#{@is_img ? '!' : ''}[#{@cap}](#{@link})" 
-      elsif !!@title and !@title.empty? #TODO
-        return "#{@is_img ? '!' : ''}[#{@cap}](#{@link} \"#{title}\")" 
+      if @is_img
+        return "![#{@cap}](#{@link})"
+      else # not image
+        if @title.empty?
+          return "[#{@cap}](#{@link})"
+        else
+          return "[#{@cap}](#{@link} \"#{title}\")"
+        end
       end
     end
   end
