@@ -177,14 +177,6 @@ module Wp2jekyll
       return b
     end
 
-    def img_md_from_xml(img_xml)
-      img = Nokogiri::XML::DocumentFragment.parse(img_xml).css('img').first
-      cap = xml_to_md(img['alt'])
-      img_md  = '!' + md_link(cap, img['src'])
-      @logger.debug 'img_md: ' + img_md
-      img_md
-    end
-
     def xml_figure_to_md_s(txt)
       frag = Nokogiri::XML::DocumentFragment.parse(txt) do |config|
         config.nonet.recover
@@ -198,7 +190,8 @@ module Wp2jekyll
         return figure_md
     end
 
-    def md_link(cap, url) # a mark down link
+    # construct markdown link from caption and url (aware of relative )
+    def md_link(cap, url)
       return '' if nil == url
       @logger.debug 'md_link: '.green + url
       if !should_url_relative?(url) then
@@ -208,63 +201,105 @@ module Wp2jekyll
       end
     end
 
-    def xml_to_md(txt, embed_lv = 0, expand_match = false)
-      return '' if nil == txt
-      if expand_match then
-        xml_re = %r{(<(\w+)\b[^>]*>(.*)</\2>)}m
-      else
-        xml_re = %r{(<(\w+)\b[^>]*>(.*?)</\2>)}m
-      end
-      # pair tag
-      txt.scan(xml_re).each do |tag|
-        case tag[1]
-        when 'figure' then
-          txt.gsub!(tag[0], xml_figure_to_md_s(tag[0]))
+    # TODO
+    def parse_xml_to_md_array(xml)
+      frag = Nokogiri::XML::DocumentFragment.parse(xml)
 
+      md_pieces = [ ]
+
+      for n in frag.children
+        case n.type
+        when Nokogiri::XML::Node::TEXT_NODE
+          md_pieces.append n.content
+          @logger.debug n.text.yellow
+        when Nokogiri::XML::Node::ELEMENT_NODE
+          @logger.debug "<#{n.name}>".yellow
+          case n.name
+          when "figure"
+            md_pieces.append xml_figure_to_md_s(n.to_s)
+          when "img"
+            md_pieces.append '!' + md_link(n['alt'], n['src'])
+          else
+            md_pieces.append parse_xml_to_md_array(n.inner_html.strip)
+          end
+        end
+      end
+      return md_pieces
+    end
+
+    def xml_to_md(txt, embed_lv = 0)
+      if nil == txt
+        @logger.warn 'xml_to_md() empty txt'.yellow
+      end
+
+      # pair tag allows nesting
+      pair_re = %r{(<(\w+)\b[^>]*>(.*)</\2>)}m    # paired tags that allows nesting
+      # pair_re = %r{(<(\w+)\b[^>]*>(.*?)</\2>)}m
+      txt.scan(pair_re).each do |tag|
+        case tag[1]
         when 'p' then
-          @logger.debug '<p>...</p>'
-          txt.gsub!(tag[0], xml_to_md(tag[2], embed_lv + 1, false))
+          @logger.debug '<p>...</p>'.yellow
+          p_ng = Nokogiri::XML::DocumentFragment.parse(tag[0])#.css("p")[0] #TODO
+          @logger.debug 'p_ng'.yellow
+          @logger.debug p_ng
+          txt.gsub!(tag[0], xml_to_md(tag[2], embed_lv + 1))
+
         when 'a' then
           a_ng = Nokogiri::XML::DocumentFragment.parse(tag[0]).css("a")[0]
-
-          a_cap_md = xml_to_md(tag[2], embed_lv + 1, false)
-
+          a_cap_md = xml_to_md(tag[2], embed_lv + 1)
           a_md = md_link(a_cap_md, a_ng['href'])
-
           txt.gsub!(tag[0],a_md)
 
         when 'div' then # TODO is indentation needed ?
-          @logger.debug '<div>...</div>'
-          txt.gsub!(tag[0], xml_to_md(tag[2], embed_lv + 1, false))
+          # TODO get text between divs, inorder to parse all div pairs, what regex can not catch
+          div_ng = Nokogiri::XML::DocumentFragment.parse(tag[0]).css("div")[0]
+          @logger.debug ('<div>...</div>' + 'lv ' + embed_lv.to_s).yellow
+          @logger.debug div_ng
+          txt.gsub!(tag[0], xml_to_md(div_ng.inner_html, embed_lv + 1))
 
         when 'table' then
-          table_ng = Nokogiri::XML::DocumentFragment.parse(tag[2])
+          table_ng = Nokogiri::XML::DocumentFragment.parse(tag[0]).css('table')[0]
           table_md = ''
           table_ng.css('tr').each do |tr|
             rowdata_a = []
             tr.css('td').each do |td|
+              @logger.debug 'td.inner_html '.red + td.inner_html
               rowdata_a.append(xml_to_md(td.inner_html).gsub!("\n", ' ')) # better no newline in markdown table cell
             end
             table_md += '| ' + rowdata_a.join(' | ') + " |\n"
           end
           @logger.debug table_md
           txt.gsub!(tag[0], table_md )
+
+        else
+          @logger.debug "unknown possible nesting el pair : #{tag[0]}"
+          
+        end
+      end
+
+      # paired tags that does not allow nesting
+      pair_re_nonest = %r{(<(\w+)\b[^>]*>(.*?)</\2>)}m
+      txt.scan(pair_re_nonest).each do |tag|
+        case tag[1]
+        when 'figure' then # should not embedded in case : wordpress exprted
+          txt.gsub!(tag[0], xml_figure_to_md_s(tag[0]))
         when 'span' then
           @logger.debug '<span>...</span>'
           span_txt = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
           txt.gsub!(tag[0], span_txt )
+
         when 'del' then
           @logger.debug '<del>...</del>'
           patched_tag = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
-
           txt.gsub!(tag[0], '~~' + patched_tag + '~~')
+
         when 'font' then
           @logger.debug '<del>...</del>'
           patched_tag = Nokogiri::XML::DocumentFragment.parse(tag[2]).inner_text
-
           txt.gsub!(tag[0], '__' + patched_tag + '__')
         else
-          @logger.debug "unknown el pair : #{tag[0]}"
+          @logger.debug "unknown non-nesting el pair : #{tag[0]}"
+          
         end
       end
 
@@ -273,9 +308,17 @@ module Wp2jekyll
         case tag[1]
         when 'img' then
           # [<img ...>](xxx) -> [![img]()](xxx)
-          txt.gsub!(tag[0], img_md_from_xml(tag[0]))
+          img = Nokogiri::XML::DocumentFragment.parse(tag[0]).css('img').first
+          cap = xml_to_md(img['alt'])
+          img_md  = '!' + md_link(cap, img['src'])
+          txt.gsub!(tag[0], img_md)
+          @logger.debug '<img /> md: '.red + img_md
+
         when 'br' then
           txt.gsub!(tag[0], "\n\n")
+
+        else
+          @logger.debug "unknown el : #{tag[0]}"
         end
       end
 
@@ -333,7 +376,8 @@ module Wp2jekyll
 
     def str_patch_group(dst_string) # helper func
       # patch leftover xml pieces
-      dst_string = xml_to_md(dst_string) # xml
+      # dst_string = xml_to_md(dst_string) # xml
+      dst_string = parse_xml_to_md_array(dst_string).join('') # xml
 
       # mardown link
       dst_string = md_modify_link(dst_string)

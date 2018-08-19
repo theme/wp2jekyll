@@ -225,7 +225,7 @@ some other text
 
         passage 2
 '''
-      assert_equal(s2, WordpressMarkdown.new.xml_to_md(s1))
+      assert_equal(s2, WordpressMarkdown.new.str_patch_group(s1))
     end
 
     def test_whole_md
@@ -322,8 +322,10 @@ EOS
     CLANNAD的图：
     | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgKJiLCjb5pTGW5H7oVR85NNxTi8Y-XtMitykXZ6KiV_cQS5gkjpzuz8)](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU) | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-LxobLZDNk3ngbFhU69Eu3RAGD8TeHISQMbvuerQ6snf5AcNuKCGvCc)](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A) 
 EOS
-    # assert_equal(md, WordpressMarkdown.new.xml_to_md(xml))
-    assert_equal(md, WordpressMarkdown.new.str_patch_group(xml))
+    txt =  WordpressMarkdown.new.xml_to_md(xml)
+    txt2 = WordpressMarkdown.new.md_modify_link(txt)
+    assert_equal(md, txt2)
+    # assert_equal(md, WordpressMarkdown.new.str_patch_group(xml))
     end
 
     def test_comment_in_code_should_not_change
