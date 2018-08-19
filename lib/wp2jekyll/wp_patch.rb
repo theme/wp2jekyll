@@ -221,6 +221,18 @@ module Wp2jekyll
             md_pieces.append '!' + md_link(n['alt'], n['src'])
           when 'pre'
             md_pieces.append "\n```\n" + n + "\n```\n"
+          when 'table'
+            n.css('tr').each do |tr|
+              rowdata_a = []
+              tr.css('td').each do |td|
+                # @logger.debug 'td.inner_html '.red + td.inner_html
+                rowdata_a.append(parse_xml_to_md_array(td).join('')) # better no newline in markdown table cell
+              end
+              # @logger.debug 'talbe rowdata'.red
+              # @logger.debug rowdata_a
+              table_md += '| ' + rowdata_a.join(' | ') + " |\n" if !rowdata_a.empty?
+            end
+            md_pieces.append table_md
           else
             md_pieces.append parse_xml_to_md_array(n.inner_html.strip)
           end
@@ -376,34 +388,26 @@ module Wp2jekyll
       return txt
     end
 
-    def str_patch_group(dst_string) # helper func
-      # patch leftover xml pieces
-      # dst_string = xml_to_md(dst_string) # xml
-      dst_string = parse_xml_to_md_array(dst_string).join('') # xml
+    # indent code section in for jekyll markdown
+    def patch_code(txt, indent = 8) # -> String
+      match = txt.scan(%r{(\[code\](.*?)\[/code\])}m)
+      for m in match do 
+        @@code_cnt += 1
 
-      # mardown link
-      dst_string = md_modify_link(dst_string)
-      # @logger.debug ('dst_string: ' + dst_string).yellow
-      # @logger.debug '^^^^^^^^^^ str_patch_group: md_modify_link ^^^^^^^^^^^^'
-      #
-      # # markdown quote
-      dst_string = patch_quote(dst_string)
-      # # markdown list
-      dst_string = patch_list_like(dst_string, '*', true)
-      #
-      # # pre formatted
-      dst_string = patch_code(dst_string)
-      #
-      # # section titles
-      dst_string = patch_unescape_xml_char(dst_string)
-      dst_string = patch_h1h2_space(dst_string)
+        if !!m then
+          code = m[1]
+          code.strip!
+          code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
 
-      @logger.debug dst_string.white
-      dst_string
+          txt.gsub!(m[0], "\n" + code + "\n\n")
+        end
+      end
+
+      return txt
     end
 
+    # TODO
     def line_patch_group(line) # helper func
-      line.gsub!(/^permalink:/, 'permalink_wp:') # wordpress exported
       line.gsub!('{{}}', '{ {} }') # liquid template engine of jekyll
       line.gsub!('&#8211;', '-') # the original text is mangled by wp
       line.gsub!('&#8212;', '--')
@@ -413,53 +417,52 @@ module Wp2jekyll
       return line
     end
 
+    def process_md_header(header)
+      # process header
+      header.gsub!(/^permalink:/, 'permalink_wp:') # wordpress exported
+      header = patch_unescape_xml_char(header)
+    end
+
+    def process_md_body(body_str)
+      body_str  = parse_xml_to_md_array(body_str).join('') # xml
+
+      # mardown link
+      body_str = md_modify_link(body_str)
+      #
+      # markdown quote
+      body_str = patch_quote(body_str)
+
+      # # markdown list
+      body_str = patch_list_like(body_str, '*', true)
+      #
+      # # pre formatted
+      body_str = patch_code(body_str)
+      #
+      # # section titles
+      body_str = patch_unescape_xml_char(body_str)
+
+      body_str = patch_h1h2_space(body_str)
+    end
+
+    def process_md(fulltxt)
+      m = /(^---.*?---)?(.*)/m.match(fulltxt)
+      yaml_front_matter  = m[1] || ''
+      body_str = m[2] || ''
+
+      @logger.debug 'yaml_front_matter: ' + yaml_front_matter
+      yaml_front_matter = process_md_header(yaml_front_matter) if !!yaml_front_matter
+
+      @logger.debug 'body_str: ' + body_str
+      body_str = process_md_body(body_str) if !!body_str
+      '' + yaml_front_matter + body_str
+    end
+
     def wp_2_jekyll_md_file(i, o)
       @logger.info "wp_2_jekyll_md_file > #{ o }"
 
-      # patch by line
-      dst = File.open(o,'w+')
-      src = File.open(i,'r')
-      src.each { |line|
-        line = line_patch_group(line)
-        dst.puts(line)
-      }
-      src.close
-      dst.close
-
-      # patching by file
-      dst_string = File.read(o)
-      dst_string = str_patch_group(dst_string)
-      File.write(o, dst_string)
-
-    end
-
-
-    # indent code section in for jekyll markdown
-    def patch_code(txt, indent = 8) # -> String
-      match = txt.scan(%r{(\[code\](.*?)\[/code\])}m)
-      for m in match do 
-        # debug
-        @@code_cnt += 1
-        # barlen = 75
-        # cap = " patching code #{@@code_cnt} "
-        # bar = "="* ((barlen - cap.length)/2)
-        # puts  bar + cap + bar
-        # =================================
-
-        if !!m then
-          code = m[1]
-          code.strip!
-          code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
-
-          txt.gsub!(m[0], "\n" + code + "\n\n")
-          # puts "\n" + code + "\n\n"
-        end
-
-        # puts "=" * barlen
-        # =================================
-      end
-
-      return txt
+      wp_md = File.read(o)
+      wp_md = process_md(wp_md)
+      File.write(o, wp_md)
     end
 
     def to_jekyll_md

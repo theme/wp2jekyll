@@ -144,7 +144,7 @@ some other text
       <figure id="attachment_1133" style="width: 400px" class="wp-caption aligncenter">[<img class="wp-image-1133 size-full" src="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg" alt="alice_liddell" width="400" height="500" srcset="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg 400w, http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1-240x300.jpg 240w" sizes="(max-width: 400px) 85vw, 400px" />](http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg)<figcaption class="wp-caption-text">Alice Liddell</figcaption></figure>'
       s2 = '![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})
       ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})'
-      assert_equal(s2, WordpressMarkdown.new.str_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
     end
 
     def test_xml_in_md_img_cap
@@ -152,7 +152,7 @@ some other text
 
         s2 = '[![screenshot-from-2016-12-01-22-43-26]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})'
 
-        assert_equal(s2, WordpressMarkdown.new.str_patch_group(s1))
+        assert_equal(s2, WordpressMarkdown.new.process_md(s1))
     end
 
     def test_rm_bug_img
@@ -173,14 +173,14 @@ some other text
       s1 = '![](https://some.site.com/path/to/a.jpg)'
       s2 = '![](https://some.site.com/path/to/a.jpg)'
 
-      assert_equal(s2, WordpressMarkdown.new.str_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
     end
 
     def test_keep_jekyll_filter
       s1 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
       s2 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
 
-      assert_equal(s2, WordpressMarkdown.new.str_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
       assert_equal(s2, WordpressMarkdown.new.line_patch_group(s1))
     end
 
@@ -225,7 +225,7 @@ some other text
 
         passage 2
 '''
-      assert_equal(s2, WordpressMarkdown.new.str_patch_group(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
     end
 
     def test_whole_md
@@ -287,7 +287,7 @@ EOS
       md.each_line do |line|
         tmp += wm.line_patch_group(line) # special chars
       end
-      tmp = wm.str_patch_group(tmp) # xml elements
+      tmp = wm.process_md(tmp) # xml elements
 
       assert_equal(md_patched.inspect, tmp.inspect)
       # assert_equal(md_patched, WordpressMarkdown.new.xml_to_md(md))
@@ -322,10 +322,10 @@ EOS
     CLANNAD的图：
     | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgKJiLCjb5pTGW5H7oVR85NNxTi8Y-XtMitykXZ6KiV_cQS5gkjpzuz8)](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU) | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-LxobLZDNk3ngbFhU69Eu3RAGD8TeHISQMbvuerQ6snf5AcNuKCGvCc)](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A) 
 EOS
-    txt =  WordpressMarkdown.new.xml_to_md(xml)
-    txt2 = WordpressMarkdown.new.md_modify_link(txt)
-    assert_equal(md, txt2)
-    # assert_equal(md, WordpressMarkdown.new.str_patch_group(xml))
+    # txt =  WordpressMarkdown.new.xml_to_md(xml)
+    # txt2 = WordpressMarkdown.new.md_modify_link(txt)
+    # assert_equal(md, txt2)
+    assert_equal(md, WordpressMarkdown.new.process_md(xml))
     end
 
     def test_comment_in_code_should_not_change
@@ -347,7 +347,7 @@ EOS
     
     PATH=/d/bin:$PATH
 EOS
-    assert_equal(md, WordpressMarkdown.new.str_patch_group(txt))
+    assert_equal(md, WordpressMarkdown.new.process_md(txt))
     end
 end
 
