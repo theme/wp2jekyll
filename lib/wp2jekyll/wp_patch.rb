@@ -51,6 +51,7 @@ module Wp2jekyll
   class JekyllMarkdown
     attr_accessor :yaml_front_matter_str
     attr_accessor :body_str
+    attr_reader :fp
     def initialize(fp = '')
       @fp = fp # file path
       @logger = Logger.new(STDERR)

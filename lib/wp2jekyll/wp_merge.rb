@@ -12,7 +12,7 @@ module Wp2jekyll
   class Post < JekyllMarkdown
     attr_accessor :title
     attr_accessor :permalink_title
-    attr_accessor :date
+    attr_accessor :date_str
     def initialize(fp)
       super fp
       split_fulltxt(File.read(fp))
@@ -24,28 +24,21 @@ module Wp2jekyll
       @logger.debug yaml_txt.green
       if @yaml_hash = YAML.load(yaml_txt)
         @title = @yaml_hash['title']
-        @date = @yaml_hash['date']
+        @date_str = @yaml_hash['date']
         @permalink_title = @yaml_hash['permalink_title']
       end
-    end
-
-    def ==(obj)
-      if not obj.is_a? self.class
-        false
-      end
-      @title == obj.title && @date == obj.date
     end
 
     def info
       "[Post #{@fp} #{date_str} #{@title}]"
     end
 
-    def date_str
-      @date.strftime('%Y-%m-%d')
+    def datef
+      Date.parse(@date_str).strftime('%Y-%m-%d')
     end
 
     def post_fn_base
-      date_str + '-' + (@permalink_title || @title.gsub(' ', '_').downcase)
+      datef + '-' + (@permalink_title || @title.gsub(' ', '_').downcase)
     end
 
     def yaml_hash_write_back
@@ -98,10 +91,19 @@ module Wp2jekyll
   end
 
   class MarkdownFilesMerger
-    SIMILAR_LV = 0.95
+    SIMILAR_LV = 0.9
 
     @@logger = Logger.new(STDERR)
     @@logger.level = Logger::DEBUG
+
+    def user_confirm(hint = '')
+      c = ''
+      until ( 'y' == c || 'n' == c ) do
+        puts "#{hint} \n?(y/n)"
+        c = STDIN.gets.chomp
+      end
+      'y' == c
+    end
 
     def ask_usr_if_post_is_the_same(a, b)
       puts '+'*20
@@ -130,7 +132,7 @@ module Wp2jekyll
     end
 
     def is_post_same_date(a, b)
-      a.date == b.date
+      a.date === b.date
     end
 
     def is_post_same_title(a, b)
@@ -138,11 +140,18 @@ module Wp2jekyll
     end
 
     def is_post_similar(a, b)
+      if a.title == b.title then return true end
+
       lcs = Diff::LCS.lcs(a.body_str, b.body_str)
-      lcs.length * 1.0 / [a.body_str.length, b.body_str.length].max > SIMILAR_LV
+      similarity = lcs.length * 1.0 / [a.body_str.length, b.body_str.length].max
+      # @@logger.debug "similarity #{similarity} #{a.title} <-> #{b.title}".blue
+      
+      @@logger.info "\nsimilar? #{similarity}\n #{a.info}\n #{b.info}".green if similarity > 0.618
+      similarity > SIMILAR_LV 
     end
 
     def is_post_exist(post, in_dir)
+      # @@logger.debug "test post exist #{post.fp} in #{in_dir} ".green
       Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
         if is_post_similar(post, Post.new(fpath))
           return true
@@ -152,18 +161,21 @@ module Wp2jekyll
     end
 
     def merge_post(post, to_dir)
+      # @@logger.debug "try merge post #{post.fp} ".green
       if !is_post_exist(post, to_dir)
         @@logger.info post.body_str
         @@logger.info "merge_post #{post.info} new!"
-        post.usr_input_title
-        post.write_to_dir(to_dir)
+        if user_confirm("Do merge_post #{post.info}")
+          post.usr_input_title
+          post.write_to_dir(to_dir)
+        end
       else
         @@logger.info "merge_post #{post.info} exist."
       end
     end
 
     def merge_dir(from_dir, to_dir)
-      @@logger.info 'merge_dir'
+      @@logger.info "merger dir #{from_dir} -> #{to_dir}".red
       Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|
         merge_post(Post.new(fpath), to_dir)
       end
