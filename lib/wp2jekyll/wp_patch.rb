@@ -60,9 +60,9 @@ module Wp2jekyll
     end
 
     def split_fulltxt(txt)
-      m = /(^---.*?---)?(.*)/m.match(txt)
+      m = /(^(---)?.*?---)?(.*)/m.match(txt) #TODO understand yaml format
       @yaml_front_matter_str  = m[1] || ''
-      @body_str = m[2] || ''
+      @body_str = m[3] || ''
     end
 
     # (from: jekyll/utils.rb)
