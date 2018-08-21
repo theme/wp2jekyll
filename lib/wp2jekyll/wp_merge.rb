@@ -9,13 +9,37 @@ require 'colorize'
 require 'diff/lcs'
 
 module Wp2jekyll
+  class FileCache
+    attr_accessor :cache
+    def initialize
+      @cache = {}
+    end
+
+    def read(fpath)
+      if !@cache.has_key?(fpath)
+        @cache[fpath] = File.read(fpath)
+      end
+      @cache[fpath]
+    end
+
+    def write(fpath, content)
+      # delete item
+      @cache.delete(fpath)
+      # write through
+      File.write(fpath, content)
+    end
+  end
+
   class Post < JekyllMarkdown
     attr_accessor :title
     attr_accessor :permalink_title
     attr_accessor :date_str
+
+    @@fcache = FileCache.new
+
     def initialize(fp)
       super fp
-      split_fulltxt(File.read(fp))
+      split_fulltxt(@@fcache.read(fp))
       parse_yaml_front_matter(@yaml_front_matter_str)
     end
 
@@ -52,8 +76,8 @@ module Wp2jekyll
       fpath = File.join(dir, post_fn_base + '.md')
       if !File.exist?(fpath) then
         yaml_hash_write_back
-        File.write(fpath, @yaml_front_matter_str + "---\n" + @body_str)
-        @@logger.info "write file: #{fpath}"
+        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @body_str)
+        @logger.info "write file: #{fpath}"
       else
         @logger.warn "! File exist, when Post.write_to_dir #{dir}"
       end
