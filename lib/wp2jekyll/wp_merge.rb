@@ -10,18 +10,13 @@ require 'colorize'
 require 'diff/lcs'
 
 module Wp2jekyll
-  class Post
+  class Post < JekyllMarkdown
     attr_accessor :title
     attr_accessor :date
-    attr_accessor :body_txt
     def initialize(fp)
-      @logger = Logger.new(STDERR)
-      @logger.level = Logger::DEBUG
-
-      jkm = JekyllMarkdown.new(fp)
-      jkm.split_fulltxt(File.read(fp))
-      parse_yaml_front_matter(jkm.yaml_front_matter_str)
-      @body_txt = jkm.body_str
+      super fp
+      split_fulltxt(File.read(fp))
+      parse_yaml_front_matter(@yaml_front_matter_str)
     end
 
     def parse_yaml_front_matter(yaml_txt)
@@ -62,27 +57,30 @@ module Wp2jekyll
     end
 
     def hint_post_contents(p)
-      jmd = JekyllMarkdown.new
-      jmd.split_fulltxt(File.read(p))
-      puts jmd.body_str.split[0..5].join
+      puts p.body_str.split[0..5].join
     end
 
     def is_post_same_date(a, b)
-      Post.new(a).date == Post.new(b).date
+      a.date == b.date
     end
 
     def is_post_same_title(a, b)
-      Post.new(a).title == Post.new(b).title
+      a.title == b.title
     end
 
     def is_post_similar(a, b)
-      ta = Post.new(a).body_txt
-      tb = Post.new(b).body_txt
-      lcs = Diff::LCS.lcs(ta, tb)
-      lcs.length * 1.0 / [ta.length, tb.length].max > 0.95
+      lcs = Diff::LCS.lcs(a.body_str, b.body_str)
+      lcs.length * 1.0 / [a.body_str.length, b.body_str.length].max > 0.95
     end
 
     def is_post_exist(post, in_dir)
+      Dir.glob("**/*.md") do |fpath|
+        b_post = Post.new(fpath)
+        if is_post_similar(post, b_post)
+          return true
+        end
+      end
+      false
     end
 
     def merger_post(post, to_dir)

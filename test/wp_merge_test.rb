@@ -11,15 +11,15 @@ class TestPatchingRegex < MiniTest::Test
   end
 
   def test_debug
-    fa = File.expand_path('../sample/post.md', __FILE__)
-    fb = File.expand_path('../sample/post.md', __FILE__)
+    fa = Post.new(File.expand_path('../sample/post.md', __FILE__))
+    fb = Post.new(File.expand_path('../sample/post.md', __FILE__))
     
     assert(MarkdownFilesMerger.new.is_post_same_date(fa, fb))
   end
 
   def test_diff
-    fa = File.expand_path('../sample/post.md', __FILE__)
-    fb = File.expand_path('../sample/post 2.md', __FILE__)
+    fa = Post.new(File.expand_path('../sample/post.md', __FILE__))
+    fb = Post.new(File.expand_path('../sample/post 2.md', __FILE__))
     
     assert(!MarkdownFilesMerger.new.is_post_similar(fa, fb))
   end
