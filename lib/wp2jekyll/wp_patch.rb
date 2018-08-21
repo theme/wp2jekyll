@@ -36,6 +36,7 @@ module Wp2jekyll
 
     def to_s
       if @is_img
+        @logger.info "![#{@cap}](#{@link})".cyan
         return "![#{@cap}](#{@link})"
       else # not image
         if @title.empty?
@@ -48,12 +49,20 @@ module Wp2jekyll
   end
   
   class JekyllMarkdown
+    attr_accessor :yaml_front_matter_str
+    attr_accessor :body_str
     def initialize(fp = '')
       @fp = fp # file path
       @logger = Logger.new(STDERR)
       # @logger.level = Logger::INFO
       @logger.level = Logger::WARN
       # DEBUG < INFO < WARN < ERROR < FATAL < UNKNOWN
+    end
+
+    def split_fulltxt(txt)
+      m = /(^---.*?---)?(.*)/m.match(txt)
+      @yaml_front_matter_str  = m[1] || ''
+      @body_str = m[2] || ''
     end
 
     # (from: jekyll/utils.rb)
@@ -297,7 +306,7 @@ module Wp2jekyll
     end
 
     # indent code section in for jekyll markdown
-    def patch_code(txt, indent = 8) # -> String
+    def patch_code(txt, indent = 4) # -> String
       match = txt.scan(%r{(\[code\](.*?)\[/code\])}m)
       for m in match do 
         @@code_cnt += 1
@@ -305,6 +314,7 @@ module Wp2jekyll
         if !!m then
           code = m[1]
           code.strip!
+          code = compress_blank_lines(code)
           code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
 
           txt.gsub!(m[0], "\n" + code + "\n\n")
@@ -353,17 +363,15 @@ module Wp2jekyll
     end
 
     def process_md(fulltxt)
-      m = /(^---.*?---)?(.*)/m.match(fulltxt)
-      yaml_front_matter  = m[1] || ''
-      body_str = m[2] || ''
+      split_fulltxt(fulltxt)
 
       # @logger.debug 'yaml_front_matter: ' + yaml_front_matter
-      yaml_front_matter = process_md_header(yaml_front_matter) if !!yaml_front_matter
+      @yaml_front_matter_str = process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
 
       # @logger.debug 'body_str: ' + body_str
-      body_str = process_md_body(body_str) if !!body_str
+      @body_str = process_md_body(@body_str) if !!@body_str
 
-      patch_char(yaml_front_matter + body_str)
+      patch_char(@yaml_front_matter_str + @body_str)
     end
 
     def wp_2_jekyll_md_file(i, o)

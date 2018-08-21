@@ -7,3 +7,6 @@
 /spec/reports/
 /tmp/
 tags
+**/*.swp
+**/*.DS_store
+**/*.log
