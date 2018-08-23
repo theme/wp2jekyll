@@ -12,8 +12,8 @@ module Wp2jekyll
     @link = ''
     @title = ''
     @is_img = false
-    RE = %r{((\!)?\[([^\n]*?)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}m
-    #E = %r{12--2--[3--3--]-(   4--------4  5"6------6"5--)7-{----}7-1}m
+    RE = %r{((\!)?\[([^\n]*?)\]\(\s*([^"\s]*)\s*("([^"]*?)")?\)(\{.*?\})?)}
+    #E = %r{12--2--[3-------3-]-(   4-------4   5"6-------6"5-)7-{----}7-1}m
     @init_valid = false
     attr_accessor :cap
     attr_accessor :title
@@ -248,6 +248,16 @@ module Wp2jekyll
               trs_md.append ('| ' + rowdata_a.join(' | ') + " |")
             end
             md_pieces.append "\n" + trs_md.join("\n") + "\n"
+          when 'ol'
+            ol_md = []
+            count = 0
+            n.css('li').each do |li|
+              count +=1
+              ol_md.append( count.to_s + '. ' + parse_html_to_md_array(li.inner_html.strip).join)
+            end
+            md_pieces.append ol_md.join
+            @logger.debug ol_md.join.cyan
+            # exit 1
           when 'a'
             a_cap = parse_html_to_md_array(n.inner_html).join
             a_link = n['href'] || ''
@@ -337,6 +347,8 @@ module Wp2jekyll
       txt.gsub!('&#8212;', '--')
       txt.gsub!(/^\s*?&nbsp;\s*?$/, '') # a blank txt
       txt.gsub!('&nbsp;', ' ')
+      txt.gsub!('\_', '_')
+      txt.gsub!(/^`\s*$/, '```')
       return txt
     end
 
