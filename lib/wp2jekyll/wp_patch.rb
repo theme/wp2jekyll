@@ -243,6 +243,7 @@ module Wp2jekyll
               rowdata_a = []
               tr.css('td').each do |td|
                 td_md = parse_html_to_md_array(td.inner_html.strip).join
+                td_md.gsub!("\n", '')
                 rowdata_a.append(td_md) if !td_md.empty?
               end
               trs_md.append ('| ' + rowdata_a.join(' | ') + " |")
