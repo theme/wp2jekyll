@@ -268,6 +268,8 @@ module Wp2jekyll
             md_pieces.append "\n\n"
           when 'div'
             md_pieces.append parse_html_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join
+          when 'span'
+            md_pieces.append parse_html_to_md_array(n.inner_html.strip).join.gsub("\n", '')
           else
             md_pieces.append parse_html_to_md_array(n.inner_html.strip).join
           end

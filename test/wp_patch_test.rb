@@ -363,5 +363,124 @@ EOS
 
       assert_in_delta(1.0, similarity, 0.1)
     end
+
+    def test_patch_code_heredoc
+      txt =
+'''
+
+[code]
+
+    #!/usr/bin/env bash
+
+    PWD=\`pwd\`
+      
+    USER=\`whoami\`
+
+    if [ "$SUDO\_USER" != "" ] && [ "$USER" != "$SUDO\_USER" ]; then
+      
+    USER=$SUDO_USER
+      
+    fi
+
+    SERVICE_FN="disable-intous-touch.service"
+      
+    UDEVRULE_FN="99-intous.rules"
+      
+    CMD_FN="disable-intous-touch.sh"
+
+    function install(){
+
+    cat > /etc/systemd/system/$SERVICE_FN <<EOF
+
+    [Unit]
+      
+    Description=wacom intous Pro M touch disabler
+
+    [Service]
+      
+    Type=oneshot
+      
+    RemainAfterExit=no
+      
+    ExecStart=$PWD/$CMD_FN
+
+    [Install]
+      
+    WantedBy=multi-user.target
+
+    EOF
+
+    cat > /etc/udev/rules.d/$UDEVRULE_FN <<EOF
+
+    &nbsp;
+
+    ACTION=="add", SUBSYSTEM=="input", ATTR{name}=="Wacom Intuos Pro M Finger", TAG+="systemd", ENV{SYSTEMD\_WANTS}="$SERVICE\_FN"
+
+    EOF
+
+    cat > $PWD/$CMD_FN <<EOF
+      
+    #!/usr/bin/env bash
+
+    sleep 2
+
+    export XAUTHORITY=/home/$USER/.Xauthority
+      
+    export DISPLAY=:0
+
+    /usr/bin/xsetwacom set &#8216;Wacom Intuos Pro M Finger touch&#8217; TOUCH off
+
+    exit 0
+
+    EOF
+
+    sudo chown $USER $PWD/$CMD_FN
+      
+    sudo chmod a+x $PWD/$CMD_FN
+
+    }
+
+    function uninstall(){
+
+    if [ -f /etc/systemd/system/$SERVICE_FN ]; then
+      
+    rm /etc/systemd/system/$SERVICE_FN
+      
+    fi
+
+    if [ -f /etc/udev/rules.d/$UDEVRULE_FN ]; then
+      
+    rm /etc/udev/rules.d/$UDEVRULE_FN
+      
+    fi
+
+    if [ -f $PWD/$CMD_FN ]; then
+      
+    rm $PWD/$CMD_FN
+      
+    fi
+      
+    }
+
+    install
+      
+    \# uninstall
+
+    udevadm control &#8211;reload-rules
+
+    systemctl daemon-reload
+      
+    systemctl disable $SERVICE_FN
+      
+    systemctl enable $SERVICE_FN
+
+    systemctl restart systemd-udevd.service
+
+[/code]
+'''
+      out = WordpressMarkdown.new.process_md(txt)
+      puts out.yellow if !out.include?('[Unit]')
+      assert(out.include?('[Unit]'))
+    end
 end
 
