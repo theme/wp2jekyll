@@ -56,7 +56,7 @@ module Wp2jekyll
       @fp = fp # file path
       @logger = Logger.new(STDERR)
       # @logger.level = Logger::INFO
-      @logger.level = Logger::WARN
+      @logger.level = Logger::DEBUG
       # DEBUG < INFO < WARN < ERROR < FATAL < UNKNOWN
     end
 
@@ -189,7 +189,7 @@ module Wp2jekyll
       return b
     end
 
-    def xml_figure_to_md_s(txt)
+    def html_figure_to_md(txt)
       frag = Nokogiri::XML::DocumentFragment.parse(txt) do |config|
         config.nonet.recover
       end
@@ -214,21 +214,21 @@ module Wp2jekyll
     end
 
     # TODO
-    def parse_xml_to_md_array(xml)
-      frag = Nokogiri::XML::DocumentFragment.parse(xml)
+    def parse_html_to_md_array(html)
+      frag = Nokogiri::HTML::DocumentFragment.parse(html)
 
       md_pieces = [ ]
 
-      for n in frag.children
+      frag.children.each do |n|
         case n.type
         when Nokogiri::XML::Node::TEXT_NODE
           md_pieces.append n
-          @logger.debug n.text.yellow
+          @logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
         when Nokogiri::XML::Node::ELEMENT_NODE
-          @logger.debug "<#{n.name}>".yellow
+          @logger.debug "Nokogiri:...:ELEMENT_NODE <#{n.name}>".yellow
           case n.name
           when "figure"
-            md_pieces.append xml_figure_to_md_s(n.to_s)
+            md_pieces.append html_figure_to_md(n.to_s)
           when "img"
             md_pieces.append '!' + md_link(n['alt'], n['src'])
           when 'pre'
@@ -238,19 +238,23 @@ module Wp2jekyll
             n.css('tr').each do |tr|
               rowdata_a = []
               tr.css('td').each do |td|
-                td_md = parse_xml_to_md_array(td).join('')
+                td_md = parse_html_to_md_array(td.inner_html).join('')
                 rowdata_a.append(td_md) if !td_md.empty?
               end
               trs_md.append ('| ' + rowdata_a.join(' | ') + " |")
             end
             md_pieces.append "\n" + trs_md.join("\n") + "\n"
           when 'a'
-            a_cap = parse_xml_to_md_array(n.inner_html).join()
+            a_cap = parse_html_to_md_array(n.inner_html).join
             a_link = n['href'] || ''
             a_md = "[#{a_cap}](#{a_link})"
             md_pieces.append a_md
+          when 'br'
+            md_pieces.append "\n\n"
           else
-            md_pieces.append parse_xml_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join()
+            md_pieces.append parse_html_to_md_array(n.inner_html).join
+            # md_pieces.append parse_html_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join()
+            # md_pieces.append n
           end
         end
       end
@@ -308,18 +312,15 @@ module Wp2jekyll
 
     # indent code section in for jekyll markdown
     def patch_code(txt, indent = 4) # -> String
-      match = txt.scan(%r{(\[code\](.*?)\[/code\])}m)
-      for m in match do 
+      txt.scan(%r{(\[code.*?\](.*?)\[/code\])}m).each do |m|
         @@code_cnt += 1
 
-        if !!m then
-          code = m[1]
-          code.strip!
-          code = compress_blank_lines(code)
-          code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
+        code = m[1]
+        code.strip!
+        code = compress_blank_lines(code)
+        code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
 
-          txt.gsub!(m[0], "\n" + code + "\n\n")
-        end
+        txt.gsub!(m[0], "\n" + code + "\n\n")
       end
 
       return txt
@@ -343,7 +344,7 @@ module Wp2jekyll
     end
 
     def process_md_body(body_str)
-      body_str  = parse_xml_to_md_array(body_str).join('') # xml
+      body_str  = parse_html_to_md_array(body_str).join('') # xml
 
       # mardown link
       body_str = md_modify_link(body_str)

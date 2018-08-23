@@ -351,5 +351,16 @@ EOS
 EOS
     assert_equal(md, WordpressMarkdown.new.patch_code(txt))
     end
+
+    def test_patch_div
+      src = File.read(File.expand_path('../sample/post div src.md', __FILE__))
+      a = WordpressMarkdown.new.process_md(src)
+      b = File.read(File.expand_path('../sample/post div.md', __FILE__))
+
+      lcs = Diff::LCS.lcs(a, b)
+      similarity = lcs.length * 1.0 / [a.length, b.length].max
+
+      assert_in_delta(1.0, similarity, 0.1)
+    end
 end
 

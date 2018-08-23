@@ -3,3 +3,5 @@ require "wp2jekyll"
 
 require "minitest/autorun"
 require 'pretty_diffs'
+
+require 'diff/lcs'

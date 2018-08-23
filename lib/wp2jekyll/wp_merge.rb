@@ -44,8 +44,8 @@ module Wp2jekyll
     end
 
     def parse_yaml_front_matter(yaml_txt)
-      @logger.debug 'parse_yaml_front_matter'
-      @logger.debug yaml_txt.green
+      # @logger.debug 'parse_yaml_front_matter'
+      # @logger.debug yaml_txt.green
       if @yaml_hash = YAML.load(yaml_txt)
         @title = @yaml_hash['title']
         @date_str = @yaml_hash['date']
@@ -85,7 +85,7 @@ module Wp2jekyll
 
     def input_with_hint(hint: '') # get a user input line
       puts hint
-      uin = STDIN.gets.chomp.strip.gsub(' ', '_')
+      STDIN.gets.chomp.strip.gsub(' ', '_')
     end
 
     def usr_input_title
@@ -156,7 +156,7 @@ module Wp2jekyll
     end
 
     def is_post_same_date(a, b)
-      a.date === b.date
+      a.date_str === b.date_str
     end
 
     def is_post_same_title(a, b)
