@@ -6,20 +6,22 @@ require "logger"
 # They are necessary, DO NOT FORMAT this file.
 #
 
-class TestPatchingRegex < MiniTest::Test
-  make_my_diffs_pretty!
-  include PrettyDiffs
+class TestWpMarkdown2jekyll < MiniTest::Test
+  # make_my_diffs_pretty!
+  # include PrettyDiffs
   include Wp2jekyll
     def test_patch_code
         # a invisible character is there, DO NOT FORMAT
         s1 = '''
         [code]
 
-         int a = sqrt(b);
+        int main(int argc, char * argc[]) {
+            int a = sqrt(b);
 
-    print(a);
+            print(a);
 
-      print(b);
+            print(b);
+        }
 
    [/code]
 
@@ -28,38 +30,37 @@ class TestPatchingRegex < MiniTest::Test
    other code:
         [code]
 
-         #int a = sqrt(b);
+        #int a = sqrt(b);
 
-    console.log(a);
+        console.log(a);
 
-      console.log(b);
+        console.log(b);
 
    [/code]
         '''
         # targeted effect
         s2 = '''
-        
-        int a = sqrt(b);
-        
-        print(a);
-        
-        print(b);
-
+```
+        int main(int argc, char * argc[]) {
+            int a = sqrt(b);
+            print(a);
+            print(b);
+        }
+```
 
 
    some text
 
    other code:
-        
+```
         #int a = sqrt(b);
-        
         console.log(a);
-        
         console.log(b);
-
+```
 
         '''
         assert_equal(s2, WordpressMarkdown.new.patch_code(s1))
+        # assert_equal(s2, WordpressMarkdown.new.process_md_body(s1))
     end
 
     def test_patch_quote

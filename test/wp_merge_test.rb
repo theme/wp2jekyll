@@ -1,9 +1,9 @@
 require "test_helper"
 require "logger"
 
-class TestPatchingRegex < MiniTest::Test
-  make_my_diffs_pretty!
-  include PrettyDiffs
+class TestMergerMarkdownFile < MiniTest::Test
+  # make_my_diffs_pretty!
+  # include PrettyDiffs
   include Wp2jekyll
 
   def test_debug

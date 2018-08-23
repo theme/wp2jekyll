@@ -213,7 +213,6 @@ module Wp2jekyll
       end
     end
 
-    # TODO
     def parse_html_to_md_array(html)
       frag = Nokogiri::HTML::DocumentFragment.parse(html)
 
@@ -296,31 +295,16 @@ module Wp2jekyll
       return txt
     end
 
-    def compress_blank_lines(txt)
-      # leading 2 line
-      txt.gsub!(/^(\s*?\n)+/m, "\n\n")
-      # tail 2 line
-      txt.gsub!(/(\n\s*?)+$/m, "\n\n")
-
-      # inner lines
-      re = /(\n\s*?){3,}/m
-      while re.match?(txt) do
-        txt.gsub!(re, "\n\n")
-      end
-      return txt
-    end
-
-    # indent code section in for jekyll markdown
     def patch_code(txt, indent = 4) # -> String
-      txt.scan(%r{(\[code.*?\](.*?)\[/code\])}m).each do |m|
+      txt.scan(%r{([ \t\r\f]*\[code.*?\](.*?)\[/code\])}m).each do |m|
         @@code_cnt += 1
 
         code = m[1]
-        code.strip!
-        code = compress_blank_lines(code)
-        code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
-
-        txt.gsub!(m[0], "\n" + code + "\n\n")
+        # code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
+        code.rstrip!
+        code = "```\n" + code + "\n```\n"
+        code.gsub!(/^\s*$\n/m, '') # empty line (this is Ruby ~)
+        txt.gsub!(m[0], code)
       end
 
       return txt
