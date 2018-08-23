@@ -190,14 +190,19 @@ module Wp2jekyll
     end
 
     def html_figure_to_md(txt)
-      frag = Nokogiri::XML::DocumentFragment.parse(txt) do |config|
+      frag = Nokogiri::HTML::DocumentFragment.parse(txt) do |config|
         config.nonet.recover
       end
 
       fig = frag.css("figure").first
         cap = fig.css("figcaption").text
         img = fig.css("img").first
-        figure_md  = '!' + md_link(cap, img['src'])
+        src = img['src']
+        # markdown link src has precedence
+        if m = fig.inner_html.match(/\[.*?\]\((.*?)\)/)
+          src = m[1] if !m[1].empty?
+        end
+        figure_md  = '!' + md_link(cap, src)
         @logger.debug 'xml_figure ' + figure_md.light_cyan
         return figure_md
     end
@@ -310,6 +315,20 @@ module Wp2jekyll
       return txt
     end
 
+    def patch_md_img(txt)
+      # markdown link src has precedence
+      txt.scan(/(\[(.*?)\]\((.*?)\))/).each do |md_ln|
+        frag = Nokogiri::HTML::DocumentFragment.parse(md_ln[0])
+        n = frag.css('img').first
+        if !!n and n.type == Nokogiri::XML::Node::ELEMENT_NODE and n.name == 'img'
+          src = md_ln[2]
+          n['src'] = src if !src.empty?
+          txt.gsub!(md_ln[0], frag.to_s)
+        end
+      end
+      txt
+    end
+
     # TODO
     def patch_char(txt) # helper func
       txt.gsub!('{{}}', '{ {} }') # liquid template engine of jekyll
@@ -328,6 +347,8 @@ module Wp2jekyll
     end
 
     def process_md_body(body_str)
+      body_str  = patch_md_img(body_str)
+
       body_str  = parse_html_to_md_array(body_str).join('') # xml
 
       # mardown link
