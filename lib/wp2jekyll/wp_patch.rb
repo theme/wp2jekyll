@@ -223,9 +223,9 @@ module Wp2jekyll
         case n.type
         when Nokogiri::XML::Node::TEXT_NODE
           md_pieces.append n
-          @logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
+          # @logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
         when Nokogiri::XML::Node::ELEMENT_NODE
-          @logger.debug "Nokogiri:...:ELEMENT_NODE <#{n.name}>".yellow
+          # @logger.debug "Nokogiri:...:ELEMENT_NODE <#{n.name}>".yellow
           case n.name
           when "figure"
             md_pieces.append html_figure_to_md(n.to_s)
@@ -238,7 +238,7 @@ module Wp2jekyll
             n.css('tr').each do |tr|
               rowdata_a = []
               tr.css('td').each do |td|
-                td_md = parse_html_to_md_array(td.inner_html).join('')
+                td_md = parse_html_to_md_array(td.inner_html.strip).join
                 rowdata_a.append(td_md) if !td_md.empty?
               end
               trs_md.append ('| ' + rowdata_a.join(' | ') + " |")
@@ -252,7 +252,7 @@ module Wp2jekyll
           when 'br'
             md_pieces.append "\n\n"
           when 'div'
-            md_pieces.append parse_html_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join()
+            md_pieces.append parse_html_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join
           else
             md_pieces.append parse_html_to_md_array(n.inner_html.strip).join
           end
