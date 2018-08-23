@@ -251,10 +251,10 @@ module Wp2jekyll
             md_pieces.append a_md
           when 'br'
             md_pieces.append "\n\n"
+          when 'div'
+            md_pieces.append parse_html_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join()
           else
-            md_pieces.append parse_html_to_md_array(n.inner_html).join
-            # md_pieces.append parse_html_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join()
-            # md_pieces.append n
+            md_pieces.append parse_html_to_md_array(n.inner_html.strip).join
           end
         end
       end

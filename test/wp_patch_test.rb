@@ -212,18 +212,18 @@ some other text
       s1 = '''
 <div id="some id" class="bvMsg">
   <div>
-      passage 1
+      unfold_div passage 1
   </div>
 
   <div>
-      passage 2
+      unfold_div passage 2
   </div>
 </div>
 '''
       s2 ='''
-passage 1
+unfold_div passage 1
 
-passage 2
+unfold_div passage 2
 '''
       assert_equal(s2, WordpressMarkdown.new.process_md(s1))
     end
