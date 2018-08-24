@@ -364,7 +364,7 @@ module Wp2jekyll
 
         code = m[1]
         # code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
-        code.gsub!(/^/m, " "*indent) # indent code
+        # code.gsub!(/^/m, " "*indent) # indent code
         code.rstrip!
         code = "```\n" + code + "\n```\n"
         code.gsub!(/^\s*$\n/m, '') # empty line (this is Ruby ~)
