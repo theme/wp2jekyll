@@ -63,29 +63,28 @@ module Wp2jekyll
     end
 
     def parse(txt)
-      @logger.debug "CodeSegmenter.parse << #{txt}".red
+      # @logger.debug "CodeSegmenter.parse << #{txt}".red
       @li.clear
       pos = 0
       while m = RE.match(txt, pos) do
         text = txt[pos .. m.begin(0) -1]
         @li.append({:text => text, :rage => [pos, m.begin(0)-1]}) if !text.empty?
-        @logger.debug "text #{text}".red
+        # @logger.debug "text #{text}".red
 
         code = txt[m.begin(0) .. m.end(0)-1]
         @li.append({:code => code, :rage => [m.begin(0), m.end(0)-1]}) if !code.empty?
-        @logger.debug "code end-1 = #{m.end(0)-1} #{code}".red
+        # @logger.debug "code end-1 = #{m.end(0)-1} #{code}".red
 
         pos = m.end(0)
       end
 
       @li.append({:text => txt[pos .. -1], :rage => [pos, -1]}) if pos < (txt.length - 1)
-      @logger.debug "final text pos = #{pos } #{txt[pos .. -1]}".red
+      # @logger.debug "final text pos = #{pos } #{txt[pos .. -1]}".red
 
       @li
     end
 
     def join
-      @logger.debug @li
       @li.map {|o| o[:text] || o[:code] }.join
     end
   end
@@ -189,7 +188,7 @@ module Wp2jekyll
     ###
 
     def patch_unescape_html_char(txt)
-      return CGI.unescapeHTML(txt)
+      return CGI::unescapeHTML(txt)
     end
 
     def patch_list_like(txt, lead = '*', compress = false)
@@ -314,6 +313,8 @@ module Wp2jekyll
             md_pieces.append parse_html_to_md_array(n.inner_html.gsub(/(^\s*)|(\s*$)/, "\n").strip).join
           when 'span'
             md_pieces.append parse_html_to_md_array(n.inner_html.strip).join.gsub("\n", '')
+          when 'del'
+            md_pieces.append '~~'+ parse_html_to_md_array(n.inner_html.strip).join + '~~'
           else
             md_pieces.append parse_html_to_md_array(n.inner_html.strip).join
           end
@@ -358,7 +359,6 @@ module Wp2jekyll
     end
 
     def patch_code(txt, indent = 4) # -> String
-      @logger.debug "patch_code << #{txt} ".white
       txt.scan(CodeSegmenter::RE).each do |m|
         @@code_cnt += 1
 
@@ -368,6 +368,7 @@ module Wp2jekyll
         code.rstrip!
         code = "```\n" + code + "\n```\n"
         code.gsub!(/^\s*$\n/m, '') # empty line (this is Ruby ~)
+        code.gsub!(/(?=^\s*)\\#/m, "#")
         txt.gsub!(m[0], code)
       end
 
@@ -442,7 +443,7 @@ module Wp2jekyll
       # body_str = patch_h1h2_space(body_str)
       cs.li.each { |o| o[:text] = patch_h1h2_space(o[:text]) if !!o[:text] }
 
-      @logger.debug "cs.join #{cs.join}".cyan
+      # @logger.debug "cs.join #{cs.join}".cyan
 
       cs.join
     end
