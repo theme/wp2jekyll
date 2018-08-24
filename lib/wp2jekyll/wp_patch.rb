@@ -47,10 +47,54 @@ module Wp2jekyll
       end
     end
   end
+
+  class CodeSegmenter
+    RE = %r{([ \t\r\f]*\[code.*?\](.*?)\[/code\])}m
+    attr_accessor :li
+
+    def initialize( txt = '')
+      @logger = Logger.new(STDERR)
+      @logger.level = Logger::DEBUG
+
+      @li = []
+      if !txt.empty?
+        parse(txt)
+      end
+    end
+
+    def parse(txt)
+      @logger.debug "CodeSegmenter.parse #{txt}".red
+      @li.clear
+      pos = 0
+      while m = RE.match(txt, pos) do
+        @logger.debug "pos #{pos}".yellow
+        @logger.debug m
+
+        text = txt[pos, m.begin(0) -1]
+        code = txt[m.begin(0), m.end(0)-1]
+
+        @li.append({:text => text, :rage => [pos, m.begin(0)-1]}) if !text.empty?
+
+        @li.append({:code => code, :rage => [m.begin(0), m.end(0)-1]}) if !code.empty?
+
+        pos = m.end(0)
+      end
+
+      @li.append({:text => txt[pos..-1], :rage => [pos, -1]}) if pos < (txt.length - 1)
+
+      @li
+    end
+
+    def join
+      @logger.debug @li
+      @li.map {|o| o[:text] || o[:code] }.join
+    end
+  end
   
   class JekyllMarkdown
     attr_accessor :yaml_front_matter_str
     attr_accessor :body_str
+    attr_accessor :body_segments # split post body into text\ code type segments
     attr_reader :fp
     def initialize(fp = '')
       @fp = fp # file path
@@ -145,7 +189,7 @@ module Wp2jekyll
     #                                                                                                        })'
     ###
 
-    def patch_unescape_xml_char(txt)
+    def patch_unescape_html_char(txt)
       return CGI.unescapeHTML(txt)
     end
 
@@ -227,6 +271,7 @@ module Wp2jekyll
         case n.type
         when Nokogiri::XML::Node::TEXT_NODE
           md_pieces.append n
+          # puts n.text.yellow
           # @logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
         when Nokogiri::XML::Node::ELEMENT_NODE
           # @logger.debug "Nokogiri:...:ELEMENT_NODE <#{n.name}>".yellow
@@ -314,11 +359,13 @@ module Wp2jekyll
     end
 
     def patch_code(txt, indent = 4) # -> String
-      txt.scan(%r{([ \t\r\f]*\[code.*?\](.*?)\[/code\])}m).each do |m|
+      @logger.debug "patch_code #{txt}".yellow
+      txt.scan(CodeSegmenter::RE).each do |m|
         @@code_cnt += 1
 
         code = m[1]
         # code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
+        code.gsub!(/^/m, " "*indent) # indent code
         code.rstrip!
         code = "```\n" + code + "\n```\n"
         code.gsub!(/^\s*$\n/m, '') # empty line (this is Ruby ~)
@@ -358,30 +405,46 @@ module Wp2jekyll
     def process_md_header(header)
       # process header
       header.gsub!(/^permalink:/, 'permalink_wp:') # wordpress exported
-      header = patch_unescape_xml_char(header)
+      header = patch_unescape_html_char(header)
     end
 
     def process_md_body(body_str)
-      body_str  = patch_md_img(body_str)
+      cs = CodeSegmenter.new(body_str)
 
-      body_str  = parse_html_to_md_array(body_str).join('') # xml
+      cs.li.each { |o| o[:text] = patch_md_img(o[:text]) if !!o[:text]}
 
-      # mardown link
-      body_str = md_modify_link(body_str)
+      # body_str  = patch_md_img(body_str)
+
+      # body_str  = parse_html_to_md_array(body_str).join
+      cs.li.each { |o| o[:text] = parse_html_to_md_array(o[:text]).join if !!o[:text] }
+
+      # markdown link
+      # body_str = md_modify_link(body_str)
+      cs.li.each { |o| o[:text] = md_modify_link(o[:text]) if !!o[:text] }
       #
       # markdown quote
-      body_str = patch_quote(body_str)
+      # body_str = patch_quote(body_str)
+      cs.li.each { |o| o[:text] = patch_quote(o[:text]) if !!o[:text] }
 
       # # markdown list
-      body_str = patch_list_like(body_str, '*', true)
+      # body_str = patch_list_like(body_str, '*', true)
+      cs.li.each { |o| o[:text] = patch_list_like(o[:text], '*', true) if !!o[:text] }
       #
       # # pre formatted
-      body_str = patch_code(body_str)
+      # body_str = patch_code(body_str)
+      cs.li.each { |o| o[:code] = patch_code(o[:code]) if !!o[:code] }
       #
       # # section titles
-      body_str = patch_unescape_xml_char(body_str)
+      # body_str = patch_unescape_html_char(body_str)
+      cs.li.each { |o| o[:text] = patch_unescape_html_char(o[:text]) if !!o[:text] }
+      cs.li.each { |o| o[:code] = patch_unescape_html_char(o[:code]) if !!o[:code] }
 
-      body_str = patch_h1h2_space(body_str)
+      # body_str = patch_h1h2_space(body_str)
+      cs.li.each { |o| o[:text] = patch_h1h2_space(o[:text]) if !!o[:text] }
+
+      @logger.debug "cs.join #{cs.join}".cyan
+
+      cs.join
     end
 
     def process_md(fulltxt)

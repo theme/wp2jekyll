@@ -109,7 +109,7 @@ class TestWpMarkdown2jekyll < MiniTest::Test
     def test_unescape_xml_char
         s1 = '&lt; ' # targeted effect
         s2 = '< '
-        assert_equal(s2, WordpressMarkdown.new.patch_unescape_xml_char(s1))
+        assert_equal(s2, WordpressMarkdown.new.patch_unescape_html_char(s1))
     end
 
     def test_patch_h1h2_space
@@ -367,6 +367,7 @@ EOS
     def test_patch_code_heredoc
       txt =
 '''
+Text before code.
 
 [code]
 
@@ -477,6 +478,8 @@ EOS
     systemctl restart systemd-udevd.service
 
 [/code]
+
+After code text.
 '''
       out = WordpressMarkdown.new.process_md(txt)
       puts out.yellow if !out.include?('[Unit]')
