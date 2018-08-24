@@ -63,24 +63,23 @@ module Wp2jekyll
     end
 
     def parse(txt)
-      @logger.debug "CodeSegmenter.parse #{txt}".red
+      @logger.debug "CodeSegmenter.parse << #{txt}".red
       @li.clear
       pos = 0
       while m = RE.match(txt, pos) do
-        @logger.debug "pos #{pos}".yellow
-        @logger.debug m
-
-        text = txt[pos, m.begin(0) -1]
-        code = txt[m.begin(0), m.end(0)-1]
-
+        text = txt[pos .. m.begin(0) -1]
         @li.append({:text => text, :rage => [pos, m.begin(0)-1]}) if !text.empty?
+        @logger.debug "text #{text}".red
 
+        code = txt[m.begin(0) .. m.end(0)-1]
         @li.append({:code => code, :rage => [m.begin(0), m.end(0)-1]}) if !code.empty?
+        @logger.debug "code end-1 = #{m.end(0)-1} #{code}".red
 
         pos = m.end(0)
       end
 
-      @li.append({:text => txt[pos..-1], :rage => [pos, -1]}) if pos < (txt.length - 1)
+      @li.append({:text => txt[pos .. -1], :rage => [pos, -1]}) if pos < (txt.length - 1)
+      @logger.debug "final text pos = #{pos } #{txt[pos .. -1]}".red
 
       @li
     end
@@ -359,7 +358,7 @@ module Wp2jekyll
     end
 
     def patch_code(txt, indent = 4) # -> String
-      @logger.debug "patch_code #{txt}".yellow
+      @logger.debug "patch_code << #{txt} ".white
       txt.scan(CodeSegmenter::RE).each do |m|
         @@code_cnt += 1
 
@@ -372,6 +371,7 @@ module Wp2jekyll
         txt.gsub!(m[0], code)
       end
 
+      @logger.debug "patch_code => #{txt} ".yellow
       return txt
     end
 
