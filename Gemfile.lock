@@ -17,6 +17,7 @@ GEM
       mini_portile2 (~> 2.3.0)
     pretty-diffs (1.0.2)
     rake (10.5.0)
+    stackprof (0.2.12)
 
 PLATFORMS
   ruby
@@ -26,6 +27,7 @@ DEPENDENCIES
   minitest (~> 5.0)
   pretty-diffs (~> 1.0)
   rake (~> 10.0)
+  stackprof
   wp2jekyll!
 
 BUNDLED WITH
