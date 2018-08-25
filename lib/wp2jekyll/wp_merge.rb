@@ -207,14 +207,18 @@ module Wp2jekyll
     def merge_dir(from_dir, to_dir)
       @@logger.info "merger dir #{from_dir} -> #{to_dir}".red
       dbg_count = 0
+      limit_count = false
+
       Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|
         merge_post(Post.new(fpath), to_dir)
 
         dbg_count += 1
-        if dbg_count > 20
+
+        if limit_count && dbg_count > 20
           break
         end
       end
+      @@logger.info "#{dbg_count} post(s) tried."
     end
   end
 end
