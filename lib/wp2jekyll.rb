@@ -2,7 +2,7 @@ require "wp2jekyll/version"
 
 module Wp2jekyll
   require 'wp2jekyll/wp_patch'
-  require 'wp2jekyll/wp_merge'
+  require 'wp2jekyll/post_merge'
   
   def self.process_wordpress_md_dir(d)
     if Dir.exist? d then
