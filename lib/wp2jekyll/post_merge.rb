@@ -1,4 +1,4 @@
 
-require 'wp2jekyll/post_merge/FileCache'
-require 'wp2jekyll/post_merge/Post'
-require 'wp2jekyll/post_merge/MarkdownFilesMerger'
+require 'wp2jekyll/post_merge/file_cache'
+require 'wp2jekyll/post_merge/post'
+require 'wp2jekyll/post_merge/markdown_files_merger'

@@ -4,7 +4,7 @@ title: '心的话语[译]'
 date: 2009-07-23T23:23:12+00:00
 author: theme
 layout: post
-guid: 'http://xenotheme.wordpress.com/2009/07/23/%e8%af%91%e4%b9%a0-%e5%bf%83%e7%9a%84%e8%af%9d%e8%af%ad'
+guid: 'http://xxxx.wordpress.com/2009/07/23/%e8%af%91%e4%b9%a0-%e5%bf%83%e7%9a%84%e8%af%9d%e8%af%ad'
 permalink: /?p=2036
 spaces_c6acf4600f5ca322866330c0776189cd_permalink:
   - "http://cid-61ad2a9245cb7941.users.api.live.net/Users(7038328600374507841)/Blogs('61AD2A9245CB7941!102')/Entries('61AD2A9245CB7941!569')?authkey=!Hd3VViAwyA%24"

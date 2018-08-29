@@ -1,6 +1,7 @@
 
-require 'wp2jekyll/wp_patch/MarkdownLink'
-require 'wp2jekyll/wp_patch/CodeSegmenter'
-require 'wp2jekyll/wp_patch/JekyllMarkdown'
-require 'wp2jekyll/wp_patch/WordpressMarkdown'
+require 'wp2jekyll/wp_patch/markdown_link'
+require 'wp2jekyll/wp_patch/code_segmenter'
+require 'wp2jekyll/wp_patch/jekyll_link'
+require 'wp2jekyll/wp_patch/jekyll_markdown'
+require 'wp2jekyll/wp_patch/wordpress_markdown'
   

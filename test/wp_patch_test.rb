@@ -145,7 +145,7 @@ some other text
       <figure id="attachment_1133" style="width: 400px" class="wp-caption aligncenter">[<img class="wp-image-1133 size-full" src="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg" alt="alice_liddell" width="400" height="500" srcset="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg 400w, http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1-240x300.jpg 240w" sizes="(max-width: 400px) 85vw, 400px" />](http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg)<figcaption class="wp-caption-text">Alice Liddell</figcaption></figure>'
       s2 = '![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})
       ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})'
-      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md!(s1))
     end
 
     def test_xml_in_md_img_cap
@@ -153,7 +153,7 @@ some other text
 
         s2 = '[![screenshot-from-2016-12-01-22-43-26]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})'
 
-        assert_equal(s2, WordpressMarkdown.new.process_md(s1))
+        assert_equal(s2, WordpressMarkdown.new.process_md!(s1))
     end
 
     def test_rm_bug_img
@@ -174,14 +174,14 @@ some other text
       s1 = '![](https://some.site.com/path/to/a.jpg)'
       s2 = '![](https://some.site.com/path/to/a.jpg)'
 
-      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md!(s1))
     end
 
     def test_keep_jekyll_filter
       s1 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
       s2 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
 
-      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md!(s1))
       assert_equal(s2, WordpressMarkdown.new.patch_char(s1))
     end
 
@@ -226,7 +226,7 @@ unfold_div passage 1
 
 unfold_div passage 2
 '''
-      assert_equal(s2, WordpressMarkdown.new.process_md(s1))
+      assert_equal(s2, WordpressMarkdown.new.process_md!(s1))
     end
 
     def test_whole_md
@@ -288,7 +288,7 @@ EOS
       md.each_line do |line|
         tmp += wm.patch_char(line) # special chars
       end
-      tmp = wm.process_md(tmp) # xml elements
+      tmp = wm.process_md!(tmp) # xml elements
 
       assert_equal(md_patched.inspect, tmp.inspect)
       # assert_equal(md_patched, WordpressMarkdown.new.xml_to_md(md))
@@ -328,7 +328,7 @@ EOS
     # txt =  WordpressMarkdown.new.xml_to_md(xml)
     # txt2 = WordpressMarkdown.new.md_modify_link(txt)
     # assert_equal(md, txt2)
-    assert_equal(md, WordpressMarkdown.new.process_md(xml))
+    assert_equal(md, WordpressMarkdown.new.process_md!(xml))
     end
 
     def test_comment_in_code_should_not_change
@@ -355,7 +355,7 @@ EOS
 
     def test_patch_div
       src = File.read(File.expand_path('../sample/post div src.md', __FILE__))
-      a = WordpressMarkdown.new.process_md(src)
+      a = WordpressMarkdown.new.process_md!(src)
       b = File.read(File.expand_path('../sample/post div.md', __FILE__))
 
       lcs = Diff::LCS.lcs(a, b)
@@ -481,7 +481,7 @@ Text before code.
 
 After code text.
 '''
-      out = WordpressMarkdown.new.process_md(txt)
+      out = WordpressMarkdown.new.process_md!(txt)
       puts out.yellow if !out.include?('[Unit]')
       assert(out.include?('[Unit]'))
     end

@@ -4,13 +4,8 @@ require 'colorize'
 
 module Wp2jekyll
   class MarkdownLink
-    @cap = ''
-    @link = ''
-    @title = ''
-    @is_img = false
-    RE = %r{((\!)?\[([^\n]*?)\]\(\s*([^"\s]*)\s*("([^"]*?)")?\)(\{.*?\})?)}
-    #E = %r{12--2--[3-------3-]-(   4-------4   5"6-------6"5-)7-{----}7-1}m
-    @init_valid = false
+    RE = %r{((\!)?\[([^\n]*)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}
+    #E = %r{12--2--[3------3-]-(   4--------4   5"6-------6"5-)7-{----}7-1}m
     attr_accessor :cap
     attr_accessor :title
     attr_accessor :link
@@ -24,9 +19,8 @@ module Wp2jekyll
         @link = m[4] || ''
         @title = m[6] || ''
         @is_img = ('!' == m[2]) ? true : false
-        @init_valid = true
         @tail = m[7] || ''
-        @logger.debug 'MarkdownLink: ' + "#{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} \"#{@title.blue}\")#{@tail.magenta}"
+        @logger.debug "MarkdownLink: #{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} \"#{@title.blue}\")#{@tail.magenta}"
       end
     end
 

@@ -10,6 +10,7 @@ module Wp2jekyll
   class WordpressMarkdown < JekyllMarkdown
     attr_accessor :suspicious_url_contains
     attr_accessor :relative_url_contains
+    attr_reader :wp_md_str
     def initialize(fp = '')
       super(fp)
       @@code_cnt = 0
@@ -223,7 +224,6 @@ module Wp2jekyll
     def md_modify_link(txt)
       txt.scan(MarkdownLink::RE).each do |m|
         ln = m[0]
-        @logger.debug "========== md_modify_link #{ln} ============"
         mdlk = MarkdownLink.new(m[0])
         if is_url_suspicious?(mdlk.link) then
           @logger.warn 'suspicious: ' + mdlk.link.red
@@ -242,7 +242,6 @@ module Wp2jekyll
         txt.gsub!(ln, mdlk.to_s)
 
       end
-      @logger.debug '^^^^^^^^^^ modify link ^^^^^^^^^^^^'
       return txt
     end
 
@@ -336,14 +335,14 @@ module Wp2jekyll
       cs.join
     end
 
-    def process_md(fulltxt)
+    def process_md!(fulltxt)
       split_fulltxt(fulltxt)
 
       # @logger.debug 'yaml_front_matter: ' + yaml_front_matter
-      @yaml_front_matter_str = process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
+      @yaml_front_matter_str =process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
 
       # @logger.debug 'body_str: ' + body_str
-      @body_str = process_md_body(@body_str) if !!@body_str
+      @body_str =process_md_body(@body_str) if !!@body_str
 
       patch_char(@yaml_front_matter_str + @body_str)
     end
@@ -352,11 +351,11 @@ module Wp2jekyll
       @logger.info "wp_2_jekyll_md_file > #{ o }"
 
       wp_md = File.read(o)
-      wp_md = process_md(wp_md)
+      wp_md = process_md!(wp_md)
       File.write(o, wp_md)
     end
 
-    def to_jekyll_md
+    def write_jekyll_md
       if !has_yaml_header?(@fp) then
         @logger.info "! #{@fp} has no yaml header"
       else
@@ -375,3 +374,4 @@ module Wp2jekyll
     end
   end
 end
+

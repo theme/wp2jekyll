@@ -1,2 +1,2 @@
 
-require 'wp2jekyll/img_merge/ImageMerger'
+require 'wp2jekyll/img_merge/image_merger'

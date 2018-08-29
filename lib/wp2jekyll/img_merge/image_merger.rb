@@ -12,8 +12,13 @@ module Wp2jekyll
     @@logger.level = Logger::DEBUG
 
     attr_accessor :merge_count
+    attr_accessor :merge_list
+    attr_accessor :skip_list
+
     def initialize
       @merge_count = 0
+      @merge_list = []
+      @skip_list = []
     end
 
     def user_confirm(hint = '', yes = false)
@@ -50,6 +55,7 @@ module Wp2jekyll
 
     def hint_img_contents(p)
       # TODO
+      puts p
     end
 
     def is_img_same_date(a, b)
@@ -84,29 +90,47 @@ module Wp2jekyll
       end
       false
     end
-
-    def merge_img(from_dir, image, to_dir)
+    
+    def merge_img_with_path(image, to_dir, with_path)
       if !is_img_exist(image, to_dir)
-        @@logger.info "merge_img #{image} new!"
-        if user_confirm("Do merge_img #{image}", true) # TODO
+        @@logger.info "merge_img_keep_path #{image} new!"
+        if user_confirm("Do merge_img_keep_path #{image}", true) # TODO
+          to_path = File.join(to_dir, with_path)
+          FileUtils.mkdir_p(to_path)
+          FileUtils.cp(image, File.join(to_path, basefn(image)))
+          @merge_count += 1
+          @merge_list.append image
+        end
+      else
+        # @@logger.info "merge_img_keep_path #{image} exists under #{to_dir}."
+        @skip_list.append image
+      end
+    end
+
+    def merge_img_keep_path(from_dir, image, to_dir)
+      if !is_img_exist(image, to_dir)
+        @@logger.info "merge_img_keep_path #{image} new!"
+        if user_confirm("Do merge_img_keep_path #{image}", true) # TODO
           rel_path = Pathname.new(File.dirname(image)).relative_path_from(Pathname.new(from_dir))
           to_path = File.join(to_dir, rel_path)
           FileUtils.mkdir_p(to_path)
           FileUtils.cp(image, File.join(to_path, basefn(image)))
           @merge_count += 1
+          @merge_list.append image
         end
       else
-        @@logger.info "merge_img #{image} exists under #{to_dir}."
+        # @@logger.info "merge_img_keep_path #{image} exists under #{to_dir}."
+        @skip_list.append image
       end
     end
 
     def merge_dir(from_dir, to_dir)
-      @@logger.info "merger image dir #{from_dir} -> #{to_dir}".red
+      @@logger.info "... merge image dir #{from_dir} -> #{to_dir}".cyan
       dbg_count = 0
       limit_count = false
 
       Dir.glob(File.join(from_dir, "**/*.{jpg,jpeg,png,gif,svg,bmp}")) do |fpath|
-        merge_img(from_dir, fpath, to_dir) # keep dir structure
+        merge_img_keep_path(from_dir, fpath, to_dir) # keep dir structure
 
         dbg_count += 1
 
@@ -114,7 +138,14 @@ module Wp2jekyll
           break
         end
       end
-      @@logger.info "#{merge_count} / #{dbg_count} image(s) merged."
+      @@logger.info "#{merge_count} / #{dbg_count} image(s) merged.".green
+      
+      # debug list untouched files
+      Dir.glob(File.join(from_dir, "**/*")) do |fpath|
+        if File.file?(fpath) && !@merge_list.include?(fpath) && !@skip_list.include?(fpath)
+          @@logger.debug "#{fpath} is not handled : not a image.".yellow
+        end
+      end
     end
   end
 end
