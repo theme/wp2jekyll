@@ -20,6 +20,7 @@ module Wp2jekyll
   require 'wp2jekyll/post_merge'
   require 'wp2jekyll/img_merge'
   require 'wp2jekyll/file_merge'
+  require 'wp2jekyll/google_photo'
   require 'wp2jekyll/blogspot_import'
   
   def self.process_wordpress_md_dir(d)

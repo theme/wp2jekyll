@@ -38,7 +38,7 @@ module Wp2jekyll
     end
 
     def read_post(post_dir)
-      @logger.info 'BloggerPost.read_post'.yellow
+      # @logger.info 'BloggerPost.read_post'.yellow
       if File.directory?(post_dir)
         @post.each do |k, v|
           begin
@@ -60,7 +60,7 @@ module Wp2jekyll
 
     # get rid of leading 'o', left by python grabber
     def rename_image_files!(post_dir, img_sub_dir = 'images')
-      @logger.info 'BloggerPost.rename_image_files'.yellow
+      # @logger.info 'BloggerPost.rename_image_files'.yellow
       img_dir = File.join(post_dir, img_sub_dir)
       if File.directory?(img_dir)
         Dir.glob(File.join(img_dir, '*')).each do |img|
@@ -75,7 +75,7 @@ module Wp2jekyll
     end
 
     def read_images(post_dir)
-      @logger.info 'BloggerPost.read_images'.yellow
+      # @logger.info 'BloggerPost.read_images'.yellow
       img_dir = File.join(post_dir, 'images')
       if File.directory?(img_dir)
         Dir.glob(File.join(img_dir, '*')).each do |oimg|

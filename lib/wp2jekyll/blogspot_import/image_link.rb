@@ -2,14 +2,21 @@ require 'pathname'
 require 'logger'
 require 'colorize'
 
+require 'uri'
+
 module Wp2jekyll
 
-  class JekyllLink
+  class ImageLink
 
     RE = %r{(\{\{\s*\"(.*?)\"\s*(\|\s?(relative_url|absolute_url))?\s*\}\})}
-    #E = %r{0-------1--1---2-----3-------------------------32--------0}
+    #E = %r{0---------1---1-----2-----3-------------------------32--------0}
+    
     attr_accessor :path #1
     attr_accessor :jekyll_filter_url #2
+    
+    def self.https_re(img)
+      Regexp.new('https?://\w*'+img)
+    end
 
     def initialize(str)
       @logger = Logger.new(STDERR)

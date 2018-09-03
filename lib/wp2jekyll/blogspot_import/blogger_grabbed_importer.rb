@@ -32,7 +32,9 @@ module Wp2jekyll
           bn = File.basename(i)
           jk_md = JekyllMarkdown.new(tmp_fpath)
           new_relative_path = d.strftime('%Y/%m/%d')
-          jk_md.relink_image(bn, new_relative_path)
+          
+          # TODO for each image link, search image from local drive or google photo
+          jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path))
           # jd_md.write
           jk_md.info # TODO debug
 
@@ -46,7 +48,7 @@ module Wp2jekyll
         
         # Do: copy images.
         images_tobe_copy.each do |k,v| 
-          @@logger.debug "to cp #{k} #{v}"
+          @@logger.debug "[dbg] to cp #{k} #{v}"
           # ImageMerger.new.merge_img_with_path(i, v[0], v[1])
         end
       end
