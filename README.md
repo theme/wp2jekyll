@@ -29,6 +29,13 @@ Or install it yourself as:
 
     $ gem install wp2jekyll
 
+## Setup
+- Google Photo API client credential
+request a OAuth2 client credential, as described at https://developers.google.com/photos/library/guides/get-started#request-id, 
+then put json file to 
+`~/.wp2jekyll/usr/$USER/google-photo-api-oauth2-client-credentials.json`
+
+
 ## Usage
 
 For details see the code.
