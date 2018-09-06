@@ -12,6 +12,7 @@ require 'net/http'
 
 require 'googleauth'
 require 'googleauth/stores/file_token_store'
+require 'httpclient'
 
 module Wp2jekyll
   # [Concepts:](https://developers.google.com/photos/library/guides/overview)
@@ -66,11 +67,25 @@ module Wp2jekyll
     # @return [Hash] {image_filename =>`media item ID`} of Google Photo Images in one year before `date`.
     def search_image_in_one_year(date, img_fn)
       uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems:search')
+      cred = get_credentials
+      @@logger.debug "Bearer #{cred.access_token}"
+
+      clnt = HTTPClient.new
+      header = {
+        'Content-type' => 'application/json',
+        'Authorization' => "Bearer #{cred.access_token}"
+      }
+
+      ###
       req = Net::HTTP::Get.new(uri)
       req['Content-type'] = 'application/json'
-      cred = get_credentials
       req['Authorization'] = "Bearer #{cred.access_token}" #TODO
-
+      
+      clnt.debug_dev=STDOUT
+      debug_uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems')
+      debug_body_hash = {
+        "pageSize":"100",
+      }
       req_body_hash = {
         "pageSize":"100",
         "filters": {
@@ -103,23 +118,38 @@ module Wp2jekyll
         @@logger.debug "#{count = count + 1 } query Google Photo Library for image items"
         req.body = JSON.generate(req_body_hash)
 
-        res = Net::HTTP.start(uri.hostname, uri.port) {|http|
-          http.request(req)
-        }
+        res = clnt.get(debug_uri, :header => header, :body => JSON.generate(debug_body_hash))
+        # res = clnt.get(uri, :header => header, :body => JSON.generate(req_body_hash))
+        @@logger.debug res.body
+        # res = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => true) {|http|
+        #   http.request(req)
+        # }
 
-        if res.is_a?(Net::HTTPSuccess)
-          res_hash = JSON.parse res.body
-          media_items.append res_hash['mediaItems']
+        # if res.is_a?(Net::HTTPSuccess)
+        #   res_hash = JSON.parse res.body
+        #   media_items.append res_hash['mediaItems']
 
-          nextPageToken = res_hash['nextPageToken']
-          if nil != nextPageToken
-            req_body_hash["pageToken"] = nextPageToken
-          else
-            req_body_hash.delete "pageToken"
-            break
-          end
+        #   nextPageToken = res_hash['nextPageToken']
+        #   if nil != nextPageToken
+        #     req_body_hash["pageToken"] = nextPageToken
+        #   else
+        #     req_body_hash.delete "pageToken"
+        #     break
+        #   end
+        # else
+        #   @@logger.debug "!Got #{res.inspect} when search Google Photo Image.".yellow
+        #   @@logger.debug res.body.yellow
+        #   break
+        # end
+
+        res_hash = JSON.parse res.body
+        media_items.append res_hash['mediaItems']
+
+        nextPageToken = res_hash['nextPageToken']
+        if nil != nextPageToken
+          req_body_hash["pageToken"] = nextPageToken
         else
-          @@logger.debug "!Got #{res.inspect} when search Google Photo Image."
+          req_body_hash.delete "pageToken"
           break
         end
       end
@@ -127,6 +157,7 @@ module Wp2jekyll
       # process returned items
       images = {}
       media_items.each do |i|
+        @@logger.debug i
         @known_images[i['filename']] = i['id']
         images[img_fn] = i['id'] if i['filename'].include? img_fn
       end
