@@ -16,6 +16,8 @@ require "wp2jekyll/version"
 # 2.4 modify every link that referes to a image in jekyll/_posts/ to new dir path.
 
 module Wp2jekyll
+  require 'debug_logger'
+
   require 'wp2jekyll/wp_patch'
   require 'wp2jekyll/post_merge'
   require 'wp2jekyll/img_merge'

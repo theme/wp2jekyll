@@ -1,18 +1,16 @@
 require 'fileutils'
 require 'pathname'
-require 'logger'
-require 'colorize'
 
 require 'uri'
 require 'tempfile'
 require 'json'
+require 'yaml'
 require 'date'
 
 require 'net/http'
 
 require 'googleauth'
 require 'googleauth/stores/file_token_store'
-require 'httpclient'
 
 module Wp2jekyll
   # [Concepts:](https://developers.google.com/photos/library/guides/overview)
@@ -21,33 +19,42 @@ module Wp2jekyll
   #   Media items: photos, videos, and their metadata.
   #   Sharing: feature that enables users to share their media with other users.
   class GooglePhotoClient
-
-    @@logger = Logger.new(STDERR)
-    @@logger.level = Logger::DEBUG
+    include DebugLogger
 
     attr_accessor :known_images
+    attr_reader   :secret_dir
+    attr_reader   :credential_fpath
+    attr_reader   :token_store_fp
+    attr_reader   :key_store_fp
+
+    # https://developers.google.com/photos/library/guides/authentication-authorization
+    OAuth2_SCOPE_read_photo = 'https://www.googleapis.com/auth/photoslibrary.readonly'
 
     def initialize
       @known_images = {} # img_fn => img_id
+      @secret_dir = "#{ENV['HOME']}/.wp2jekyll/usr/#{ENV['USER']}"
+      @credential_fpath = "#{secret_dir}/google-photo-api-oauth2-client-credentials.json"
+
+      @token_store_fp = "#{secret_dir}/tokens.yaml"
+      @key_store_fp = "#{secret_dir}/apikeys.yaml"
+
+      # File.delete @token_store_fp # TODO debug
     end
 
     OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
+    def get_api_key
+      YAML.load(File.read(@key_store_fp))['google_photo']
+    end
+
     # get authorized for Google Photo API
     def get_credentials
-      secret_dir = "#{ENV['HOME']}/.wp2jekyll/usr/#{ENV['USER']}"
-      credential_fpath = "#{secret_dir}/google-photo-api-oauth2-client-credentials.json"
-
-
-      # https://developers.google.com/photos/library/guides/authentication-authorization
-      scope = 'https://www.googleapis.com/auth/photoslibrary.readonly'
 
       client_id = Google::Auth::ClientId.from_file(credential_fpath)
-      token_store_fp = "#{secret_dir}/tokens.yaml"
       token_store = Google::Auth::Stores::FileTokenStore.new( :file => token_store_fp)
-      authorizer = Google::Auth::UserAuthorizer.new(client_id, scope, token_store)
+      authorizer = Google::Auth::UserAuthorizer.new(client_id, OAuth2_SCOPE_read_photo, token_store)
       
-      user_id = Process.uid
+      user_id = ENV['USER']
       credentials = authorizer.get_credentials(user_id)
       if credentials.nil?
         url = authorizer.get_authorization_url(base_url: OOB_URI )
@@ -58,7 +65,7 @@ module Wp2jekyll
       end
       
       # OK to use credentials
-      @@logger.debug "Google API credentials : #{credentials}"
+      @@logger.debug "Google API credentials : #{credentials.inspect}"
       credentials
     end
     
@@ -67,27 +74,23 @@ module Wp2jekyll
     # @return [Hash] {image_filename =>`media item ID`} of Google Photo Images in one year before `date`.
     def search_image_in_one_year(date, img_fn)
       uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems:search')
+      # uri = URI('https://content-photoslibrary.googleapis.com/v1/mediaItems:search')
+
       cred = get_credentials
-      @@logger.debug "Bearer #{cred.access_token}"
+      # params = {
+      #   :key => get_api_key,
+      #   :access_token => cred.access_token
+      # }
+      # uri.query = URI.encode_www_form(params)
 
-      clnt = HTTPClient.new
-      header = {
-        'Content-type' => 'application/json',
-        'Authorization' => "Bearer #{cred.access_token}"
-      }
+      # [Google Photo API: mediaitem::search need POST method](https://developers.google.com/photos/library/reference/rest/)
+      req = Net::HTTP::Post.new(uri)
 
-      ###
-      req = Net::HTTP::Get.new(uri)
       req['Content-type'] = 'application/json'
-      req['Authorization'] = "Bearer #{cred.access_token}" #TODO
-      
-      clnt.debug_dev=STDOUT
-      debug_uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems')
-      debug_body_hash = {
-        "pageSize":"100",
-      }
+      req['Authorization'] = "Bearer #{cred.access_token}"
+
       req_body_hash = {
-        "pageSize":"100",
+        "pageSize": "100",
         "filters": {
           "mediaTypeFilter": {
             "mediaTypes": [ "PHOTO" ]
@@ -118,46 +121,36 @@ module Wp2jekyll
         @@logger.debug "#{count = count + 1 } query Google Photo Library for image items"
         req.body = JSON.generate(req_body_hash)
 
-        res = clnt.get(debug_uri, :header => header, :body => JSON.generate(debug_body_hash))
-        # res = clnt.get(uri, :header => header, :body => JSON.generate(req_body_hash))
-        @@logger.debug res.body
-        # res = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => true) {|http|
-        #   http.request(req)
-        # }
+        http = Net::HTTP.new(uri.hostname, uri.port)
+        # http.set_debug_output($stderr)
+        http.use_ssl= true
+        res = http.start {|http|
+          http.request(req)
+        }
 
-        # if res.is_a?(Net::HTTPSuccess)
-        #   res_hash = JSON.parse res.body
-        #   media_items.append res_hash['mediaItems']
+        if res.is_a?(Net::HTTPSuccess)
+          res_hash = JSON.parse res.body
+          media_items =  media_items + res_hash['mediaItems']
 
-        #   nextPageToken = res_hash['nextPageToken']
-        #   if nil != nextPageToken
-        #     req_body_hash["pageToken"] = nextPageToken
-        #   else
-        #     req_body_hash.delete "pageToken"
-        #     break
-        #   end
-        # else
-        #   @@logger.debug "!Got #{res.inspect} when search Google Photo Image.".yellow
-        #   @@logger.debug res.body.yellow
-        #   break
-        # end
-
-        res_hash = JSON.parse res.body
-        media_items.append res_hash['mediaItems']
-
-        nextPageToken = res_hash['nextPageToken']
-        if nil != nextPageToken
-          req_body_hash["pageToken"] = nextPageToken
+          nextPageToken = res_hash['nextPageToken']
+          if nil != nextPageToken
+            req_body_hash["pageToken"] = nextPageToken
+          else
+            req_body_hash.delete "pageToken"
+            break
+          end
         else
-          req_body_hash.delete "pageToken"
+          @@logger.debug "!Got #{res.inspect} when search Google Photo Image.".yellow
+          @@logger.debug res.body.yellow
           break
         end
+
       end
 
       # process returned items
       images = {}
       media_items.each do |i|
-        @@logger.debug i
+        # @@logger.debug i
         @known_images[i['filename']] = i['id']
         images[img_fn] = i['id'] if i['filename'].include? img_fn
       end
