@@ -6,15 +6,11 @@ require 'logger'
 module Wp2jekyll
   
   class JekyllMarkdown
+    include DebugLogger
     attr_accessor :yaml_front_matter_str
     attr_accessor :body_str
     attr_reader :fp
     def initialize(fp = '')
-      @logger = Logger.new(STDERR)
-      # @logger.level = Logger::INFO
-      @logger.level = Logger::DEBUG
-      # DEBUG < INFO < WARN < ERROR < FATAL < UNKNOWN
-      
       @fp = fp # file path
       
       if File.exist?(@fp)
@@ -38,7 +34,7 @@ module Wp2jekyll
 
     # search link that contains img_fn, replace its path with provided path
     def relink_image(img_fn, relative_path)
-      @logger.debug "relink_image #{img_fn}"
+      @@logger.debug "relink_image #{img_fn}"
 
       tmp_s = @body_str
       # # scan normal markdown link
@@ -48,7 +44,7 @@ module Wp2jekyll
       #     mdlk.link = File.join(relative_path, img_fn)
       #     tmp_s.gsub!(m[0], mdlk.to_s)
       #   else
-      #     @logger.debug "... not in Markdown link #{img_fn}".yellow
+      #     @@logger.debug "... not in Markdown link #{img_fn}".yellow
       #   end
       # end
       #
@@ -60,7 +56,7 @@ module Wp2jekyll
       #     jklk.link.change_path_to!(relative_path)
       #     tmp_s2.gsub!(m[0], jklk.to_s('relative_url'))
       #   else
-      #     @logger.debug "... not in Jekyll link #{img_fn}".yellow
+      #     @@logger.debug "... not in Jekyll link #{img_fn}".yellow
       #   end
       # end
 
@@ -68,11 +64,11 @@ module Wp2jekyll
       # @body_str.scan( ImageLink.https_re(img_fn) ).each do |m|
       #   jekyll_img_link = "{{ \"#{img_fn}\" | relative_url }}"
       #   tmp_s.gsub!(m[0], jekyll_img_link)
-      #   @logger.info "relink_image: #{jekyll_img_link}"
+      #   @@logger.info "relink_image: #{jekyll_img_link}"
       # end
       
       URI.extract(tmp_s).each do |uri|
-        @logger.debug uri.yellow
+        @@logger.debug uri.yellow
         if uri.include? img_fn
           jekyll_img_link = "{{ \"#{File.join(relative_path,img_fn)}\" | relative_url }}"
           tmp_s.gsub!(uri.gsub(/\)$/,''), jekyll_img_link) # ) is a patch
@@ -88,7 +84,7 @@ module Wp2jekyll
     end
 
     def info
-      @logger.info "JekyllMarkdown: #{@fp}\n#{@yaml_front_matter_str}\n#{@body_str}".white
+      @@logger.info "JekyllMarkdown: #{@fp}\n#{@yaml_front_matter_str}\n#{@body_str}".white
     end
   end
 

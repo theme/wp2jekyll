@@ -12,7 +12,7 @@ module Wp2jekyll
       Dir.glob(File.join(grabbed_dir,'*')).each do |post_dir|
         # read
         blogger_post = BloggerPost.new
-        blogger_post.read_grabbed_post_dir(post_dir)
+        blogger_post.read_grabbed_post_dir(post_dir) # post_dir/images files is recorded
 
         # assemble to jekyll markdown
         tmp_fpath = File.join(post_dir, 'jekyll_md')

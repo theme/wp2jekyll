@@ -24,6 +24,15 @@ module Wp2jekyll
       end
     end
 
+    # return [Array] with items: [0:whole_markdown_link, 1:!(image mark), 2:capture, 3:link, 4:"title", 5:title, 6:tail{}]
+    def extract(str)
+      RE.scan str
+    end
+
+    def test?(str)
+      nil != RE.match(str)
+    end
+
     def to_s
       if @is_img
         @logger.info "![#{@cap}](#{@link})".cyan

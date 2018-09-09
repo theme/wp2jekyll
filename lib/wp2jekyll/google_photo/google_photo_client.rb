@@ -190,7 +190,7 @@ module Wp2jekyll
       req = Net::HTTP::Post.new(uri)
       req['Content-type'] = 'application/json'
       req['Authorization'] = "Bearer #{get_credentials.access_token}"
-      req_body_hash = { 'mediaItemId' : img_id }
+      req_body_hash = { 'mediaItemId' => img_id }
       req.body = JSON.generate(req_body_hash)
 
       http = Net::HTTP.new(uri.hostname, uri.port)

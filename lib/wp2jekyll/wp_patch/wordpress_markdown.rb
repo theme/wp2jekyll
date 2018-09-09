@@ -19,7 +19,7 @@ module Wp2jekyll
     end
 
     def is_url_suspicious?(ln)
-      # @logger.debug 'suspicious? ' + ln
+      # @@logger.debug 'suspicious? ' + ln
       for s in @suspicious_url_contains do
         if ln.include? s then
           return true
@@ -29,7 +29,7 @@ module Wp2jekyll
     end
 
     def should_url_relative?(ln)
-      # @logger.debug 'relative? ' + ln
+      # @@logger.debug 'relative? ' + ln
       for r in @relative_url_contains do
         if ln.include? r then
           return true
@@ -81,7 +81,7 @@ module Wp2jekyll
     end
 
     def patch_list_like(txt, lead = '*', compress = false)
-      # @logger.debug 'patch_list_like: ' + lead
+      # @@logger.debug 'patch_list_like: ' + lead
       txt2 = txt
       re = Regexp.new('(?:(?:^' + '\\' + lead + '.*?\n)(?:^\s\s\n)?)+',
       Regexp::MULTILINE)
@@ -134,14 +134,14 @@ module Wp2jekyll
           src = m[1] if !m[1].empty?
         end
         figure_md  = '!' + md_link(cap, src)
-        @logger.debug 'xml_figure ' + figure_md.light_cyan
+        @@logger.debug 'xml_figure ' + figure_md.light_cyan
         return figure_md
     end
 
     # construct markdown link from caption and url (aware of relative )
     def md_link(cap, url)
       return '' if nil == url
-      @logger.debug 'md_link: '.green + url
+      @@logger.debug 'md_link: '.green + url
       if !should_url_relative?(url) then
         return "[#{cap}](#{url})"
       else
@@ -159,9 +159,9 @@ module Wp2jekyll
         when Nokogiri::XML::Node::TEXT_NODE
           md_pieces.append n
           # puts n.text.yellow
-          # @logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
+          # @@logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
         when Nokogiri::XML::Node::ELEMENT_NODE
-          # @logger.debug "Nokogiri:...:ELEMENT_NODE <#{n.name}>".yellow
+          # @@logger.debug "Nokogiri:...:ELEMENT_NODE <#{n.name}>".yellow
           case n.name
           when "figure"
             md_pieces.append html_figure_to_md(n.to_s)
@@ -189,7 +189,7 @@ module Wp2jekyll
               ol_md.append( count.to_s + '. ' + parse_html_to_md_array(li.inner_html.strip).join)
             end
             md_pieces.append ol_md.join
-            @logger.debug ol_md.join.cyan
+            @@logger.debug ol_md.join.cyan
             # exit 1
           when 'a'
             a_cap = parse_html_to_md_array(n.inner_html).join
@@ -226,14 +226,14 @@ module Wp2jekyll
         ln = m[0]
         mdlk = MarkdownLink.new(m[0])
         if is_url_suspicious?(mdlk.link) then
-          @logger.warn 'suspicious: ' + mdlk.link.red
+          @@logger.warn 'suspicious: ' + mdlk.link.red
           txt.gsub!(ln, '') # delete to prevent being published
           next
         end
 
         # relative
         if is_uri?(mdlk.link) and should_url_relative?(mdlk.link) then
-          @logger.debug 'url should be relative: ' + mdlk.link.green
+          @@logger.debug 'url should be relative: ' + mdlk.link.green
           mdlk.link = url_to_liquid(mdlk.link)
           txt.gsub!(ln, mdlk.to_s)
         end
@@ -259,7 +259,7 @@ module Wp2jekyll
         txt.gsub!(m[0], code)
       end
 
-      @logger.debug "patch_code => #{txt} ".yellow
+      @@logger.debug "patch_code => #{txt} ".yellow
       return txt
     end
 
@@ -330,7 +330,7 @@ module Wp2jekyll
       # body_str = patch_h1h2_space(body_str)
       cs.li.each { |o| o[:text] = patch_h1h2_space(o[:text]) if !!o[:text] }
 
-      # @logger.debug "cs.join #{cs.join}".cyan
+      # @@logger.debug "cs.join #{cs.join}".cyan
 
       cs.join
     end
@@ -338,17 +338,17 @@ module Wp2jekyll
     def process_md!(fulltxt)
       split_fulltxt(fulltxt)
 
-      # @logger.debug 'yaml_front_matter: ' + yaml_front_matter
+      # @@logger.debug 'yaml_front_matter: ' + yaml_front_matter
       @yaml_front_matter_str =process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
 
-      # @logger.debug 'body_str: ' + body_str
+      # @@logger.debug 'body_str: ' + body_str
       @body_str =process_md_body(@body_str) if !!@body_str
 
       patch_char(@yaml_front_matter_str + @body_str)
     end
 
     def wp_2_jekyll_md_file(i, o)
-      @logger.info "wp_2_jekyll_md_file > #{ o }"
+      @@logger.info "wp_2_jekyll_md_file > #{ o }"
 
       wp_md = File.read(o)
       wp_md = process_md!(wp_md)
@@ -357,7 +357,7 @@ module Wp2jekyll
 
     def write_jekyll_md
       if !has_yaml_header?(@fp) then
-        @logger.info "! #{@fp} has no yaml header"
+        @@logger.info "! #{@fp} has no yaml header"
       else
         @dir = File.dirname(@fp)
         @ext = File.extname(@fp)

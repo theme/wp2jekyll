@@ -7,10 +7,7 @@ require 'diff/lcs'
 module Wp2jekyll
 
   class ImageMerger
-
-    @@logger = Logger.new(STDERR)
-    @@logger.level = Logger::DEBUG
-
+    include DebugLogger
     attr_accessor :merge_count
     attr_accessor :merge_list
     attr_accessor :skip_list

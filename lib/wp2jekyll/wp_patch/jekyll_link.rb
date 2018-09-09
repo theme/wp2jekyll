@@ -7,7 +7,7 @@ module Wp2jekyll
   class JekyllLink
 
     RE = %r{(\{\{\s*\"(.*?)\"\s*(\|\s?(relative_url|absolute_url))?\s*\}\})}
-    #E = %r{0-------1--1---2-----3-------------------------32--------0}
+    #E = %r{0---------1---1-----2-----3-------------------------32--------0}
     attr_accessor :path #1
     attr_accessor :jekyll_filter_url #2
 
@@ -21,6 +21,15 @@ module Wp2jekyll
         return true
       end
       false
+    end
+
+    # return [Array] with items: [0:whole_jekyll_link, 1:url, 2:url_filter_part, 3: url_filter]
+    def extract(str)
+      RE.scan str
+    end
+
+    def test?(str)
+      nil != RE.match(str)
     end
 
     def change_path_to!(to_path)

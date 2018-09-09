@@ -74,14 +74,17 @@ module Wp2jekyll
       end
     end
 
+    # scan image files in post/images dir,
+    # then register those used in the post body.
+    # @images: [Array] list of images that is a file && used in post.
     def read_images(post_dir)
       # @logger.info 'BloggerPost.read_images'.yellow
       img_dir = File.join(post_dir, 'images')
       if File.directory?(img_dir)
-        Dir.glob(File.join(img_dir, '*')).each do |oimg|
-          img_bn = File.basename(oimg).gsub(/^o/, '')
+        Dir.glob(File.join(img_dir, '*')).each do |i|
+          img_bn = File.basename(i).gsub(/^o/, '') # in case of image files that is forgotten to be renamed.
           if @post['body'].include?(img_bn)
-            @images.append(oimg)
+            @images.append(i)
             @logger.info "Image #{img_bn} in Blogger post #{info}"
           else
             @logger.info "? Image #{img_bn} NOT in Blogger post #{info}".yellow
