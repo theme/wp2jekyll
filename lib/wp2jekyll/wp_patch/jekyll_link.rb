@@ -24,11 +24,11 @@ module Wp2jekyll
     end
 
     # return [Array] with items: [0:whole_jekyll_link, 1:url, 2:url_filter_part, 3: url_filter]
-    def extract(str)
+    def self.extract(str)
       RE.scan str
     end
 
-    def test?(str)
+    def self.test?(str)
       nil != RE.match(str)
     end
 

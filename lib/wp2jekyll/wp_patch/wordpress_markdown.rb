@@ -14,7 +14,7 @@ module Wp2jekyll
     def initialize(fp = '')
       super(fp)
       @@code_cnt = 0
-      @suspicious_url_contains = [ '/home/theme' ]
+      @suspicious_url_contains = [ "/home/#{ENV['USER']}" ]
       @relative_url_contains = ['wp-content']
     end
 
@@ -42,7 +42,7 @@ module Wp2jekyll
       return URI(ln).path
     end
 
-    def url_to_liquid(url)
+    def url_to_liquid(url) # liquid is the template engine that jekyll used.
       return "{{ \"#{url_to_relative(url)}\" | relative_url }}" 
     end
     
