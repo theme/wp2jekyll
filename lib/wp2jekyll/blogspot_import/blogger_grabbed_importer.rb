@@ -5,8 +5,7 @@ require 'colorize'
 module Wp2jekyll
   
   class BloggerGrabbedImporter
-    @@logger = Logger.new(STDERR)
-    @@logger.level = Logger::DEBUG
+    include DebugLogger
 
     def import(grabbed_dir, to_dir, to_img_dir)
       Dir.glob(File.join(grabbed_dir,'*')).each do |post_dir|
@@ -35,7 +34,7 @@ module Wp2jekyll
           # TODO for each image link, search image from local drive or google photo
           jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path))
           # jd_md.write
-          jk_md.info # TODO debug
+          @@logger.info jk_md.white
 
           i_path = File.dirname(i)
           images_tobe_copy[i] = [to_img_dir, new_relative_path] # to be copied

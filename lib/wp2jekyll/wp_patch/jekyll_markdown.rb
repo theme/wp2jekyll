@@ -56,7 +56,7 @@ module Wp2jekyll
     end
 
     def info
-      @@logger.info "JekyllMarkdown: #{@fp}\n#{@yaml_front_matter_str}\n#{@body_str}".white
+      "JekyllMarkdown: #{@fp}\n#{@yaml_front_matter_str}\n#{@body_str}"
     end
   end
 
