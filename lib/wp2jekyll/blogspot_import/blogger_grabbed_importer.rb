@@ -17,7 +17,7 @@ module Wp2jekyll
         # @@logger.debug "assemble jekyll md : #{blogger_post.to_s}".yellow
         File.write(tmp_fpath, blogger_post.to_s)
 
-        # patch post body format to markdown using wp_patch
+        # patch post body format to markdown using wp_import
         WordpressMarkdown.new(tmp_fpath).write_jekyll_md
 
         # modify link of image
@@ -25,23 +25,22 @@ module Wp2jekyll
         # to jekyll/_source/_images/yyyy/mm/dd/basename 
         #
         images_tobe_copy = {}
+        jk_md = JekyllMarkdown.new(tmp_fpath)
         blogger_post.images.each do |i| 
           # Handles only blogger_post's known images (that are on the disk at initialzing time),
           # missing images will be handled below.
 
-          d = Date.parse(blogger_post.date_str)
           bn = File.basename(i)
-          jk_md = JekyllMarkdown.new(tmp_fpath)
-          new_relative_path = d.strftime('%Y/%m/%d')
+          new_relative_path = blogger_post.date.strftime('%Y/%m/%d')
 
           jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path))
-          # jd_md.write
-          @@logger.info jk_md.white
 
           i_path = File.dirname(i)
           images_tobe_copy[i] = [to_img_dir, new_relative_path] # to be copied
           @@logger.info "[dbg] import #{i} to #{to_img_dir} with_path #{new_relative_path}" #TODO debug
         end
+        # jd_md.write
+        @@logger.info jk_md.white
 
         # import using post
         MarkdownFilesMerger.new.merge_post(Post.new(tmp_fpath), to_dir)

@@ -4,7 +4,7 @@ require 'colorize'
 
 module Wp2jekyll
 
-  class JekyllLink
+  class LiquidLink
 
     RE = %r{(\{\{\s*\"(.*?)\"\s*(\|\s?(relative_url|absolute_url))?\s*\}\})}
     #E = %r{0---------1---1-----2-----3-------------------------32--------0}
@@ -17,7 +17,7 @@ module Wp2jekyll
       if m = RE.match(str)
         @path = m[1] || ''
         @jekyll_filter_url = m[2] || ''
-        @logger.debug "JekyllLink #{m[0]}".green
+        @logger.debug "LiquidLink #{m[0]}".green
         return true
       end
       false

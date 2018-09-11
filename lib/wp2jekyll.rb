@@ -19,11 +19,8 @@ require "wp2jekyll/version"
 module Wp2jekyll
   require 'debug_logger'
 
-  require 'wp2jekyll/wp_patch'
-  require 'wp2jekyll/post_merge'
-  require 'wp2jekyll/img_merge'
-  require 'wp2jekyll/file_merge'
-  require 'wp2jekyll/google_photo'
+  require 'wp2jekyll/wp_import'
+  require 'wp2jekyll/google_photo_import'
   require 'wp2jekyll/blogspot_import'
   
   def self.process_wordpress_md_dir(d)

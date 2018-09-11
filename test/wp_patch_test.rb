@@ -160,14 +160,14 @@ some other text
         s1 = '''![](///home/theme/Downloads/How%20Chromium%20Displays%20Web%20Pages-%20Conceptual%20application%20layers.svg)'''
         s2 = ''
 
-        assert_equal(s2, WordpressMarkdown.new.md_modify_link(s1))
+        assert_equal(s2, WordpressMarkdown.new.modify_md_link(s1))
     end
 
     def test_patch_link_bug
         s1 = '''[https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome](https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome "https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome"){.https}'''
         s2 = '''[https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome](https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome "https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome")'''
 
-        assert_equal(s2, WordpressMarkdown.new.md_modify_link(s1))
+        assert_equal(s2, WordpressMarkdown.new.modify_md_link(s1))
     end
 
     def test_keep_normal_link
@@ -326,7 +326,7 @@ EOS
 
 EOS
     # txt =  WordpressMarkdown.new.xml_to_md(xml)
-    # txt2 = WordpressMarkdown.new.md_modify_link(txt)
+    # txt2 = WordpressMarkdown.new.modify_md_link(txt)
     # assert_equal(md, txt2)
     assert_equal(md, WordpressMarkdown.new.process_md!(xml))
     end

@@ -27,6 +27,10 @@ module Wp2jekyll
       @post['date']
     end
 
+    def date
+      Date.parse(date_str)
+    end
+
     def to_s
       s = "---\n"
       @post.each do |k, v|

@@ -221,7 +221,7 @@ module Wp2jekyll
       end
     end
 
-    def md_modify_link(txt)
+    def modify_md_link(txt)
       txt.scan(MarkdownLink::RE).each do |m|
         ln = m[0]
         mdlk = MarkdownLink.new(m[0])
@@ -307,8 +307,8 @@ module Wp2jekyll
       cs.li.each { |o| o[:text] = parse_html_to_md_array(o[:text]).join if !!o[:text] }
 
       # markdown link
-      # body_str = md_modify_link(body_str)
-      cs.li.each { |o| o[:text] = md_modify_link(o[:text]) if !!o[:text] }
+      # body_str = modify_md_link(body_str)
+      cs.li.each { |o| o[:text] = modify_md_link(o[:text]) if !!o[:text] }
       #
       # markdown quote
       # body_str = patch_quote(body_str)

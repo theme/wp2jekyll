@@ -5,6 +5,7 @@ require 'colorize'
 
 module Wp2jekyll
 
+  # Used to cut Wordpress post into interleaved Code | Text list. ( for other processing )
   class CodeSegmenter
     RE = %r{([ \t\r\f]*\[code.*?\](.*?)\[/code\])}m
     attr_accessor :li
