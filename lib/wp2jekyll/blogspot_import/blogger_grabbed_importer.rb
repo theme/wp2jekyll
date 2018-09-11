@@ -11,8 +11,7 @@ module Wp2jekyll
     def import(grabbed_dir, to_dir, to_img_dir)
       Dir.glob(File.join(grabbed_dir,'*')).each do |post_dir|
         # read
-        blogger_post = BloggerPost.new
-        blogger_post.read_grabbed_post_dir(post_dir) # post_dir/images files is recorded
+        blogger_post = BloggerPost.new(post_dir) # post_dir/images files is recorded
 
         # assemble to jekyll markdown
         tmp_fpath = File.join(post_dir, 'jekyll_md')
@@ -27,7 +26,7 @@ module Wp2jekyll
         # to jekyll/_source/_images/yyyy/mm/dd/basename 
         #
         images_tobe_copy = {}
-        blogger_post.images.each do |i|
+        blogger_post.images.each do |i| # blogger_post only know images that are on the disk
           d = Date.parse(blogger_post.date_str)
           bn = File.basename(i)
           jk_md = JekyllMarkdown.new(tmp_fpath)

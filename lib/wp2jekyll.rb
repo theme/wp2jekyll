@@ -14,6 +14,7 @@ require "wp2jekyll/version"
 # 2.2 check if image file is already exist in jekyll's _assets dir.
 # 2.3 copy image, keep dir structure for same kind of source. (wordpress | wordpress.com | blogspot)
 # 2.4 modify every link that referes to a image in jekyll/_posts/ to new dir path.
+# 2.5 If a image link lack correspondent image file, try search from online storage ( e.g. Google Photo ) and save to local, then modify link to jekyll format.
 
 module Wp2jekyll
   require 'debug_logger'

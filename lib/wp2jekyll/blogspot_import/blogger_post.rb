@@ -9,7 +9,7 @@ module Wp2jekyll
     attr_accessor :post
     attr_accessor :images
 
-    def initialize()
+    def initialize(post_dir)
       @logger = Logger.new(STDERR)
       @logger.level = Logger::DEBUG
 
@@ -20,6 +20,7 @@ module Wp2jekyll
       @post['body'] = ''
 
       @images = []
+      read_grabbed_post_dir(post_dir)
     end
     
     def date_str
