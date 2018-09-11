@@ -25,13 +25,15 @@ module Wp2jekyll
         # to jekyll/_source/_images/yyyy/mm/dd/basename 
         #
         images_tobe_copy = {}
-        blogger_post.images.each do |i| # blogger_post only know images that are on the disk
+        blogger_post.images.each do |i| 
+          # Handles only blogger_post's known images (that are on the disk at initialzing time),
+          # missing images will be handled below.
+
           d = Date.parse(blogger_post.date_str)
           bn = File.basename(i)
           jk_md = JekyllMarkdown.new(tmp_fpath)
           new_relative_path = d.strftime('%Y/%m/%d')
-          
-          # TODO for each image link, search image from local drive or google photo
+
           jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path))
           # jd_md.write
           @@logger.info jk_md.white
