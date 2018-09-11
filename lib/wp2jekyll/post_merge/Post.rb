@@ -21,8 +21,8 @@ module Wp2jekyll
     end
 
     def parse_yaml_front_matter(yaml_txt)
-      # @logger.debug 'parse_yaml_front_matter'
-      # @logger.debug yaml_txt.green
+      # @@logger.debug 'parse_yaml_front_matter'
+      # @@logger.debug yaml_txt.green
       if @yaml_hash = YAML.load(yaml_txt)
         @title = @yaml_hash['title']
         @date_str = @yaml_hash['date']
@@ -60,9 +60,9 @@ module Wp2jekyll
       if !File.exist?(fpath) then
         yaml_hash_write_back
         @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @body_str)
-        @logger.info "write file: #{fpath}"
+        @@logger.info "write file: #{fpath}"
       else
-        @logger.warn "! File exist, when Post.write_to_dir #{dir}"
+        @@logger.warn "! File exist, when Post.write_to_dir #{dir}"
       end
     end
 

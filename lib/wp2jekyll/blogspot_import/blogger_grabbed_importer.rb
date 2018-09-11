@@ -22,34 +22,35 @@ module Wp2jekyll
 
         # modify link of image
         # from blog spot magic number path
-        # to jekyll/_source/_images/yyyy/mm/dd/basename 
+        # to jekyll/_source/_images/yyyy/mm/dd/basename
         #
         images_tobe_copy = {}
         jk_md = JekyllMarkdown.new(tmp_fpath)
-        blogger_post.images.each do |i| 
+        blogger_post.images.each do |i|
           # Handles only blogger_post's known images (that are on the disk at initialzing time),
-          # missing images will be handled below.
+          # missing images will be handled by other separate module like google_photo_importer.
 
           bn = File.basename(i)
           new_relative_path = blogger_post.date.strftime('%Y/%m/%d')
 
-          jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path))
+          jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path)) # modify link to rel_path/image.jpg
 
           i_path = File.dirname(i)
           images_tobe_copy[i] = [to_img_dir, new_relative_path] # to be copied
           @@logger.info "[dbg] import #{i} to #{to_img_dir} with_path #{new_relative_path}" #TODO debug
         end
-        # jd_md.write
-        @@logger.info jk_md.white
+        jk_md.write
+        # @@logger.info jk_md.info.white
 
         # import using post
         MarkdownFilesMerger.new.merge_post(Post.new(tmp_fpath), to_dir)
         
         # Do: copy images.
         images_tobe_copy.each do |k,v| 
-          @@logger.debug "[dbg] to cp #{k} #{v}"
-          # ImageMerger.new.merge_img_with_path(i, v[0], v[1])
+          @@logger.debug "[dbg] to cp #{k} #{v}".yellow
+          ImageMerger.new.merge_img_with_path(k, v[0], v[1])
         end
+
       end
     end
 

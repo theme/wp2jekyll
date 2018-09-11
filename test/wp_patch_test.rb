@@ -10,6 +10,8 @@ class TestWpMarkdown2jekyll < MiniTest::Test
   # make_my_diffs_pretty!
   # include PrettyDiffs
   include Wp2jekyll
+  include DebugLogger
+
     def test_patch_code
         # a invisible character is there, DO NOT FORMAT
         s1 = '''
@@ -277,12 +279,8 @@ tags:
 [![aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093]({{ "/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg" | relative_url }})]({{ \"/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg\" | relative_url }})
 
 EOS
-      logger = Logger.new(STDERR)
-      # @logger.level = Logger::INFO
-      logger.level = Logger::DEBUG
-      # DEBUG < INFO < WARN < ERROR < FATAL < UNKNOWN
 
-      logger.debug "############ test_whole_md ##############"
+      @@logger.debug "############ test_whole_md ##############"
       wm = WordpressMarkdown.new
       tmp = ''
       md.each_line do |line|
@@ -292,7 +290,7 @@ EOS
 
       assert_equal(md_patched.inspect, tmp.inspect)
       # assert_equal(md_patched, WordpressMarkdown.new.xml_to_md(md))
-      logger.debug "############ end test_whole_md ##############"
+      @@logger.debug "############ end test_whole_md ##############"
     end
 
     def test_xml_table_a_img

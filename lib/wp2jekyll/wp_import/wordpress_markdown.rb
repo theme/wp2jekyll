@@ -73,7 +73,7 @@ module Wp2jekyll
     #"more_anchor"    => true,
     #"extension"      => "xml",
     #"status"         => ["publish"]
-    #                                                                                                        })'
+    #  })'
     ###
 
     def patch_unescape_html_char(txt)

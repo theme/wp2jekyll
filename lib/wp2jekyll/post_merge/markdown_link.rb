@@ -4,6 +4,8 @@ require 'colorize'
 
 module Wp2jekyll
   class MarkdownLink
+    include DebugLogger
+
     RE = %r{((\!)?\[([^\n]*)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}
     #E = %r{12--2--[3------3-]-(   4--------4   5"6-------6"5-)7-{----}7-1}m
     attr_accessor :cap
@@ -12,15 +14,13 @@ module Wp2jekyll
     attr_accessor :is_img
     attr_accessor :re
     def initialize(str)
-      @logger = Logger.new(STDERR)
-      @logger.level = Logger::DEBUG
       if m = RE.match(str)
         @cap = m[3] || ''
         @link = m[4] || ''
         @title = m[6] || ''
         @is_img = ('!' == m[2]) ? true : false
         @tail = m[7] || ''
-        @logger.debug "MarkdownLink: #{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} \"#{@title.blue}\")#{@tail.magenta}"
+        @@logger.debug "MarkdownLink: #{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} \"#{@title.blue}\")#{@tail.magenta}"
       end
     end
 
@@ -35,7 +35,7 @@ module Wp2jekyll
 
     def to_s
       if @is_img
-        @logger.info "![#{@cap}](#{@link})".cyan
+        @@logger.info "![#{@cap}](#{@link})".cyan
         return "![#{@cap}](#{@link})"
       else # not image
         if @title.empty?

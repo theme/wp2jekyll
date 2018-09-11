@@ -35,13 +35,13 @@ module Wp2jekyll
 
     # search link that contains img_fn, replace its path with provided path
     def relink_image(img_fn, relative_path)
-      @@logger.debug "relink_image #{img_fn}"
+      @@logger.debug "relink_image #{img_fn}".yellow
 
       tmp_s = @body_str
       
       URI.extract(tmp_s).each do |uri|
-        @@logger.debug uri.yellow
         if uri.include? img_fn
+          @@logger.debug uri.red
           jekyll_img_link = "{{ \"#{File.join(relative_path,img_fn)}\" | relative_url }}"
           tmp_s.gsub!(uri.gsub(/\)$/,''), jekyll_img_link) # ) is a patch
         end
