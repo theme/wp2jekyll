@@ -56,22 +56,27 @@ module Wp2jekyll
       return li
     end
 
-    def extract(str)
-      li = []
-      RE.scan(str).each do |m|
-        li.append self.parse m[0]
-      end
-      return li
-    end
-
     def self.test?(str)
       nil != RE.match(str)
     end
 
     def change_path_to!(to_path)
-      basen = Pathname.new(@uri).basename
-      new_uri = Pathname.new(File.join(to_path, basename))
-      @uri = new_uri.to_s
+      @uri.path = to_path
+    end
+
+    def drop_scheme_host!
+      @uri.scheme = ''
+      @uri.host = ''
+    end
+
+    def to_liquid_relative!
+      drop_scheme_host!
+      @liquid_filter = 'relative_url'
+    end
+
+    def to_liquid_absolute!(scheme, host)
+      drop_scheme_host!
+      @liquid_filter = 'absolute_url'
     end
 
   end
