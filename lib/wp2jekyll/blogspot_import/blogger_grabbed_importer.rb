@@ -7,7 +7,7 @@ module Wp2jekyll
   class BloggerGrabbedImporter
     include DebugLogger
 
-    def import(grabbed_dir, to_dir, to_img_dir)
+    def self.import(grabbed_dir, to_dir, to_img_dir)
       Dir.glob(File.join(grabbed_dir,'*')).each do |post_dir|
         # read
         blogger_post = BloggerPost.new(post_dir) # post_dir/images files is recorded
@@ -18,7 +18,7 @@ module Wp2jekyll
         File.write(tmp_fpath, blogger_post.to_s)
 
         # patch post body format to markdown using wp_import
-        WordpressMarkdown.new(tmp_fpath).write_jekyll_md
+        WordpressMarkdown.new(tmp_fpath).write_jekyll_md!
 
         # modify link of image
         # from blog spot magic number path
@@ -43,7 +43,7 @@ module Wp2jekyll
         # @@logger.info jk_md.info.white
 
         # import using post
-        MarkdownFilesMerger.new.merge_post(Post.new(tmp_fpath), to_dir)
+        PostMerger.new.merge_post(Post.new(tmp_fpath), to_dir)
         
         # Do: copy images.
         images_tobe_copy.each do |k,v| 

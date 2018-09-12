@@ -23,12 +23,82 @@ module Wp2jekyll
   require 'wp2jekyll/google_photo_import'
   require 'wp2jekyll/blogspot_import'
   
-  def self.process_wordpress_md_dir(d)
+  def self.process_wordpress_md_in_dir(d)
     if Dir.exist? d then
       Dir.glob (d + '/**/*.md') do |fpath|
-        WordpressMarkdown.new(fpath).write_jekyll_md
+        WordpressMarkdown.new(fpath).write_jekyll_md!
       end
     end
+  end
+
+  def self.merge_markdown_posts(from_dir:, to_jekyll_posts_dir:)
+    PostMerger.new.merge_dir(from_dir, to_jekyll_posts_dir)
+  end
+
+  def self.import_blogger_post(from_grabbed_dir:, to_dir:, to_img_dir:)
+    BloggerGrabbedImporter.import(from_grabbed_dir, to_dir, to_img_dir)
+  end
+
+  def self.rename_md_posts_indir(dir)
+    if Dir.exist? dir then
+      Dir.glob (dir + '**/*.md') do |fpath|
+        dirn = File.dirname(fpath)
+        extn = File.extname(fpath)
+        basen = File.basename(fpath, extn)
+
+        ma = basen.match(/^\d\d\d\d-\d\d-\d\d-/)
+        next if !ma
+        dates = ma[0]
+        fn_re = /^[a-zA-Z_0-9-]+$/
+        next if fn_re.match?(basen)
+
+        dst_string = File.read(fpath)
+        puts dst_string
+
+        puts '---------'
+        puts basen
+        puts URI.unescape(fpath)
+
+        c = ''
+        until ( 'r' == c || 'd' == c ) do
+          puts '(r)ename? (d)raft?'
+          c = STDIN.getc
+          STDIN.gets # this flush getc's left over string
+        end
+
+        case c
+        when 'r' then
+          puts 'rename to?'
+          puts dates
+
+          # input new name
+          inputs = STDIN.gets.chomp
+          basen_new = dates + inputs
+          basen_new.downcase!
+          basen_new.gsub!(' ', '-')
+          puts basen_new
+
+          # move
+          fpath_new = fpath.gsub(basen, basen_new)
+          if fn_re.match?(basen_new) then
+            FileUtils.mv(fpath, fpath_new,
+                         :force => false, :verbose => true)
+          else
+            puts 'X invalid name: ' + fpath_new
+            exit
+          end
+
+        when 'd' then
+          puts 'TODO: mv to ../_drafts/, append date if conflict.'
+          dirn = File.dirname(fpath)
+          extn = File.extname(fpath)
+          basen = File.basename(fpath, extn)
+          FileUtils.mv(fpath, fpath.gsub(dirn, dirn + '/../_drafts/'),
+                       :force => false, :verbose => true)
+        end
+      end
+  end
+
   end
   
 end

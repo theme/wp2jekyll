@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'tempfile'
 require 'cgi'
 require 'uri'
 require 'logger'
@@ -353,7 +354,7 @@ module Wp2jekyll
       File.write(o, wp_md)
     end
 
-    def write_jekyll_md
+    def write_jekyll_md!
       if !has_yaml_header?(@fp) then
         @@logger.info "! #{@fp} has no yaml header"
       else
@@ -361,13 +362,13 @@ module Wp2jekyll
         @ext = File.extname(@fp)
         @base = File.basename(@fp, @ext)
 
-        tmp = @fp + '.tmp'
+        tmpf = Tempfile.new('wpmd_tmp')
+        
+        FileUtils.cp(@fp, tmp.path, :verbose => false)
+        wp_2_jekyll_md_file(tmp.path, @fp)
 
-          if (!File.exists?(tmp)) then
-            FileUtils.cp(@fp, tmp, :verbose => false)
-          end
-        wp_2_jekyll_md_file(tmp, @fp)
-        File.delete(tmp)
+        tmpf.unlink
+        
       end
     end
   end

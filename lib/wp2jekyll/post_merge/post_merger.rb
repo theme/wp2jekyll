@@ -5,11 +5,10 @@ require 'diff/lcs'
 
 module Wp2jekyll
 
-  class MarkdownFilesMerger
-    SIMILAR_LV = 0.9
+  class PostMerger
+    include DebugLogger
 
-    @@logger = Logger.new(STDERR)
-    @@logger.level = Logger::DEBUG
+    SIMILAR_LV = 0.9
 
     def user_confirm(hint = '')
       c = ''

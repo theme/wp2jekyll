@@ -42,7 +42,7 @@ For details see the code.
 
 Overview:
 
-- import posts: `Wp2jekyll::MarkdownFilesMerger.new.merge_dir(d, File.join(source_dir, '_posts/'))`
+- import posts: `Wp2jekyll::PostMerger.new.merge_dir(d, File.join(source_dir, '_posts/'))`
 - `**/*.md` to jekyll format: `Wp2jekyll.process_wordpress_md_dir(source_dir)`
 - import posts saved as separated parts (in dirs), checking Google Photo: `Wp2jekyll::BloggerGrabbedImporter.new.import(blogspot_archive_dir,File.join(source_dir, '_posts'),File.join(source_dir, '_images'))`
 
