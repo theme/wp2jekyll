@@ -219,7 +219,6 @@ module Wp2jekyll
 
     def modify_md_link(txt)
       MarkdownLink.extract(txt).each do |mdlk|
-        @@logger.debug mdlk.to_s.green
 
         # recursive process embedded markdown link in link cap
         mdlk.cap = modify_md_link(mdlk.cap)
@@ -232,7 +231,7 @@ module Wp2jekyll
         # relative
         if is_uri?(mdlk.link) and should_url_relative?(mdlk.link) then
           @@logger.debug 'url should be relative: ' + mdlk.link.green
-          mdlk.link = LiquidUrl.new(uri: mdlk.link).to_s
+          mdlk.link = LiquidUrl.new(uri: mdlk.link).to_liquid_relative!.to_s
           txt.gsub!(mdlk.parsed_str, mdlk.to_s)
         end
 
