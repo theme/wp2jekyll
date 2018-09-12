@@ -279,18 +279,12 @@ tags:
 [![aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093]({{ "/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg" | relative_url }})]({{ \"/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg\" | relative_url }})
 
 EOS
-
-      @@logger.debug "############ test_whole_md ##############"
       wm = WordpressMarkdown.new
-      tmp = ''
-      md.each_line do |line|
-        tmp += wm.patch_char(line) # special chars
-      end
-      tmp = wm.process_md!(tmp) # xml elements
+      tmp = wm.process_md!(md) # xml elements
+      tmp = wm.patch_char(tmp)
 
       assert_equal(md_patched.inspect, tmp.inspect)
       # assert_equal(md_patched, WordpressMarkdown.new.xml_to_md(md))
-      @@logger.debug "############ end test_whole_md ##############"
     end
 
     def test_xml_table_a_img
@@ -480,7 +474,7 @@ Text before code.
 After code text.
 '''
       out = WordpressMarkdown.new.process_md!(txt)
-      puts out.yellow if !out.include?('[Unit]')
+      # puts out.yellow if !out.include?('[Unit]')
       assert(out.include?('[Unit]'))
     end
 end

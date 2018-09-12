@@ -219,6 +219,11 @@ module Wp2jekyll
 
     def modify_md_link(txt)
       MarkdownLink.extract(txt).each do |mdlk|
+        @@logger.debug mdlk.to_s.green
+
+        # recursive process embedded markdown link in link cap
+        mdlk.cap = modify_md_link(mdlk.cap)
+
         if is_url_suspicious? mdlk.link then
           @@logger.warn 'suspicious: ' + mdlk.link.red
           txt.gsub!(mdlk.parsed_str, '') # delete to prevent being published
@@ -227,12 +232,13 @@ module Wp2jekyll
         # relative
         if is_uri?(mdlk.link) and should_url_relative?(mdlk.link) then
           @@logger.debug 'url should be relative: ' + mdlk.link.green
-          mdlk.link = LiquidUrl.parse(mdlk.link).to_liquid_relative!
+          mdlk.link = LiquidUrl.new(uri: mdlk.link).to_s
           txt.gsub!(mdlk.parsed_str, mdlk.to_s)
         end
 
         # drop tail {}
         txt.gsub!(mdlk.parsed_str, mdlk.to_s)
+
       end
 
       return txt
@@ -252,7 +258,7 @@ module Wp2jekyll
         txt.gsub!(m[0], code)
       end
 
-      @@logger.debug "patch_code => #{txt} ".yellow
+      # @@logger.debug "patch_code => #{txt} ".yellow
       return txt
     end
 

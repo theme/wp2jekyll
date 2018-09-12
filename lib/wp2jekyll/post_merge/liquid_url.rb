@@ -20,7 +20,7 @@ module Wp2jekyll
     end
 
     def to_s
-      if (nil == @liquid_filter) || @liquid_filter.is_empty?
+      if (nil == @liquid_filter) || @liquid_filter.empty?
         @uri.to_s
       else
         "{{ \"#{@uri.to_s}\" | #{@liquid_filter} }}"
@@ -42,6 +42,7 @@ module Wp2jekyll
 
         o.parsed_str = str
         @@logger.debug info.green
+
         return o
       end
       nil
@@ -50,7 +51,7 @@ module Wp2jekyll
     # return [Array] of LiquidUrl
     def self.extract(str)
       li = []
-      RE.scan(str).each do |m|
+      str.scan(RE).each do |m|
         lqlk = self.parse m[0]
         li.append lqlk if nil != lqlk
       end

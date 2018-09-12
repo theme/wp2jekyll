@@ -7,7 +7,7 @@ module Wp2jekyll
     include DebugLogger
 
     RE = %r{((\!)?\[([^\n]*)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}
-    #E = %r{12--2--[3------3-]-(   4--------4   5"6-------6"5-)7-{----}7-1}m
+    #E = %r{12--2--[3------3-]-(   4--------4   5"6-------6"5-)7-{----}7-1}
     attr_accessor :cap
     attr_accessor :link
     attr_accessor :title
@@ -29,7 +29,7 @@ module Wp2jekyll
         # @@logger.info "![#{@cap}](#{@link})".cyan
         return "![#{@cap}](#{@link})"
       else # not image
-        if @title.empty?
+        if nil == @title || @title.empty?
           return "[#{@cap}](#{@link})"
         else
           return "[#{@cap}](#{@link} \"#{title}\")"
@@ -38,7 +38,7 @@ module Wp2jekyll
     end
     
     def info
-      "MarkdownLink: #{@is_img ? '!' : ''}[#{@cap.red}](#{@link.green} \"#{@title.blue}\")#{@tail.magenta}"
+      "MarkdownLink: #{@is_img ? '!' : ''}[#{(@cap || '').red}](#{(@link || '').green} \"#{(@title || '').blue}\")#{(@tail || '').magenta}"
     end
 
     # @return
@@ -48,13 +48,13 @@ module Wp2jekyll
       if m = RE.match(str)
         o = self.new(
           is_img: ('!' == m[2]) ? true : false,
-          cap: m[3] || '',
-          link: '',
-          title: m[6] || '',
-          tail: m[7] || ''
+          cap: m[3],
+          link: m[4],
+          title: m[6],
+          tail: m[7]
         )
         o.parsed_str = str
-        @@logger.debug o.info
+        @@logger.debug "MarkdownLink #{o.info}"
 
         return o
       end
@@ -64,9 +64,9 @@ module Wp2jekyll
     # return [Array] of MarkdownLink
     def self.extract(str)
       li = []
-      RE.scan(str).each do |m|
+      str.scan(RE).each do |m|
         mdlk = self.parse m[0]
-        li.append if nil != mdlk
+        li.append mdlk if nil != mdlk
       end
       return li
     end
