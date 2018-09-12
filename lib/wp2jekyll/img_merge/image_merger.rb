@@ -124,7 +124,7 @@ module Wp2jekyll
           @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: to_fp)
         end
       else
-        @@logger.info "merge_img_prepend_path #{basefn(image)} exists in #{to_dir}.".green
+        @@logger.info "merge_img_prepend_path #{basefn(image)} in #{to_dir} exists.".green
         @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: nil)
       end
     end
@@ -145,7 +145,7 @@ module Wp2jekyll
           @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: to_fp)
         end
       else
-        @@logger.info "merge_img_keep_path #{basefn(image)} exists in #{to_dir}.".green
+        @@logger.info "merge_img_keep_path #{basefn(image)} in #{to_dir} exists.".green
         @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: nil)
       end
     end

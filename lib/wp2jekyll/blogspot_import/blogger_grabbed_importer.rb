@@ -25,7 +25,7 @@ module Wp2jekyll
         pm.merge_post(tmp_fpath, to_dir) # may be imported, may be not.
 
         # for post that is now in the to_dir, try import images
-        pfp = pm.existing_post_fp(post, to_dir)
+        pfp = pm.existing_post_fp(tmp_fpath, to_dir)
         if nil != pfp then
           jk_md = JekyllMarkdown.new(pfp)
           im = ImageMerger.new

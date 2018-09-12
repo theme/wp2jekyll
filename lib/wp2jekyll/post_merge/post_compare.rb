@@ -18,6 +18,8 @@ module Wp2jekyll
     attr_accessor :pb
 
     attr_accessor :user_say_same
+    
+    @@cache = PostCompareCache.new
 
     def initialize(a, b)
       @a = a
@@ -49,8 +51,10 @@ module Wp2jekyll
 
       case user_input
       when 'y' then
+        @@cache.add_same(@a, @b)
         @user_say_same = true
       when 'n' then
+        @@cache.add_diff(@a, @b)
         @user_say_same = false
       end
     end
@@ -68,16 +72,21 @@ module Wp2jekyll
     end
 
     def similar?
+      if @@cache.same?(@a, @b) then return true end
+      if @@cache.diff?(@a, @b) then return false end
+
       if same_title? && same_date? then return true end
 
       lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
       similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
 
       if SIMILAR_LV_AUTO < similarity
+        @@cache.add_same(@a, @b)
         return true
       elsif SIMILAR_LV_HINT < similarity && similarity < SIMILAR_LV_AUTO
         return ask_usr_same?
       else # similarity < SIMILAR_LV_HINT
+        @@cache.add_diff(@a, @b)
         return false
       end
       
