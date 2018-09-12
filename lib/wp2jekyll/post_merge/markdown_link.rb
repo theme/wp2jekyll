@@ -13,6 +13,7 @@ module Wp2jekyll
     attr_accessor :title
     attr_accessor :is_img
     attr_accessor :tail
+    attr_accessor :parsed_str
     
     # simple constructor
     def initialize(is_img: false, cap: '', link:, title: '', tail: '')
@@ -52,6 +53,7 @@ module Wp2jekyll
           title: m[6] || '',
           tail: m[7] || ''
         )
+        o.parsed_str = str
         @@logger.debug o.info
 
         return o
@@ -63,7 +65,8 @@ module Wp2jekyll
     def self.extract(str)
       li = []
       RE.scan(str).each do |m|
-        li.append self.parse m[0]
+        mdlk = self.parse m[0]
+        li.append if nil != mdlk
       end
       return li
     end

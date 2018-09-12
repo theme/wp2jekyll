@@ -23,7 +23,7 @@ module Wp2jekyll
       if (nil == @liquid_filter) || @liquid_filter.is_empty?
         @uri.to_s
       else
-        "{{ \"#{@uri.path}\" | #{@liquid_filter} }}"
+        "{{ \"#{@uri.to_s}\" | #{@liquid_filter} }}"
       end
     end
 
@@ -51,7 +51,8 @@ module Wp2jekyll
     def self.extract(str)
       li = []
       RE.scan(str).each do |m|
-        li.append self.parse m[0]
+        lqlk = self.parse m[0]
+        li.append lqlk if nil != lqlk
       end
       return li
     end
@@ -65,18 +66,22 @@ module Wp2jekyll
     end
 
     def drop_scheme_host!
-      @uri.scheme = ''
+      @uri.scheme = nil
       @uri.host = ''
+      @uri.port = ''
+      @uri = URI.join(@uri.to_s) # reduce // to /
     end
 
     def to_liquid_relative!
       drop_scheme_host!
       @liquid_filter = 'relative_url'
+      self
     end
 
     def to_liquid_absolute!(scheme, host)
       drop_scheme_host!
       @liquid_filter = 'absolute_url'
+      self
     end
 
   end

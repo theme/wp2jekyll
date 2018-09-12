@@ -41,10 +41,6 @@ module Wp2jekyll
     def url_to_relative(ln)
       return URI(ln).path
     end
-
-    def url_to_liquid(url) # liquid is the template engine that jekyll used.
-      return "{{ \"#{url_to_relative(url)}\" | relative_url }}" 
-    end
     
     ####
     # the wordpress exported md is got by the following ruby script ,
@@ -222,26 +218,23 @@ module Wp2jekyll
     end
 
     def modify_md_link(txt)
-      txt.scan(MarkdownLink::RE).each do |m|
-        ln = m[0]
-        mdlk = MarkdownLink.parse(m[0])
-        if is_url_suspicious?(mdlk.link) then
+      MarkdownLink.extract(txt).each do |mdlk|
+        if is_url_suspicious? mdlk.link then
           @@logger.warn 'suspicious: ' + mdlk.link.red
-          txt.gsub!(ln, '') # delete to prevent being published
-          next
+          txt.gsub!(mdlk.parsed_str, '') # delete to prevent being published
         end
-
+        
         # relative
         if is_uri?(mdlk.link) and should_url_relative?(mdlk.link) then
           @@logger.debug 'url should be relative: ' + mdlk.link.green
-          mdlk.link = url_to_liquid(mdlk.link)
-          txt.gsub!(ln, mdlk.to_s)
+          mdlk.link = LiquidUrl.parse(mdlk.link).to_liquid_relative!
+          txt.gsub!(mdlk.parsed_str, mdlk.to_s)
         end
 
         # drop tail {}
-        txt.gsub!(ln, mdlk.to_s)
-
+        txt.gsub!(mdlk.parsed_str, mdlk.to_s)
       end
+
       return txt
     end
 
