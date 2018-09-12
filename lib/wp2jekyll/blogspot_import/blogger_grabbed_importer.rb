@@ -42,6 +42,8 @@ module Wp2jekyll
             # to jekyll/_source/_images/yyyy/mm/dd/basename
             jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path)) # modify link to rel_path/image.jpg
 
+            # TODO : for JFIF file with a messed file name that is not end in jpg, add one.
+
             im.merge_img_prepend_path(image:i, to_dir:to_img_dir, prepend_path:new_relative_path)
           end
 
