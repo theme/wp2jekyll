@@ -7,21 +7,21 @@ class TestMergerMarkdownFile < MiniTest::Test
   include Wp2jekyll
 
   def test_debug
-    PostMerger.new.hint_post_contents(Post.new(File.expand_path('../sample/post.md', __FILE__)))
+    Post.new(File.expand_path('../sample/post.md', __FILE__)).hint_contents
   end
 
   def test_compare_date
-    fa = Post.new(File.expand_path('../sample/post.md', __FILE__))
-    fb = Post.new(File.expand_path('../sample/post.md', __FILE__))
+    fa = File.expand_path('../sample/post.md', __FILE__)
+    fb = File.expand_path('../sample/post.md', __FILE__)
     
-    assert(PostMerger.new.is_post_same_date(fa, fb))
+    assert(PostCompare.new(fa, fb).same_date?)
   end
 
   def test_diff
-    fa = Post.new(File.expand_path('../sample/post.md', __FILE__))
-    fb = Post.new(File.expand_path('../sample/post 2.md', __FILE__))
+    fa = File.expand_path('../sample/post.md', __FILE__)
+    fb = File.expand_path('../sample/post 2.md', __FILE__)
     
-    assert(PostMerger.new.is_post_similar(fa, fb))
+    assert(PostCompare.new(fa, fb).similar?)
   end
 
 end

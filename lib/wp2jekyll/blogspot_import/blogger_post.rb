@@ -107,4 +107,3 @@ module Wp2jekyll
   end
 
 end
-

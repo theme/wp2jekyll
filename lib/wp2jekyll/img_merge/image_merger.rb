@@ -1,7 +1,6 @@
 require 'fileutils'
 require 'pathname'
-require 'logger'
-require 'colorize'
+
 require 'diff/lcs'
 
 module Wp2jekyll
@@ -9,13 +8,33 @@ module Wp2jekyll
   class ImageMerger
     include DebugLogger
     attr_accessor :merge_count
-    attr_accessor :merge_list
-    attr_accessor :skip_list
+    attr_accessor :img_trans
 
     def initialize
       @merge_count = 0
-      @merge_list = []
-      @skip_list = []
+      @img_trans = []
+    end
+
+    def basefn(path)
+      base = File.basename(path)
+    end
+
+    def is_merged?(img)
+      @img_trans.each do |t|
+        if basefn(img) == t.fn && nil != t.to
+          return true
+        end
+      end
+      false
+    end
+
+    def is_skipped?(img)
+      @img_trans.each do |t|
+        if basefn(img) == t.fn && nil == t.to
+          return true
+        end
+      end
+      false
     end
 
     def user_confirm(hint = '', yes = false)
@@ -59,10 +78,6 @@ module Wp2jekyll
       # TODO compare File ctime : change time
     end
 
-    def basefn(path)
-      base = File.basename(path)
-    end
-
     def is_img_same_title(a, b)
       # TODO now only compare file name
       basefn(a) == basefn(b)
@@ -92,36 +107,46 @@ module Wp2jekyll
       false
     end
     
-    def merge_img_with_path(image, to_dir, with_path)
+    # copy image
+    #   from from_dir/relative_path/basename (image)
+    #   to to_dir/prepend_path/basename
+    def merge_img_prepend_path(image:, to_dir:, prepend_path:)
       if !is_img_exist(image, to_dir)
-        @@logger.info "merge_img_keep_path #{image} new!".green
+        @@logger.info "merge_img_prepend_path #{image} new!".green
         if user_confirm("Do merge_img_keep_path #{image}", true) # TODO
-          to_path = File.join(to_dir, with_path)
-          FileUtils.mkdir_p(to_path)
-          FileUtils.cp(image, File.join(to_path, basefn(image)))
+          new_path = File.join(to_dir, prepend_path)
+          to_fp = File.join(new_path, basefn(image))
+
+          FileUtils.mkdir_p(new_path)
+          FileUtils.cp(image, to_fp)
+
           @merge_count += 1
-          @merge_list.append image
+          @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: to_fp)
         end
       else
-        # @@logger.info "merge_img_keep_path #{image} exists under #{to_dir}."
-        @skip_list.append image
+        @@logger.info "merge_img_prepend_path #{basefn(image)} exists in #{to_dir}.".green
+        @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: nil)
       end
     end
 
-    def merge_img_keep_path(from_dir, image, to_dir)
+    # copy image
+    #   from from_dir/relative_path/basename
+    #   to to_dir/relative_path/basename
+    def merge_img_keep_path(from_dir:, image:, to_dir:)
       if !is_img_exist(image, to_dir)
-        @@logger.info "merge_img_keep_path #{image} new!"
+        @@logger.info "merge_img_keep_path #{image} new!".green
         if user_confirm("Do merge_img_keep_path #{image}", true) # TODO
           rel_path = Pathname.new(File.dirname(image)).relative_path_from(Pathname.new(from_dir))
-          to_path = File.join(to_dir, rel_path)
-          FileUtils.mkdir_p(to_path)
-          FileUtils.cp(image, File.join(to_path, basefn(image)))
+          new_path = File.join(to_dir, rel_path)
+          to_fp = File.join(to_path, basefn(image))
+          FileUtils.mkdir_p(new_path)
+          FileUtils.cp(image, to_fp)
           @merge_count += 1
-          @merge_list.append image
+          @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: to_fp)
         end
       else
-        # @@logger.info "merge_img_keep_path #{image} exists under #{to_dir}."
-        @skip_list.append image
+        @@logger.info "merge_img_keep_path #{basefn(image)} exists in #{to_dir}.".green
+        @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: nil)
       end
     end
 
@@ -143,7 +168,7 @@ module Wp2jekyll
       
       # debug list untouched files
       Dir.glob(File.join(from_dir, "**/*")) do |fpath|
-        if File.file?(fpath) && !@merge_list.include?(fpath) && !@skip_list.include?(fpath)
+        if File.file?(fpath) && !is_merged?(fpath) && !is_skipped?(fpath)
           @@logger.debug "#{fpath} is not handled : not a image.".yellow
         end
       end

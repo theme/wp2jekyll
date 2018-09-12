@@ -54,7 +54,7 @@ module Wp2jekyll
           tail: m[7]
         )
         o.parsed_str = str
-        @@logger.debug "MarkdownLink #{o.info}"
+        @@logger.debug o.info
 
         return o
       end

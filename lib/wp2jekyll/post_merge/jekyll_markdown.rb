@@ -19,6 +19,10 @@ module Wp2jekyll
       end
     end
 
+    def hint_contents(lines: 5)
+      puts @body_str.split[0..lines].join
+    end
+
     def split_fulltxt(txt)
       m = /(^(---)?.*?---)?(.*)/m.match(txt) # TODO understand yaml format
       @yaml_front_matter_str  = m[1] || ''
@@ -40,10 +44,12 @@ module Wp2jekyll
       tmp_s = @body_str
       
       URI.extract(tmp_s).each do |uri|
+        uri.gsub!(/\)$/,'') # a patch
+        
         if uri.include? img_fn
-          @@logger.debug uri.red
-          jekyll_img_link = "{{ \"#{File.join(relative_path,img_fn)}\" | relative_url }}"
-          tmp_s.gsub!(uri.gsub(/\)$/,''), jekyll_img_link) # ) is a patch
+          @@logger.debug "relink_image uri: #{uri.red}"
+          jekyll_img_link = LiquidUrl.new(uri: File.join(relative_path,img_fn)).to_s
+          tmp_s.gsub!(uri, jekyll_img_link)
         end
       end
 

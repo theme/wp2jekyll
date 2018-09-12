@@ -20,37 +20,37 @@ module Wp2jekyll
         # patch post body format to markdown using wp_import
         WordpressMarkdown.new(tmp_fpath).write_jekyll_md!
 
-        # modify link of image
-        # from blog spot magic number path
-        # to jekyll/_source/_images/yyyy/mm/dd/basename
-        #
-        images_tobe_copy = {}
-        jk_md = JekyllMarkdown.new(tmp_fpath)
-        blogger_post.images.each do |i|
+        # try import
+        pm = PostMerger.new
+        pm.merge_post(tmp_fpath, to_dir) # may be imported, may be not.
+
+        # for post that is now in the to_dir, try import images
+        pfp = pm.existing_post_fp(post, to_dir)
+        if nil != pfp then
+          jk_md = JekyllMarkdown.new(pfp)
+          im = ImageMerger.new
+          
           # Handles only blogger_post's known images (that are on the disk at initialzing time),
-          # missing images will be handled by other separate module like google_photo_importer.
+          # missing images will be handled by other separate module later, like google_photo_importer.
+          blogger_post.images.each do |i|
+            bn = File.basename(i)
+            new_relative_path = blogger_post.date.strftime('%Y/%m/%d')
+            
+            # modify link of image
+            # from blog spot magic number path
+            # to jekyll/_source/_images/yyyy/mm/dd/basename
+            jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path)) # modify link to rel_path/image.jpg
 
-          bn = File.basename(i)
-          new_relative_path = blogger_post.date.strftime('%Y/%m/%d')
+            im.merge_img_prepend_path(image:i, to_dir:to_img_dir, prepend_path:new_relative_path)
+          end
 
-          jk_md.relink_image(bn, File.join(File.basename(to_img_dir), new_relative_path)) # modify link to rel_path/image.jpg
+          jk_md.write
 
-          i_path = File.dirname(i)
-          images_tobe_copy[i] = [to_img_dir, new_relative_path] # to be copied
-          @@logger.info "[dbg] import #{i} to #{to_img_dir} with_path #{new_relative_path}" #TODO debug
+          # TODO : handle_other images link in jk_md
         end
-        jk_md.write
-        # @@logger.info jk_md.info.white
 
-        # import using post
-        PostMerger.new.merge_post(Post.new(tmp_fpath), to_dir)
+        File.delete(tmp_fpath)
         
-        # Do: copy images.
-        images_tobe_copy.each do |k,v| 
-          @@logger.debug "[dbg] to cp #{k} #{v}".yellow
-          ImageMerger.new.merge_img_with_path(k, v[0], v[1])
-        end
-
       end
     end
 

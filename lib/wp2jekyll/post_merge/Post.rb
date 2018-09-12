@@ -7,7 +7,7 @@ require 'date'
 
 module Wp2jekyll
 
-  class Post < JekyllMarkdown
+  class Post < JekyllMarkdown # TODO: JekyllPost
     attr_accessor :title
     attr_accessor :permalink_title
     attr_accessor :date_str
@@ -30,7 +30,7 @@ module Wp2jekyll
       end
     end
 
-    def info
+    def post_info
       "[Post #{@fp} #{date_str} #{@title}]"
     end
 
@@ -72,7 +72,7 @@ module Wp2jekyll
     end
 
     def usr_input_title
-      puts "> Please input a title (empty keeps original) for #{self.info}"
+      puts "> Please input a title (empty keeps original) for #{post_info}"
       puts "> Current post title: #{@title}"
       uin = input_with_hint
       if !uin.empty?
@@ -84,7 +84,7 @@ module Wp2jekyll
     end
 
     def usr_input_permalink
-      puts "> Please input a permalink title (empty keeps original) for #{self.info}"
+      puts "> Please input a permalink title (empty keeps original) for #{post_info}"
       puts "> Current post file name : #{post_fn_base}"
       uin = input_with_hint
       puts uin
@@ -98,4 +98,3 @@ module Wp2jekyll
   end
 
 end
-

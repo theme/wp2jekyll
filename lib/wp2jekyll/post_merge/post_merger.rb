@@ -1,14 +1,26 @@
 require 'fileutils'
-require 'logger'
-require 'colorize'
-require 'diff/lcs'
 
 module Wp2jekyll
+
+  class MergeFailError < StandardError
+    attr_reader :reason
+    ALREADY_EXIST = -1
+    USER_DENY = -2
+
+    def initialize(msg:, reason:)
+      super msg
+      @reason = reason
+    end
+
+  end
 
   class PostMerger
     include DebugLogger
 
-    SIMILAR_LV = 0.9
+    attr_accessor :merged_post
+    def initialize
+      @merged_post = []
+    end
 
     def user_confirm(hint = '')
       c = ''
@@ -17,51 +29,6 @@ module Wp2jekyll
         c = STDIN.gets.chomp
       end
       'y' == c
-    end
-
-    def ask_usr_if_post_is_the_same(a, b)
-      puts '+'*20
-      hint_post_contents(a)
-      puts '-'*20
-      hint_post_contents(b)
-      puts '='*20
-
-      user_input = ''
-      until user_input == 'y' || user_input == 'n' do
-        puts "Regards them as the same post ?"
-        user_input = STDIN.getc
-        STDIN.gets # flush
-      end
-
-      case user_input
-      when 'y' then
-        true
-      when 'n' then
-        false
-      end
-    end
-
-    def hint_post_contents(p)
-      puts p.body_str.split[0..5].join
-    end
-
-    def is_post_same_date(a, b)
-      a.date_str === b.date_str
-    end
-
-    def is_post_same_title(a, b)
-      a.title == b.title
-    end
-
-    def is_post_similar(a, b)
-      if a.title == b.title then return true end
-
-      lcs = Diff::LCS.lcs(a.body_str, b.body_str)
-      similarity = lcs.length * 1.0 / [a.body_str.length, b.body_str.length].max
-      # @@logger.debug "similarity #{similarity} #{a.title} <-> #{b.title}".blue
-      
-      @@logger.info "\nsimilar? #{similarity}\n #{a.info}\n #{b.info}".green if similarity > 0.618
-      similarity > SIMILAR_LV 
     end
 
     def is_post_exist(post, in_dir)
@@ -74,36 +41,50 @@ module Wp2jekyll
       false
     end
 
-    def merge_post(post, to_dir)
-      # @@logger.debug "try merge post #{post.fp} ".green
+    def existing_post_fp(post, in_dir)
+      Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
+        if is_post_similar(post, Post.new(fpath))
+          return fpath
+        end
+      end
+      nil
+    end
+
+    # @return [Bool] true if post is merged.
+    def merge_post(fp, to_dir)
+      post = Post.new fp
       if !is_post_exist(post, to_dir)
         @@logger.info post.body_str
         @@logger.info "merge_post #{post.info} new!"
         if user_confirm("Do merge_post #{post.info}")
           post.usr_input_title
           post.write_to_dir(to_dir)
+          @merged_post.append fp
+        else
+          # raise MergeFailError.new("User deny to merge post", reason: MergeFailError::USER_DENY)
+        @@logger.info "merge_post user denied #{post.info}."
         end
       else
         @@logger.info "merge_post #{post.info} exist."
+        # raise MergeFailError.new("Post already exist", reason: MergeFailError::ALREADY_EXIST)
       end
     end
 
     def merge_dir(from_dir, to_dir)
-      @@logger.info "merger dir #{from_dir} -> #{to_dir}".red
-      dbg_count = 0
-      limit_count = false
+      # @@logger.info "merger dir #{from_dir} -> #{to_dir}".red
+      # dbg_count = 0
+      # limit_count = false
 
       Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|
-        merge_post(Post.new(fpath), to_dir)
+        merge_post(fpath, to_dir)
 
-        dbg_count += 1
+        # dbg_count += 1
 
-        if limit_count && dbg_count > 20
-          break
-        end
+        # if limit_count && dbg_count > 20
+        #   break
+        # end
       end
       @@logger.info "#{dbg_count} post(s) tried."
     end
   end
 end
-

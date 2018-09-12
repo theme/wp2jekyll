@@ -5,10 +5,6 @@ module Wp2jekyll
   
     class WordpressImporter
       include DebugLogger
-
-      def import_image_of_post(post_fp:, search_dir_list:)
-        
-      end
         
       def import_post(fpath:, jekyll_posts_dir:)
         # comvert wordpress markdown to jekyll format

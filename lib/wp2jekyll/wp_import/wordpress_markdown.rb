@@ -347,7 +347,7 @@ module Wp2jekyll
     end
 
     def wp_2_jekyll_md_file(i, o)
-      @@logger.info "wp_2_jekyll_md_file > #{ o }"
+      # @@logger.info "wp_2_jekyll_md_file > #{ o }"
 
       wp_md = File.read(o)
       wp_md = process_md!(wp_md)
@@ -364,8 +364,8 @@ module Wp2jekyll
 
         tmpf = Tempfile.new('wpmd_tmp')
         
-        FileUtils.cp(@fp, tmp.path, :verbose => false)
-        wp_2_jekyll_md_file(tmp.path, @fp)
+        FileUtils.cp(@fp, tmpf.path, :verbose => false)
+        wp_2_jekyll_md_file(tmpf.path, @fp)
 
         tmpf.unlink
         
