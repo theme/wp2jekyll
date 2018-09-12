@@ -8,7 +8,9 @@ module Wp2jekyll
   class PostCompare
     include DebugLogger
 
-    SIMILAR_LV = 0.9
+    SIMILAR_LV_AUTO = 0.9
+
+    SIMILAR_LV_HINT = 0.618
 
     attr_reader :a
     attr_reader :b
@@ -70,10 +72,15 @@ module Wp2jekyll
 
       lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
       similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
-      
-      @@logger.info "\nsimilar? #{similarity}\n #{pa.post_info}\n #{pb.post_info}".green if similarity > 0.618
 
-      similarity > SIMILAR_LV
+      if SIMILAR_LV_AUTO < similarity
+        return true
+      elsif SIMILAR_LV_HINT < similarity && similarity < SIMILAR_LV_AUTO
+        return ask_usr_same?
+      else # similarity < SIMILAR_LV_HINT
+        return false
+      end
+      
     end
 
   end
