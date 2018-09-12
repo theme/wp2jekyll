@@ -69,12 +69,15 @@ module Wp2jekyll
     end
 
     def is_img_similar(a, b)
-      begin
-        return true if File.size(a) == File.size(b) # TODO
-      rescue
+      if File.size(a) == File.size(b) # TODO
+        @@logger.info "#{a} size: #{File.size(a)}\n#{b} size:#{File.size(b)}"
+        return true 
       end
 
-      return true if basefn(a).include?(basefn(b)) || basefn(b).include?(basefn(a))
+      if basefn(a) == basefn(b)
+        @@logger.info "#{a} basefn: #{basefn(a)}\n#{b} basefn:#{basefn(b)}"
+        return true
+      end
 
       false
     end
@@ -82,6 +85,7 @@ module Wp2jekyll
     def is_img_exist(image, in_dir)
       Dir.glob(File.join(in_dir, '**/*')) do |fpath|
         if is_img_similar(image, fpath)
+          @@logger.info "similar image #{fpath}".green
           return true
         end
       end
@@ -90,7 +94,7 @@ module Wp2jekyll
     
     def merge_img_with_path(image, to_dir, with_path)
       if !is_img_exist(image, to_dir)
-        @@logger.info "merge_img_keep_path #{image} new!"
+        @@logger.info "merge_img_keep_path #{image} new!".green
         if user_confirm("Do merge_img_keep_path #{image}", true) # TODO
           to_path = File.join(to_dir, with_path)
           FileUtils.mkdir_p(to_path)

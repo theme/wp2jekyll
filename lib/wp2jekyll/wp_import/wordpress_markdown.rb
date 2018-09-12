@@ -141,7 +141,7 @@ module Wp2jekyll
     # construct markdown link from caption and url (aware of relative )
     def md_link(cap, url)
       return '' if nil == url
-      @@logger.debug 'md_link: '.green + url
+      # @@logger.debug 'md_link: '.green + url
       if !should_url_relative?(url) then
         return "[#{cap}](#{url})"
       else
@@ -224,7 +224,7 @@ module Wp2jekyll
     def modify_md_link(txt)
       txt.scan(MarkdownLink::RE).each do |m|
         ln = m[0]
-        mdlk = MarkdownLink.new(m[0])
+        mdlk = MarkdownLink.parse(m[0])
         if is_url_suspicious?(mdlk.link) then
           @@logger.warn 'suspicious: ' + mdlk.link.red
           txt.gsub!(ln, '') # delete to prevent being published
