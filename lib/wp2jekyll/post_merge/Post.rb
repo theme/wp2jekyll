@@ -23,10 +23,16 @@ module Wp2jekyll
     def parse_yaml_front_matter(yaml_txt)
       # @@logger.debug 'parse_yaml_front_matter'
       # @@logger.debug yaml_txt.green
-      if @yaml_hash = YAML.load(yaml_txt)
-        @title = @yaml_hash['title']
-        @date_str = @yaml_hash['date']
-        @permalink_title = @yaml_hash['permalink_title']
+      begin
+        if @yaml_hash = YAML.load(yaml_txt)
+          @title = @yaml_hash['title']
+          @date_str = @yaml_hash['date']
+          @permalink_title = @yaml_hash['permalink_title']
+        end
+      rescue Psych::SyntaxError => e
+        @@logger.error e.message.red
+        @@logger.error "error Post::parse_yaml_front_matter: #{fp}\n#{yaml_txt}".red
+        Process.exit
       end
     end
 

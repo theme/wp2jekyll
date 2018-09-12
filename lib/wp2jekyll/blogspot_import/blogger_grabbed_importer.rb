@@ -8,6 +8,8 @@ module Wp2jekyll
     include DebugLogger
 
     def self.import(grabbed_dir, to_dir, to_img_dir)
+      pm = PostMerger.new
+
       Dir.glob(File.join(grabbed_dir,'*')).each do |post_dir|
         # read
         blogger_post = BloggerPost.new(post_dir) # post_dir/images files is recorded
@@ -21,7 +23,6 @@ module Wp2jekyll
         WordpressMarkdown.new(tmp_fpath).write_jekyll_md!
 
         # try import
-        pm = PostMerger.new
         pm.merge_post(tmp_fpath, to_dir) # may be imported, may be not.
 
         # for post that is now in the to_dir, try import images
@@ -52,6 +53,8 @@ module Wp2jekyll
         File.delete(tmp_fpath)
         
       end
+
+      @@logger.info pm.stat.yellow
     end
 
   end

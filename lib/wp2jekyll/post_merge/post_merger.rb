@@ -18,8 +18,15 @@ module Wp2jekyll
     include DebugLogger
 
     attr_accessor :merged_post
+    attr_accessor :try_counter
+
     def initialize
       @merged_post = []
+      @try_counter = 0
+    end
+
+    def stat
+      "#{@merged_post.length}/#{@try_counter} merge/try"
     end
 
     def user_confirm(hint = '')
@@ -52,6 +59,7 @@ module Wp2jekyll
 
     # @return [Bool] true if post is merged.
     def merge_post(fp, to_dir)
+      @try_counter += 1
       post = Post.new fp
       if !is_post_exist(fp, to_dir)
         @@logger.info post.body_str
@@ -71,20 +79,12 @@ module Wp2jekyll
     end
 
     def merge_dir(from_dir, to_dir)
-      # @@logger.info "merger dir #{from_dir} -> #{to_dir}".red
-      # dbg_count = 0
-      # limit_count = false
 
       Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|
         merge_post(fpath, to_dir)
-
-        # dbg_count += 1
-
-        # if limit_count && dbg_count > 20
-        #   break
-        # end
       end
-      @@logger.info "#{dbg_count} post(s) tried."
+
+      @@logger.info "post merge_dir #{stat}."
     end
   end
 end
