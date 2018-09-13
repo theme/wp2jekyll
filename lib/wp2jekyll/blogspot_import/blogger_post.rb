@@ -35,7 +35,7 @@ module Wp2jekyll
       s = "---\n"
       @post.each do |k, v|
         # @logger.debug "BloggerPost.to_s #{k}: #{v}"
-        s << "#{k}: #{v}\n" if 'body' != k
+        s << "#{k}: \'#{v}\'\n" if 'body' != k
       end
       s << "---\n"
       s << @post['body']
