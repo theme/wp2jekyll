@@ -39,8 +39,8 @@ module Wp2jekyll
       nearest_post = nil
       Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
         c = PostCompare.new(fp, fpath)
-        if c.similar? && c.get_similarity > highest_similarity
-            highest_similarity = c.get_similarity
+        if c.similar? && c.body_similarity > highest_similarity
+            highest_similarity = c.body_similarity
             nearest_post = fpath
         end
       end

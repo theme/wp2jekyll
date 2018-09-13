@@ -76,41 +76,41 @@ module Wp2jekyll
       end
     end
 
-    def get_similarity
+    def body_similarity
       # query cache
       s = @@cache.get_similarity(@a, @b)
       if nil != s
         return s
       end
-
-      # quick check
-      if pa.date_str == pb.date_str && pa.title == pb.title
-        @@cache.record_similarity(@a, @b, SIMILAR_LV_USER_SAME)
-        return SIMILAR_LV_USER_SAME
-      end
-
+      
       # body diff
       lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
-      similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
+      @similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
       @@cache.record_similarity(@a, @b, similarity)
-      return similarity
+      return @similarity
     end
 
     def similar?
-      s = @@cache.get_similarity(@a, @b)
-      if nil == s
-        s = get_similarity
-      end
-      # report result
-      if SIMILAR_LV_AUTO <= s
+
+      # meta check, incase of duplicate import
+      meta_same = (pa.title == pb.title) && (pa.datef == pb.datef)
+
+      bs = body_similarity
+
+      # consider result
+      if SIMILAR_LV_AUTO <= bs
         return true
-      elsif (SIMILAR_LV_HINT < s) && (s < SIMILAR_LV_AUTO)
-        ask_usr_same?
-        raise UncertainSimilarityError.new(msg:"Uncertain similar posts", a:@a, b:@b, user_judge:@user_judge)
+      elsif (SIMILAR_LV_HINT < bs) && (bs < SIMILAR_LV_AUTO)
+        nil # uncertain
       else # similarity < SIMILAR_LV_HINT
-        return false
+        if !meta_same
+          return false
+        end
       end
-      
+
+      # uncertain
+      ask_usr_same?
+      raise UncertainSimilarityError.new(msg:"Uncertain similar posts", a:@a, b:@b, user_judge:@user_judge)
     end
 
   end

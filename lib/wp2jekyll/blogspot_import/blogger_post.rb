@@ -64,14 +64,16 @@ module Wp2jekyll
     end
 
     # get rid of leading 'o', left by python grabber
-    def rename_image_files!(post_dir, img_sub_dir = 'images')
+    def rename_image_files!(post_dir, img_sub_dir = 'images')  # TODO : rename none regualr image file name, like append .jpg
       # @logger.info 'BloggerPost.rename_image_files'.yellow
       img_dir = File.join(post_dir, img_sub_dir)
       if File.directory?(img_dir)
         Dir.glob(File.join(img_dir, '*')).each do |img|
           img_bn_new = File.basename(img).gsub(/^o/, '')
+          img_new = File.join(img_dir, img_bn_new)
           begin
-            File.rename(img, File.join(img_dir, img_bn_new))
+            File.rename(img, img_new)
+            @logger.info "Rename image \n#{img} \n#{img_new}.".red
           rescue => e
             @logger.info "Error #{e.class} #{e.message} renaming blogger image file #{img}."
           end
