@@ -13,6 +13,7 @@ module Wp2jekyll
 
     def initialize(fp = '')
       @fp = fp # file path
+      @links = {}
       
       if File.exist?(@fp)
         split_fulltxt(File.read(@fp))
@@ -37,6 +38,38 @@ module Wp2jekyll
       false
     end
 
+    def extract_md_link_urls(str)
+      h = {}
+      MarkdownLink.extract(str).each do |mdlk|
+        h.merge({ mdlk.parsed_str => mdlk.link })
+        h.merge(extract_md_link_urls(mdlk.cap))
+      end
+      h
+    end
+
+    # @return [Hash] of { match_string => url_inside }
+    def extract_urls_hash
+      h = {}
+      # markdown_link
+      h.merge(extract_md_link_urls(body_str))
+
+      # liquid_url
+      LiquidUrl.extract(body_str).each do |lqlk|
+        if !h.keys.include? lqlk.parsed_str
+          h.merge({ lqlk.parsed_str => lqlk.uri })
+        end
+      end
+
+      # simple_url
+      URI.extract(body_str).each do |uri|
+        uri.gsub!(/\)$/,'')
+        if !h.keys.include? uri then
+          h.merge({ uri => uri})
+        end
+      end
+
+    end
+
     # search link that contains img_fn, replace its path with provided path
     def relink_image(img_fn, relative_path)
       @@logger.debug "relink_image #{img_fn}".yellow
@@ -48,8 +81,8 @@ module Wp2jekyll
         
         if uri.include? img_fn
           @@logger.debug "relink_image uri: #{uri.red}"
-          jekyll_img_link = LiquidUrl.new(uri: File.join(relative_path,img_fn)).to_s
-          tmp_s.gsub!(uri, jekyll_img_link)
+          lqlk_s = LiquidUrl.new(uri: File.join(relative_path,img_fn)).to_s
+          tmp_s.gsub!(uri, lqlk_s)
         end
       end
 

@@ -42,22 +42,16 @@ module Wp2jekyll
     def initialize(a, b)
       @a = a
       @b = b
+      @pa = Post.new(@a)
+      @pb = Post.new(@b)
       @similarity = nil
-    end
-
-    def pa
-      @pa || @pa = Post.new(@a)
-    end
-
-    def pb
-      @pb || @pb = Post.new(@b)
     end
 
     def ask_usr_same?
       puts "- #{@a}".yellow
-      pa.hint_contents
+      @pa.hint_contents
       puts "+ #{@b}".yellow
-      pb.hint_contents
+      @pb.hint_contents
 
       user_input = ''
       until user_input == 'y' || user_input == 'n' do
@@ -84,8 +78,8 @@ module Wp2jekyll
       end
       
       # body diff
-      lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
-      @similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
+      lcs = Diff::LCS.lcs(@pa.body_str, @pb.body_str)
+      @similarity = lcs.length * 1.0 / [@pa.body_str.length, @pb.body_str.length].max
       @@cache.record_similarity(@a, @b, similarity)
       return @similarity
     end
@@ -93,7 +87,7 @@ module Wp2jekyll
     def similar?
 
       # meta check, incase of duplicate import
-      meta_same = (pa.title == pb.title) && (pa.datef == pb.datef)
+      meta_same = (@pa.title == @pb.title) && (@pa.datef == @pb.datef)
 
       bs = body_similarity
 

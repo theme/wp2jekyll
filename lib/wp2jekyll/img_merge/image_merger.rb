@@ -16,7 +16,7 @@ module Wp2jekyll
     end
 
     def basefn(path)
-      base = File.basename(path)
+      File.basename(path)
     end
 
     def user_confirm(hint = '', yes = false)

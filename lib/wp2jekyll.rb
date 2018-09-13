@@ -18,6 +18,7 @@ require "wp2jekyll/version"
 
 module Wp2jekyll
   require 'debug_logger'
+  require 'image'
 
   require 'wp2jekyll/wp_import'
   require 'wp2jekyll/google_photo_import'
@@ -97,7 +98,7 @@ module Wp2jekyll
                        :force => false, :verbose => true)
         end
       end
-  end
+    end
 
   end
   
