@@ -20,22 +20,29 @@ module Wp2jekyll
   class PostCompare
     include DebugLogger
 
+    SIMILAR_LV_USER_SAME = 2.0
+
     SIMILAR_LV_AUTO = 0.9
 
     SIMILAR_LV_HINT = 0.618
 
+    SIMILAR_LV_USER_DIFF = -1.0
+
     attr_reader :a
     attr_reader :b
+    attr_accessor :similarity
+
     attr_accessor :pa
     attr_accessor :pb
 
-    attr_accessor :user_say_same
+    attr_accessor :user_judge
     
     @@cache = PostCompareCache.new
 
     def initialize(a, b)
       @a = a
       @b = b
+      @similarity = nil
     end
 
     def pa
@@ -47,64 +54,61 @@ module Wp2jekyll
     end
 
     def ask_usr_same?
-      len = 20
-      puts '+'*len + @a
+      puts "- #{@a}".yellow
       pa.hint_contents
-      puts '-'*len + @b
+      puts "+ #{@b}".yellow
       pb.hint_contents
-      puts '='*len
 
       user_input = ''
       until user_input == 'y' || user_input == 'n' do
-        puts "Regards them as the same post ?"
+        puts "Regards them as the same post ?".yellow
         user_input = STDIN.getc
         STDIN.gets # flush
       end
 
       case user_input
       when 'y' then
-        @@cache.add_same(@a, @b)
-        @user_say_same = true
+        @@cache.record_similarity(@a, @b, SIMILAR_LV_USER_SAME)
+        @user_judge = true
       when 'n' then
-        @@cache.add_diff(@a, @b)
-        @user_say_same = false
+        @@cache.record_similarity(@a, @b, SIMILAR_LV_USER_DIFF)
+        @user_judge = false
       end
     end
 
-    def same_date?
-      # @@logger.debug pa.inspect
-      # @@logger.debug pb.inspect
-      pa.date_str == pb.date_str
-    end
+    def calc_similarity(a,b)
+      # query cache
+      s = @@cache.get_similarity(@a, @b)
+      if nil != s
+        return s
+      end
 
-    def same_title?
-      # @@logger.debug pa.inspect
-      # @@logger.debug pb.inspect
-      pa.title == pb.title
+      # quick check
+      if pa.date_str == pb.date_str && pa.title == pb.title
+        @@cache.record_similarity(@a, @b, SIMILAR_LV_USER_SAME)
+        return SIMILAR_LV_USER_SAME
+      end
+
+      # body diff
+      lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
+      similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
+      @@cache.record_similarity(@a, @b, similarity)
+      @@logger.debug "PostCompare similarity #{similarity} \n-#{@a} \n+#{@b}".cyan
+      return SIMILAR_LV_USER_SAME
     end
 
     def similar?
-
-      # @@logger.debug "PostCompare \n-#{@a} \n+#{@b}".green
-      if @@cache.same?(@a, @b) then return true end
-      if @@cache.diff?(@a, @b) then return false end
-
-      if same_title? && same_date?
-        @@cache.add_same(@a, @b)
-        return true
+      s = @@cache.get_similarity(@a, @b)
+      if nil == s
+        s = calc_similarity(@a, @b)
       end
-
-      lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
-      similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
-
-      if SIMILAR_LV_AUTO < similarity
-        @@cache.add_same(@a, @b)
+      # report result
+      if SIMILAR_LV_AUTO <= s
         return true
-      elsif SIMILAR_LV_HINT < similarity && similarity < SIMILAR_LV_AUTO
-        user_judge = ask_usr_same?
-        raise UncertainSimilarityError(msg:"Uncertain similar posts", a:@a, b:@b, user_judge:user_judge)
+      elsif (SIMILAR_LV_HINT < s) && (s < SIMILAR_LV_AUTO)
+        ask_usr_same?
+        raise UncertainSimilarityError.new(msg:"Uncertain similar posts", a:@a, b:@b, user_judge:@user_judge)
       else # similarity < SIMILAR_LV_HINT
-        @@cache.add_diff(@a, @b)
         return false
       end
       

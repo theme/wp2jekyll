@@ -17,16 +17,12 @@ module Wp2jekyll
   class PostMerger
     include DebugLogger
 
-    attr_accessor :merged_post
+    attr_accessor :post_trans
     attr_accessor :try_counter
 
     def initialize
-      @merged_post = []
+      @post_trans = FileTransactionHistory.new
       @try_counter = 0
-    end
-
-    def stat
-      "#{@merged_post.length}/#{@try_counter} merge/try"
     end
 
     def user_confirm(hint = '')
@@ -38,16 +34,9 @@ module Wp2jekyll
       'y' == c
     end
 
-    def is_post_exist?(fp, in_dir)
-      Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
-        if PostCompare.new(fp, fpath).similar?
-          return true
-        end
-      end
-      false
-    end
-
-    def find_similar_post(fp, in_dir)
+    def most_similar_post(fp, in_dir)
+      highest_similarity = 0
+      nearest_post = nil
       Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
         if PostCompare.new(fp, fpath).similar? # TODO get top similar post
           return fpath
@@ -64,26 +53,34 @@ module Wp2jekyll
       do_merge = false
 
       begin
-        e_p = find_similar_post(fp, to_dir)
+        e_p = most_similar_post(fp, to_dir)
         if nil == e_p 
-          # if not exist, do merge, return target
+          # not exist, do merge, return target
+          @@logger.info "merge_post new! #{post.post_info} ".green
           do_merge = true
-
-      # if not sure( catch exception, user decidedj ), delete existing one or not, do merge or not, return target
-      rescue UncertainSimilarityError => e
-      # if exist, skip
-      if !is_post_exist?(fp, to_dir)
-        @@logger.info "merge_post new! #{post.post_info} ".green
-        do_merge = true
-      else
-        fpath = find_similar_post(fp, to_dir)
-        @@logger.info "merge_post exist. #{fpath} ".yellow # BUG HINT
-        # e_p = Post.new fpath
-        # e_p.hint_contents
-        # @@logger.info "\n+ #{fp}".yellow
-        # post.hint_contents
-        # do_merge = user_confirm("Do merge post ? #{post.post_info}".yellow)
-        do_merge = false
+        else
+          # exist
+          @@logger.info "merge_post exist. #{e_p} ".yellow
+          # e_p = Post.new fpath
+          # e_p.hint_contents
+          # @@logger.info "\n+ #{fp}".yellow
+          # post.hint_contents
+          # do_merge = user_confirm("Do merge post ? #{post.post_info}".yellow)
+          do_merge = false
+        end
+      rescue UncertainSimilarityError => e  # not sure,  user decided
+        if !e.user_judge # posts are not the same
+          @@logger.info "merge_post new! #{post.post_info} ".green
+          do_merge = true
+        else # posts are the same
+          if user_confirm("Force merge and overwrite ???".red)
+            File.delete(e.b)
+            do_merge = true
+          else
+            do_merge = false
+            @@logger.info "user skip merge_post #{e_p}"
+          end
+        end
       end
 
       if do_merge
@@ -94,11 +91,16 @@ module Wp2jekyll
         end
 
         wrote_fpath = post.write_to_dir(to_dir, force: true)
-        @merged_post.append [fp, wrote_fpath]
+        @post_trans.add(from:fp, to:wrote_fpath)
+        wrote_fpath
+      else
+        nil
       end
-
     end
 
+    def stat
+      "#{@post_trans.length}/#{try_counter}"
+    end
     def merge_dir(from_dir, to_dir)
 
       Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|

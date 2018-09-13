@@ -41,13 +41,8 @@ module Wp2jekyll
     end
 
     def datef
-      if @date_str.respond_to? :strftime
-        @date_str.strftime('%Y-%m-%d')
-      elsif @data_str.is_a? String
-        Date.parse(@date_str).strftime('%Y-%m-%d')
-      else
-        Time.now.strftime('%Y-%m-%d')
-      end
+      @@logger.debug "datef #{@date_str}".red
+      Date.parse(@date_str).strftime('%Y-%m-%d')
     end
 
     def post_fn_base

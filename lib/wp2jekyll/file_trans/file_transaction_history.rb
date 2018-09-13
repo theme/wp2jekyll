@@ -31,6 +31,10 @@ module Wp2jekyll
             end
             false
         end
+
+        def length
+            @his.length
+        end
     end
 
 end

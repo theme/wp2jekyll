@@ -19,8 +19,8 @@ module Wp2jekyll
       end
     end
 
-    def hint_contents(lines: 5)
-      puts @body_str.split[0..lines].join
+    def hint_contents
+      puts @body_str
     end
 
     def split_fulltxt(txt)

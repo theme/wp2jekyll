@@ -9,33 +9,17 @@ module Wp2jekyll
             @cache = {}
         end
 
-        def add_same(a, b)
+        def record_similarity(a,b,similarity)
             if nil == @cache[a] then
-                @cache[a] = { b => true }
+                @cache[a] = { b => similarity }
             else
-                @cache[a][b] = true
+                @cache[a][b] = similarity
             end
         end
 
-        def add_diff(a, b)
-            if nil == @cache[a] then
-                @cache[a] = { b => false }
-            else
-                @cache[a][b] = false
-            end
-        end
-
-        def same?(a, b)
-            if nil != @cache[a] && true == @cache[a][b]
-                true
-            else
-                nil
-            end
-        end
-
-        def diff?(a, b)
-            if nil != @cache[a] && false == @cache[a][b]
-                true
+        def get_similarity(a,b)
+            if nil != @cache[a]
+                @cache[a][b]
             else
                 nil
             end
