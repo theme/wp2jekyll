@@ -26,7 +26,7 @@ module Wp2jekyll
         end
 
         def same?(a, b)
-            if nil != @cache[a] && @cache[a][b] = true
+            if nil != @cache[a] && true == @cache[a][b]
                 true
             else
                 nil
@@ -34,7 +34,7 @@ module Wp2jekyll
         end
 
         def diff?(a, b)
-            if nil != @cache[a] && @cache[a][b] = false
+            if nil != @cache[a] && false == @cache[a][b]
                 true
             else
                 nil

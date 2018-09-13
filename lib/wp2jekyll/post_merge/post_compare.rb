@@ -72,10 +72,15 @@ module Wp2jekyll
     end
 
     def similar?
+
+      # @@logger.debug "PostCompare \n-#{@a} \n+#{@b}".green
       if @@cache.same?(@a, @b) then return true end
       if @@cache.diff?(@a, @b) then return false end
 
-      if same_title? && same_date? then return true end
+      if same_title? && same_date?
+        @@cache.add_same(@a, @b)
+        return true
+      end
 
       lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
       similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max

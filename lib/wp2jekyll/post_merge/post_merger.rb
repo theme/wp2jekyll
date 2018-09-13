@@ -38,8 +38,7 @@ module Wp2jekyll
       'y' == c
     end
 
-    def is_post_exist(fp, in_dir)
-      # @@logger.debug "test post exist #{post.fp} in #{in_dir} ".green
+    def is_post_exist?(fp, in_dir)
       Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
         if PostCompare.new(fp, fpath).similar?
           return true
@@ -60,22 +59,34 @@ module Wp2jekyll
     # @return [Bool] true if post is merged.
     def merge_post(fp, to_dir)
       @try_counter += 1
+
       post = Post.new fp
-      if !is_post_exist(fp, to_dir)
-        @@logger.info post.body_str
-        @@logger.info "merge_post #{post.post_info} new!"
-        if user_confirm("Do merge_post #{post.post_info}")
-          post.usr_input_title
-          post.write_to_dir(to_dir)
-          @merged_post.append fp
-        else
-          # raise MergeFailError.new("User deny to merge post", reason: MergeFailError::USER_DENY)
-        @@logger.info "merge_post user denied #{post.post_info}."
-        end
+
+      do_merge = false
+      if !is_post_exist?(fp, to_dir)
+        @@logger.info "merge_post new! #{post.post_info} ".green
+        do_merge = true
       else
-        @@logger.info "merge_post #{post.post_info} exist."
-        # raise MergeFailError.new("Post already exist", reason: MergeFailError::ALREADY_EXIST)
+        fpath = existing_post_fp(fp, to_dir)
+        @@logger.info "merge_post exist. \n- #{fpath} ".yellow # BUG HINT
+        e_p = Post.new fpath
+        e_p.hint_contents
+        @@logger.info "\n+ #{fp}".yellow
+        post.hint_contents
+        do_merge = user_confirm("Do merge post ? #{post.post_info}".yellow)
       end
+
+      if do_merge
+        post.usr_input_title
+
+        if !Dir.exist?(to_dir)
+          FileUtils.mkdir_p(to_dir)
+        end
+
+        post.write_to_dir(to_dir)
+        @merged_post.append fp
+      end
+
     end
 
     def merge_dir(from_dir, to_dir)
