@@ -60,16 +60,21 @@ module Wp2jekyll
       end
     end
 
-    def write_to_dir(dir)
+    def write_to_dir(dir, force: false)
       usr_input_permalink
       fpath = File.join(dir, post_fn_base + '.md')
       if !File.exist?(fpath) then
         yaml_hash_write_back
         @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @body_str)
         @@logger.info "write file: #{fpath}"
+      elsif force
+        File.delete(fpath)
+        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @body_str)
+        @@logger.info "force write file: #{fpath}"
       else
-        @@logger.warn "! File exist, when Post.write_to_dir #{dir}"
+        @@logger.warn "skip write file:  #{fpath}"
       end
+      fpath
     end
 
     def input_with_hint(hint: '') # get a user input line

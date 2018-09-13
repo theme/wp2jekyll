@@ -1,3 +1,4 @@
+require 'wp2jekyll/file_trans'
 
 require 'wp2jekyll/post_merge/markdown_link'
 require 'wp2jekyll/post_merge/liquid_url'

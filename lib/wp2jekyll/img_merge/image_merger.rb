@@ -12,29 +12,11 @@ module Wp2jekyll
 
     def initialize
       @merge_count = 0
-      @img_trans = []
+      @img_trans = FileTransactionHistory.new
     end
 
     def basefn(path)
       base = File.basename(path)
-    end
-
-    def is_merged?(img)
-      @img_trans.each do |t|
-        if basefn(img) == t.fn && nil != t.to
-          return true
-        end
-      end
-      false
-    end
-
-    def is_skipped?(img)
-      @img_trans.each do |t|
-        if basefn(img) == t.fn && nil == t.to
-          return true
-        end
-      end
-      false
     end
 
     def user_confirm(hint = '', yes = false)
@@ -121,11 +103,11 @@ module Wp2jekyll
           FileUtils.cp(image, to_fp)
 
           @merge_count += 1
-          @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: to_fp)
+          @img_trans.add(from: image, to: to_fp)
         end
       else
         @@logger.info "merge_img_prepend_path #{basefn(image)} in #{to_dir} exists.".green
-        @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: nil)
+        @img_trans.add(from: image, to: nil)
       end
     end
 
@@ -142,11 +124,11 @@ module Wp2jekyll
           FileUtils.mkdir_p(new_path)
           FileUtils.cp(image, to_fp)
           @merge_count += 1
-          @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: to_fp)
+          @img_trans.add(from: image, to: to_fp)
         end
       else
         @@logger.info "merge_img_keep_path #{basefn(image)} in #{to_dir} exists.".green
-        @img_trans.append ImageTransaction.new(fn: basefn(image), from: image, to: nil)
+        @img_trans.add(from: image, to: nil)
       end
     end
 
@@ -168,7 +150,7 @@ module Wp2jekyll
       
       # debug list untouched files
       Dir.glob(File.join(from_dir, "**/*")) do |fpath|
-        if File.file?(fpath) && !is_merged?(fpath) && !is_skipped?(fpath)
+        if File.file?(fpath) && !@img_trans.has_trans?(fpath) && !@img_trans.has_skip?(fpath)
           @@logger.debug "#{fpath} is not handled : not a image.".yellow
         end
       end

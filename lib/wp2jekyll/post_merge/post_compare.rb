@@ -4,6 +4,18 @@ require 'colorize'
 require 'diff/lcs'
 
 module Wp2jekyll
+  class UncertainSimilarityError < StandardError
+    attr_reader :a
+    attr_reader :b
+    attr_reader :user_judge
+
+    def initialize(msg:, a:, b:, user_judge:)
+      super msg
+      @user_judge = user_judge
+      @a = a
+      @b = b
+    end
+  end
 
   class PostCompare
     include DebugLogger
@@ -89,7 +101,8 @@ module Wp2jekyll
         @@cache.add_same(@a, @b)
         return true
       elsif SIMILAR_LV_HINT < similarity && similarity < SIMILAR_LV_AUTO
-        return ask_usr_same?
+        user_judge = ask_usr_same?
+        raise UncertainSimilarityError(msg:"Uncertain similar posts", a:@a, b:@b, user_judge:user_judge)
       else # similarity < SIMILAR_LV_HINT
         @@cache.add_diff(@a, @b)
         return false

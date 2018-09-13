@@ -47,7 +47,7 @@ module Wp2jekyll
       false
     end
 
-    def existing_post_fp(fp, in_dir)
+    def find_similar_post(fp, in_dir)
       Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
         if PostCompare.new(fp, fpath).similar? # TODO get top similar post
           return fpath
@@ -56,24 +56,34 @@ module Wp2jekyll
       nil
     end
 
-    # @return [Bool] true if post is merged.
+    # @return [String] the post in target dir after merge.
     def merge_post(fp, to_dir)
       @try_counter += 1
 
       post = Post.new fp
-
       do_merge = false
+
+      begin
+        e_p = find_similar_post(fp, to_dir)
+        if nil == e_p 
+          # if not exist, do merge, return target
+          do_merge = true
+
+      # if not sure( catch exception, user decidedj ), delete existing one or not, do merge or not, return target
+      rescue UncertainSimilarityError => e
+      # if exist, skip
       if !is_post_exist?(fp, to_dir)
         @@logger.info "merge_post new! #{post.post_info} ".green
         do_merge = true
       else
-        fpath = existing_post_fp(fp, to_dir)
-        @@logger.info "merge_post exist. \n- #{fpath} ".yellow # BUG HINT
-        e_p = Post.new fpath
-        e_p.hint_contents
-        @@logger.info "\n+ #{fp}".yellow
-        post.hint_contents
-        do_merge = user_confirm("Do merge post ? #{post.post_info}".yellow)
+        fpath = find_similar_post(fp, to_dir)
+        @@logger.info "merge_post exist. #{fpath} ".yellow # BUG HINT
+        # e_p = Post.new fpath
+        # e_p.hint_contents
+        # @@logger.info "\n+ #{fp}".yellow
+        # post.hint_contents
+        # do_merge = user_confirm("Do merge post ? #{post.post_info}".yellow)
+        do_merge = false
       end
 
       if do_merge
@@ -83,8 +93,8 @@ module Wp2jekyll
           FileUtils.mkdir_p(to_dir)
         end
 
-        post.write_to_dir(to_dir)
-        @merged_post.append fp
+        wrote_fpath = post.write_to_dir(to_dir, force: true)
+        @merged_post.append [fp, wrote_fpath]
       end
 
     end
