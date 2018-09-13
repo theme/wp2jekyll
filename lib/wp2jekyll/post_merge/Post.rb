@@ -26,7 +26,7 @@ module Wp2jekyll
       begin
         if @yaml_hash = YAML.load(yaml_txt)
           @title = @yaml_hash['title']
-          @date_str = @yaml_hash['date']
+          @date_str = @yaml_hash['date'].to_s
           @permalink_title = @yaml_hash['permalink_title']
         end
       rescue Psych::SyntaxError => e
@@ -37,7 +37,7 @@ module Wp2jekyll
     end
 
     def post_info
-      "[Post #{@fp} #{date_str} #{@title}]"
+      "[Post #{@fp} #{@date_str} #{@title}]"
     end
 
     def datef
