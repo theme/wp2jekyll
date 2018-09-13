@@ -7,16 +7,18 @@ module Wp2jekyll
   class BloggerGrabbedImporter
     include DebugLogger
 
-    def self.import(grabbed_dir, to_dir, to_img_dir)
+    def self.import(grabbed_dir, to_dir, to_img_dir, replace_meta:)
       pm = PostMerger.new
 
       Dir.glob(File.join(grabbed_dir,'*')).each do |post_dir|
         # read
         blogger_post = BloggerPost.new(post_dir) # post_dir/images files is recorded
+        blogger_post.replace_meta(replace_meta)
 
         # assemble to jekyll markdown
         tmp_fpath = File.join(post_dir, 'jekyll_md')
         # @@logger.debug "assemble jekyll md : #{blogger_post.to_s}".yellow
+        blogger_post.post['layout'] = 'post'
         File.write(tmp_fpath, blogger_post.to_s)
 
         # patch post body format to markdown using wp_import

@@ -104,6 +104,16 @@ module Wp2jekyll
       read_images(dir)
     end
 
+    def replace_meta(rm)
+      if rm.is_a? Hash
+        rm.each do |k,v|
+          @post[k] = v
+        end
+      else
+        @@logger.info "blogger post replace meta needs a Hash object as argument."
+      end
+    end
+
   end
 
 end

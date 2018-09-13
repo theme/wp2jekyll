@@ -35,8 +35,8 @@ module Wp2jekyll
     PostMerger.new.merge_dir(from_dir, to_jekyll_posts_dir)
   end
 
-  def self.import_blogger_post(from_grabbed_dir:, to_dir:, to_img_dir:)
-    BloggerGrabbedImporter.import(from_grabbed_dir, to_dir, to_img_dir)
+  def self.import_blogger_post(from_grabbed_dir:, to_dir:, to_img_dir:, replace_meta:)
+    BloggerGrabbedImporter.import(from_grabbed_dir, to_dir, to_img_dir, replace_meta: replace_meta)
   end
 
   def self.rename_md_posts_indir(dir)

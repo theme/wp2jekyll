@@ -41,7 +41,7 @@ module Wp2jekyll
     end
 
     def datef
-      @@logger.debug "datef #{@date_str}".red
+      # @@logger.debug "datef #{@date_str}".red
       Date.parse(@date_str).strftime('%Y-%m-%d')
     end
 
