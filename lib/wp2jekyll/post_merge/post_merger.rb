@@ -38,11 +38,14 @@ module Wp2jekyll
       highest_similarity = 0
       nearest_post = nil
       Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
-        if PostCompare.new(fp, fpath).similar? # TODO get top similar post
-          return fpath
+        c = PostCompare.new(fp, fpath)
+        if c.similar? && c.get_similarity > highest_similarity
+            highest_similarity = c.get_similarity
+            nearest_post = fpath
         end
       end
-      nil
+
+      nearest_post
     end
 
     # @return [String] the post in target dir after merge.

@@ -76,7 +76,7 @@ module Wp2jekyll
       end
     end
 
-    def calc_similarity(a,b)
+    def get_similarity
       # query cache
       s = @@cache.get_similarity(@a, @b)
       if nil != s
@@ -93,14 +93,13 @@ module Wp2jekyll
       lcs = Diff::LCS.lcs(pa.body_str, pb.body_str)
       similarity = lcs.length * 1.0 / [pa.body_str.length, pb.body_str.length].max
       @@cache.record_similarity(@a, @b, similarity)
-      @@logger.debug "PostCompare similarity #{similarity} \n-#{@a} \n+#{@b}".cyan
-      return SIMILAR_LV_USER_SAME
+      return similarity
     end
 
     def similar?
       s = @@cache.get_similarity(@a, @b)
       if nil == s
-        s = calc_similarity(@a, @b)
+        s = get_similarity
       end
       # report result
       if SIMILAR_LV_AUTO <= s
