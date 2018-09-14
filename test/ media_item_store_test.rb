@@ -9,14 +9,25 @@ class MediaItemStoreTest < MiniTest::Test
   def test_JSON
     s = %{
         {
-            'a': 'va',
-            'b': 'vb',
-            'mediaItem': {
-                'id': '123'
-            }
+            "a": "va",
+            "b": "vb",
+            "mediaItem": {
+                "id": 123
+            },
+            "array": [7,6,5],
+            "true" : true,
+            "false" : false,
+            "null" : null
         }
-    }
-    assert(JSON.parse(s).is_a? JSON)
+    } 
+    o = JSON.parse(s)
+    assert(o.is_a? Object)
+    assert(o['a'] == 'va')
+    assert(o['array'] == [7, 6, 5])
+    assert(o['true'] == true)
+    assert(o['false'] == false)
+    assert(o['null'] == nil)
+    assert(o['mediaItem']['id'] == 123)
   end
 
 

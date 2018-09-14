@@ -15,18 +15,18 @@ module Wp2jekyll
         end
 
         # @return Object
-        # Remove the token data from storage for the given ID.
+        # Remove the json data from storage for the given ID.
         def delete(_id)
         end
 
         # @return String
-        # Load the token data from storage for the given ID.
+        # Load the json data from storage for the given ID.
         def load(_id)
         end
 
         # @return Object
-        #Put the token data into storage for the given ID.
-        def store(_id, _token)
+        #Put the json data into storage for the given ID.
+        def store(_id, _json)
         end
 
     end
