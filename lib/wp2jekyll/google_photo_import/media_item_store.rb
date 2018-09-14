@@ -15,6 +15,9 @@ module Wp2jekyll
 
             f = File.new(store_file, 'a+')
             @json_h = JSON.load(f)
+            if nil == @json_h
+                @json_h = {}
+            end
             f.close
         end
 
