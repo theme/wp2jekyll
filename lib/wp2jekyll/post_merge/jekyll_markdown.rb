@@ -66,6 +66,8 @@ module Wp2jekyll
           h = h.merge({ uri => uri})
         end
       end
+
+      # @@logger.info "#{h.inspect}".red
       h
     end
 

@@ -12,11 +12,12 @@ module Wp2jekyll
     #E = %r{0---------1---1-----2-----3-------------------------32--------0}
     attr_accessor :uri #1
     attr_accessor :liquid_filter #2
-    attr_accessor :parsed_str # last string parsed
+    attr_reader :parsed_str # last string parsed
 
     def initialize(uri:, liquid_filter: 'relative_url', parsed_str: nil)
       @uri = URI(uri)
       @liquid_filter = liquid_filter
+      @parsed_str = parsed_str
     end
 
     def to_s

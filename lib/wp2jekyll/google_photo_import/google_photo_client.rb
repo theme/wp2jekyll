@@ -140,7 +140,7 @@ module Wp2jekyll
       loop do
         @@logger.debug "#{count = count + 1 } query Google Photo Library for image items"
         if count > 3 # TODO debug
-          Process.exit
+          return nil
         end
 
         req.body = JSON.generate(req_body_hash)
