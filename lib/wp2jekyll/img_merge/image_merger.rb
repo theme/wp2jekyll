@@ -92,12 +92,16 @@ module Wp2jekyll
     # copy image
     #   from from_dir/relative_path/basename (image)
     #   to to_dir/prepend_path/basename
-    def merge_img_prepend_path(image:, to_dir:, prepend_path:)
+    def merge_img_prepend_path(image:, rename: nil, to_dir:, prepend_path:)
       if !is_img_exist(image, to_dir)
         @@logger.info "merge_img_prepend_path #{image} new!".green
         if user_confirm("Do merge_img_keep_path #{image}", true) # TODO
           new_path = File.join(to_dir, prepend_path)
-          to_fp = File.join(new_path, basefn(image))
+          if nil != rename
+            to_fp = File.join(new_path, basefn(rename))
+          else
+            to_fp = File.join(new_path, basefn(image))
+          end
 
           FileUtils.mkdir_p(new_path)
           FileUtils.cp(image, to_fp)

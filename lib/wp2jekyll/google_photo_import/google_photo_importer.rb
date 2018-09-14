@@ -47,7 +47,7 @@ module Wp2jekyll
 
                         # merge
                         new_relative_path = post_date.strftime('%Y/%m/%d')
-                        im.merge_img_prepend_path(image:tmp_f, to_dir:image_dir, prepend_path:new_relative_path)
+                        im.merge_img_prepend_path(image:tmp_f, rename:bn, to_dir:image_dir, prepend_path:new_relative_path)
 
                         # jk_md.relink
 

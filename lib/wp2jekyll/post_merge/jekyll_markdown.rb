@@ -38,20 +38,23 @@ module Wp2jekyll
       false
     end
 
-    def extract_md_link_urls(str)
-      h = {}
-      MarkdownLink.extract(str).each do |mdlk|
-        h = h.merge({ mdlk.parsed_str => mdlk.link })
-        h = h.merge(extract_md_link_urls(mdlk.cap))
-      end
-      h
-    end
+    # def extract_md_link_urls(str)
+    #   h = {}
+    #   h
+    # end
 
     # @return [Hash] of { match_string => url_inside }
     def extract_urls_hash(txt)
       h = {}
       # markdown_link
-      h = h.merge(extract_md_link_urls(txt))
+      MarkdownLink.extract(txt).each do |mdlk|
+        h = h.merge(extract_urls_hash(mdlk.cap))
+        h = h.merge(extract_urls_hash(mdlk.link))
+        if !h.keys.include? mdlk.parsed_str
+          h = h.merge({ mdlk.parsed_str => mdlk.link })
+        end
+      end
+      
       # liquid_url
       LiquidUrl.extract(txt).each do |lqlk|
         if !h.keys.include? lqlk.parsed_str
@@ -77,12 +80,12 @@ module Wp2jekyll
 
     # search link that contains img_fn, replace its path with provided path
     def relink_image_in_txt(img_fn, to_path, in_txt)
-
+      new_url = URI.join(File.join(to_path, img_fn))
       extract_urls_hash(in_txt).each do |mstr, url|
         if url.include? img_fn
           if mdlk = MarkdownLink.parse(mstr)
             mdlk.cap = relink_image_in_txt(img_fn, to_path, mdlk.cap)
-            mdlk.link = LiquidUrl.new(uri:to_path)
+            mdlk.link = LiquidUrl.new(uri:new_url)
             in_txt.gsub!(mstr, mdlk.to_s)
           end
 
@@ -93,7 +96,7 @@ module Wp2jekyll
 
           begin
             uri = URI.parse(url)
-            in_txt.gsub!(mstr, LiquidUrl.new(uri:to_path).to_s)
+            in_txt.gsub!(mstr, LiquidUrl.new(uri:new_url).to_s)
           rescue URI::InvalidURIError => e
             nil
           end
