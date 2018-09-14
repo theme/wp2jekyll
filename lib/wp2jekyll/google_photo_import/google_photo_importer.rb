@@ -13,7 +13,6 @@ module Wp2jekyll
 
         def process_posts_dir(posts_dir, image_dir)
             Dir.glob(File.join(posts_dir, '**/*.{md,markdown}')).each do |pfp|
-                @@logger.debug "... import Google Photo for post : #{pfp}"
 
                 # for each URI in `jk_md`
                 # search URI.basename in Google Photo
@@ -23,16 +22,16 @@ module Wp2jekyll
 
                 im = ImageMerger.new
                 jk_md = Post.new(pfp)
+                @@logger.debug "Import Google Photo for post : #{jk_md.post_info}"
                 urls_hash = jk_md.extract_urls_hash
                 urls_hash.each do |k,v|
-                    begin
+
+                    if Image.is_a_image_url? v
                         uri = URI(v)
-                    rescue ArgumentError => e
-                        @@logger.debug "#{e} , v=#{v}, urls_hash : #{urls_hash.inspect}".red
+                        @@logger.debug "import image : #{k} => #{v}".yellow
+                    else
                         next
                     end
-
-                    @@logger.debug "import image for : #{k} => #{v}".yellow
                     
                     # if v is image
                     bn = Pathname(uri).basename.to_s

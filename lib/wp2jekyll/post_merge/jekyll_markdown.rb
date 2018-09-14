@@ -56,14 +56,14 @@ module Wp2jekyll
       # liquid_url
       LiquidUrl.extract(@body_str).each do |lqlk|
         if !h.keys.include? lqlk.parsed_str
-          h.merge({ lqlk.parsed_str => lqlk.uri })
+          h.merge({ lqlk.parsed_str => lqlk.uri.to_s })
         end
       end
 
       # simple_url
       URI.extract(@body_str).each do |uri|
         uri.gsub!(/\)$/,'')
-        if Image.is_a_image_url? uri then
+        if !h.keys.include? uri
           h.merge({ uri => uri})
         end
       end
