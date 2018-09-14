@@ -1,5 +1,6 @@
 require "test_helper"
 require "logger"
+require "fileutils"
 
 class MediaItemStoreTest < MiniTest::Test
   # make_my_diffs_pretty!
@@ -30,5 +31,24 @@ class MediaItemStoreTest < MiniTest::Test
     assert(o['mediaItem']['id'] == 123)
   end
 
+  def test_store_file
+    f = File.expand_path('../sample/json_store.json', __FILE__)
+    mis = MediaItemStore.new(f)
+
+    assert(mis.load('a') == 'va')
+
+    h = {
+        "id" => 44534,
+        "type" => "photo",
+        "url" => "https://host.domain/path/to/fn.jpg" 
+    }
+
+    mis.store('test_store_id', h)
+
+    assert(mis.load('test_store_id')['id'] == 44534)
+
+    assert(mis.delete('test_store_id')['id'] == 44534)
+
+  end
 
 end
