@@ -25,15 +25,13 @@ module Wp2jekyll
                 @@logger.info "Import Google Photo for post : #{jk_md.post_info}"
                 urls_hash = jk_md.extract_urls_hash
                 urls_hash.each do |k,v|
+                    bn = Image.basen_in_url v
 
-                    if Image.is_a_image_url? v
-                        uri = URI(v)
+                    if nil != bn
                         @@logger.debug "import image : #{k} => #{v}".yellow
                     else
                         next
                     end
-                    
-                    bn = Pathname(uri.path).basename.to_s
 
                     if Image.is_img_fn_exist?(bn, image_dir)
                         @@logger.debug "image exist : #{bn}".cyan
@@ -51,6 +49,7 @@ module Wp2jekyll
                         im.merge_img_prepend_path(image:temp_f, to_dir:image_dir, prepend_path:new_relative_path)
 
                         # jk_md.relink
+
                         jk_md.relink_image(bn, File.join(File.basename(image_dir), new_relative_path)) # modify link to rel_path/image.jpg
                     end
                 end

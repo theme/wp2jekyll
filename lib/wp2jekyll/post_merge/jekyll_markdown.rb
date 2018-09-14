@@ -72,22 +72,35 @@ module Wp2jekyll
     end
 
     # search link that contains img_fn, replace its path with provided path
-    def relink_image(img_fn, relative_path)
-      @@logger.debug "relink_image #{img_fn}".yellow
+    def relink_image_in_txt(img_fn, to_path, in_txt)
 
-      tmp_s = @body_str
-      
-      URI.extract(tmp_s).each do |uri|
-        uri.gsub!(/\)$/,'') # a patch
-        
-        if uri.include? img_fn
-          @@logger.debug "relink_image uri: #{uri.red}"
-          lqlk_s = LiquidUrl.new(uri: File.join(relative_path,img_fn)).to_s
-          tmp_s.gsub!(uri, lqlk_s)
+      extract_urls_hash.each do |mstr, url|
+        if url.include? img_fn
+          if mdlk = MarkdownLink.parse(mstr)
+            mdlk.cap = relink_image_in_txt(img_fn, to_path, mdlk.cap)
+            mdlk.link = LiquidUrl.new(to_path)
+            in_txt.gsub!(mstr, mdlk.to_s)
+          end
+
+          if lqlk = LiquidUrl.parse(mstr)
+            lqlk.uri = URI.parse(url)
+            in_txt.gsub!(mstr, lqlk.to_s)
+          end
+
+          begin
+            uri = URI.parse(url)
+            in_txt.gsub!(mstr, LiquidUrl.new(to_path).to_s)
+          rescue URI::InvalidURIError => e
+            nil
+          end
         end
       end
+      in_txt
+    end
 
-      @body_str = tmp_s
+    def relink_image(img_fn, to_path)
+      @@logger.debug "relink_image #{img_fn}".yellow
+      @body_str = relink_image_in_txt(img_fn, to_path, @body_str)
     end
 
     # write to @fp file

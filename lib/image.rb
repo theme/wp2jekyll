@@ -8,6 +8,14 @@ module Image
         nil != (IMG_URL_RE =~ str)
     end
 
+    def self.basen_in_url(url)
+        if self.is_a_image_url? url
+            Pathname(URI(url).path).basename.to_s
+        else
+            nil
+        end
+    end
+
     def self.is_img_fn_exist?(img_fn, in_dir)
         Dir.glob(File.join(in_dir, FP_WILDCARD)).each do |fp|
             if fp.include? File.basename(fp)
