@@ -43,7 +43,7 @@ module Wp2jekyll
           parsed_str: str
           )
           
-        @@logger.debug o.info.green
+        # @@logger.debug o.info.green
 
         return o
       end

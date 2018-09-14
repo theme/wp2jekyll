@@ -189,7 +189,7 @@ module Wp2jekyll
           break
         end
       end
-
+      @@logger.info "!not found, searching Google Photo for #{img_fn}".red
       nil
     end
 
