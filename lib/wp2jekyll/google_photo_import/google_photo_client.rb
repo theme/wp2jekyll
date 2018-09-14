@@ -27,6 +27,8 @@ module Wp2jekyll
     attr_reader   :token_store_fp
     attr_reader   :key_store_fp
 
+    attr_reader   :media_item_store
+
     # https://developers.google.com/photos/library/guides/authentication-authorization
     OAuth2_SCOPE_read_photo = 'https://www.googleapis.com/auth/photoslibrary.readonly'
 
@@ -38,6 +40,7 @@ module Wp2jekyll
       @token_store_fp = "#{secret_dir}/tokens.yaml"
       @key_store_fp = "#{secret_dir}/apikeys.yaml"
 
+      @media_item_store = MediaItemStore.new("#{secret_dir}/media_item_store.json")
       # File.delete @token_store_fp # TODO debug
     end
 
@@ -49,7 +52,6 @@ module Wp2jekyll
 
     # get authorized for Google Photo API
     def get_credentials
-
       client_id = Google::Auth::ClientId.from_file(credential_fpath)
       token_store = Google::Auth::Stores::FileTokenStore.new( :file => token_store_fp)
       authorizer = Google::Auth::UserAuthorizer.new(client_id, OAuth2_SCOPE_read_photo, token_store)
@@ -72,7 +74,7 @@ module Wp2jekyll
     # TODO: no api to search by image file name, now fetching one year's.
     # @param [Date] date The date one year range end at.
     # @return [Hash] {image_filename =>`media item ID`} of Google Photo Images in one year before `date`.
-    def search_image_in_one_year(date, img_fn)
+    def search_image_in_period(img_fn, from_date, to_date)
       uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems:search')
       # uri = URI('https://content-photoslibrary.googleapis.com/v1/mediaItems:search')
 
@@ -99,14 +101,14 @@ module Wp2jekyll
             "ranges": [
               {
                 "startDate": {
-                  "year": date.year - 1,
-                  "month": date.month,
-                  "day": date.day
+                  "year": from_date.year,
+                  "month": from_date.month,
+                  "day": from_date.day
                 },
                 "endDate": {
-                  "year": date.year,
-                  "month": date.month,
-                  "day": date.day
+                  "year": to_date.year,
+                  "month": to_date.month,
+                  "day": to_date.day
                 }
               }
             ]
@@ -157,13 +159,21 @@ module Wp2jekyll
       return images
     end
 
-    def search_img_id(img_fn, date)
-      hash = search_image_in_one_year(date, img_fn)
-      id = hash[img_fn]
+    # @img_fn [String]: image file name to search in Google Library
+    # @from_date [String]: "YYYY-mm-dd" start date of search time range
+    # @to_date [String]: "YYYY-mm-dd" end date of search time range
+    #
+    # @return
+    #   - [String]: image mediaItem id
+    #   - [nil]; image not found
+    def search_img_id(img_fn:, from_date:, to_date:)
+      id = @media_item_store.load(img_fn)
       if nil != id
-        @@logger.info "Image found in Google Photo: #{img_fn} => id: #{id}"
+        id 
+      else
+        hash = search_image_in_period(img_fn, Date.parse(from_date), Date.parse(to_date))
+        id = hash[img_fn]
       end
-      return id
     end
 
     def download_image(img_uri, sav_fpath)
@@ -209,9 +219,6 @@ module Wp2jekyll
         @@logger.warn "!Save image to #{fpath} failed."
         return false
       end
-    end
-
-    def search_down(bn, to_fp)
     end
 
   end

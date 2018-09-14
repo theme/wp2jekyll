@@ -12,7 +12,10 @@ module Wp2jekyll
 
         def initialize(store_file)
             @store_file = store_file
-            @json_h = JSON.load(File.new(store_file))
+
+            f = File.new(store_file, 'a+')
+            @json_h = JSON.load(f)
+            f.close
         end
 
         # @return [Hash]
