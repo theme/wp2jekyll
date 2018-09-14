@@ -225,8 +225,8 @@ module Wp2jekyll
       end
     end
 
-    def search_and_download(img_fn:, to_path:)
-      if id = search_img_id
+    def search_and_download(img_fn:, from_date:, to_date:, to_path:)
+      if id = search_img_id(img_fn: img_fn, from_date: from_date, to_date: to_date)
         download_image_by_id(id, to_path)
       end
     end

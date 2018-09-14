@@ -42,7 +42,9 @@ module Wp2jekyll
 
                     # download
                     tmp_f = Tempfile.new(bn)
-                    if nil != @google_photo_client.search_and_download(img_fn:bn, to_path:tmp_f) # TODO
+                    prev_year = Date.parse(jk_md.datef).prev_year.to_s
+                    if nil != @google_photo_client.search_and_download(img_fn:bn,
+                        from_date:prev_year, to_date:jk_md.datef, to_path:tmp_f) # TODO
                         # merge
                         new_relative_path = jk_md.date.strftime('%Y/%m/%d')
                         im.merge_img_prepend_path(image:temp_f, to_dir:image_dir, prepend_path:new_relative_path)
