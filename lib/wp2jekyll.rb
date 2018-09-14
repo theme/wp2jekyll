@@ -40,6 +40,10 @@ module Wp2jekyll
     BloggerGrabbedImporter.import(from_grabbed_dir, to_dir, to_img_dir, replace_meta: replace_meta)
   end
 
+  def self.import_google_photo(posts_dir:, image_dir:)
+    GooglePhotoImporter.new.process_posts_dir(posts_dir, image_dir)
+  end
+
   def self.rename_md_posts_indir(dir)
     if Dir.exist? dir then
       Dir.glob (dir + '**/*.md') do |fpath|

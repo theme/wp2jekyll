@@ -10,7 +10,7 @@ module Wp2jekyll
             @google_photo_client = GooglePhotoClient.new
         end
 
-        def process_posts_dir(posts_dir:, image_dir:)
+        def process_posts_dir(posts_dir, image_dir)
             Dir.glob(File.join(posts_dir, '**/*.{md,markdown}')).each do |pfp|
 
                 # for each URI in `jk_md`
