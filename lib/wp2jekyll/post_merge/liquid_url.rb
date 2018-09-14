@@ -14,7 +14,7 @@ module Wp2jekyll
     attr_accessor :liquid_filter #2
     attr_accessor :parsed_str # last string parsed
 
-    def initialize(uri:, liquid_filter: 'relative_url')
+    def initialize(uri:, liquid_filter: 'relative_url', parsed_str: nil)
       @uri = URI(uri)
       @liquid_filter = liquid_filter
     end
@@ -38,9 +38,10 @@ module Wp2jekyll
       if m = RE.match(str)
         o = self.new(
           uri: m[2] || '',
-          liquid_filter: m[3] || '')
-
-        o.parsed_str = str
+          liquid_filter: m[4] || '',
+          parsed_str: str
+          )
+          
         @@logger.debug o.info.green
 
         return o

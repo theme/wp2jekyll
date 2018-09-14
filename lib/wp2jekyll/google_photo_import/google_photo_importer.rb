@@ -22,9 +22,8 @@ module Wp2jekyll
 
                 im = ImageMerger.new
                 jk_md = Post.new(pfp)
-                @@logger.debug "Import Google Photo for post : #{jk_md.post_info}"
+                @@logger.info "Import Google Photo for post : #{jk_md.post_info}"
                 urls_hash = jk_md.extract_urls_hash
-                @@logger.debug "urls_hash : #{urls_hash.inspect}"
                 urls_hash.each do |k,v|
 
                     if Image.is_a_image_url? v
@@ -36,7 +35,7 @@ module Wp2jekyll
                     
                     bn = Pathname(uri.path).basename.to_s
 
-                    if im.is_img_exist(bn, image_dir)
+                    if Image.is_img_fn_exist?(bn, image_dir)
                         @@logger.debug "image exist : #{bn}".cyan
                         next
                     end

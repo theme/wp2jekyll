@@ -41,8 +41,8 @@ module Wp2jekyll
     def extract_md_link_urls(str)
       h = {}
       MarkdownLink.extract(str).each do |mdlk|
-        h.merge({ mdlk.parsed_str => mdlk.link })
-        h.merge(extract_md_link_urls(mdlk.cap))
+        h = h.merge({ mdlk.parsed_str => mdlk.link })
+        h = h.merge(extract_md_link_urls(mdlk.cap))
       end
       h
     end
@@ -51,12 +51,11 @@ module Wp2jekyll
     def extract_urls_hash
       h = {}
       # markdown_link
-      h.merge(extract_md_link_urls(body_str))
-
+      h = h.merge(extract_md_link_urls(body_str))
       # liquid_url
       LiquidUrl.extract(@body_str).each do |lqlk|
         if !h.keys.include? lqlk.parsed_str
-          h.merge({ lqlk.parsed_str => lqlk.uri.to_s })
+          h = h.merge({ lqlk.parsed_str => lqlk.uri.to_s })
         end
       end
 
@@ -64,7 +63,7 @@ module Wp2jekyll
       URI.extract(@body_str).each do |uri|
         uri.gsub!(/\)$/,'')
         if !h.keys.include? uri
-          h.merge({ uri => uri})
+          h = h.merge({ uri => uri})
         end
       end
       h
