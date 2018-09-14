@@ -162,7 +162,7 @@ module Wp2jekyll
             @media_item_store.store mih['id'], mih
 
             if mih['filename'].include? img_fn
-              @@logger.info "!found #{mih['filename']}, search Google Photo for #{img_fn}".green
+              @@logger.info "!found #{mih['filename']} in Google Photo, id => #{mih['id']}".green
               img_id = mih['id']
             end
           end
@@ -208,32 +208,13 @@ module Wp2jekyll
       id = search_image_in_period(img_fn, Date.parse(from_date), Date.parse(to_date))
     end
 
-    def stream_image(img_uri, sav_fpath)
-      uri = URI(img_uri)
-      Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
-        req = Net::HTTP::Get.new uri
-
-        http.request req do |response|
-          open sav_fpath, 'w' do |io|
-            response.readbody do |chunk|
-              @@logger.info "...download image #{io.write chunk}"
-            end
-          end
-
-        end
-      end
-
-      system "open #{sav_fpath}" # TODO DEBUG
-      sav_fpath
-    end
-
-    def download_image_by_id(img_id, fpath)
-      uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems')
-      req = Net::HTTP::Post.new(uri)
-      req['Content-type'] = 'application/json'
+    def get_img_url_by_id(img_id)
+      uri = URI("https://photoslibrary.googleapis.com/v1/mediaItems/#{img_id}")
+      req = Net::HTTP::Get.new(uri)
+      # req['Content-type'] = 'application/json'
       req['Authorization'] = "Bearer #{get_credentials.access_token}"
-      req_body_hash = { 'mediaItemId' => img_id }
-      req.body = JSON.generate(req_body_hash)
+      # req_body_hash = { 'mediaItemId' => img_id }
+      # req.body = JSON.generate(req_body_hash)
 
       http = Net::HTTP.new(uri.hostname, uri.port)
       # http.set_debug_output($stderr)
@@ -242,15 +223,44 @@ module Wp2jekyll
         http.request(req)
       }
 
-      if res.is_a?(Net::HTTPSuccess)
+      if res.is_a?(Net::HTTPOK)
         res_hash = JSON.parse res.body
         img_meta = res_hash['mediaMetadata']
         original_uri = res_hash['baseUrl'] + "=w#{img_meta['width']}-h#{img_meta['height']}"
-        return stream_image(original_uri, fpath)
+        return original_uri
       else
-        @@logger.warn "!Save image to #{fpath} failed."
-        return nil
+        @@logger.debug "!Failed getting image url. id #{img_id}. \n#{res.body}"
       end
+      nil
+    end
+
+    def stream_image(img_uri, sav_fpath)
+      uri = URI(img_uri)
+      Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
+        req = Net::HTTP::Get.new uri
+
+        http.request req do |response|
+          open sav_fpath, 'w' do |io|
+            chunk_counter = 0
+            response.read_body do |chunk|
+              chunk_counter += io.write chunk
+              printf("\r... download image ... #{chunk_counter}")
+            end
+            puts "\n"
+          end
+
+        end
+      end
+
+      sav_fpath
+    end
+
+    def download_image_by_id(img_id, fpath)
+      original_uri = get_img_url_by_id(img_id)
+      if nil != original_uri
+        return stream_image(original_uri, fpath)
+      end
+      nil
     end
 
     def search_and_download(img_fn:, from_date:, to_date:, to_path:)

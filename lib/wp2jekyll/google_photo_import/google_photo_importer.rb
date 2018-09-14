@@ -5,13 +5,9 @@ module Wp2jekyll
     class GooglePhotoImporter
         include DebugLogger
 
-        attr_reader :google_photo_client
-
-        def initialize
-            @google_photo_client = GooglePhotoClient.new
-        end
-
         def process_posts_dir(posts_dir, image_dir)
+            google_photo_client = GooglePhotoClient.new
+
             Dir.glob(File.join(posts_dir, '**/*.{md,markdown}')).each do |pfp|
 
                 # for each URI in `jk_md`
@@ -40,10 +36,15 @@ module Wp2jekyll
 
                     # download
                     tmp_f = Tempfile.new(bn)
-                    prev_year = (Date.parse(jk_md.datef) << 6).to_s
-                    post_year = (Date.parse(jk_md.datef) >> 6).to_s
-                    if nil != @google_photo_client.search_and_download(img_fn:bn,
+
+                    datestr = jk_md.datef
+
+                    prev_year = (Date.parse(datestr) << 6).to_s
+                    post_year = (Date.parse(datestr) >> 6).to_s
+
+                    if nil != google_photo_client.search_and_download(img_fn:bn,
                         from_date:prev_year, to_date:post_year, to_path:tmp_f.path)
+
                         # merge
                         new_relative_path = jk_md.date.strftime('%Y/%m/%d')
                         im.merge_img_prepend_path(image:temp_f, to_dir:image_dir, prepend_path:new_relative_path)
