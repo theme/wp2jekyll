@@ -1,8 +1,15 @@
 require 'fileutils'
 
 module Image
-    FP_WILDCARD="**/*.{jpg,jpeg,png,gif,svg,bmp}"
-    IMG_URL_RE=/((https?|ftp):)?([^\s]*)?(\.|\/)*([^\s]*)(jpg|jpeg|png|gif|svg|bmp)\??(.*=.*)*$/
+    include DebugLogger
+    FP_WILDCARD = "**/*.{jpg,jpeg,png,gif,svg,bmp}"
+    PURE_PATH_RE_STR = '[^\s]*'
+    IMG_BN_RE_STR = '[^\/\s]*\.(jpg|jpeg|png|gif|svg|bmp)'
+    IMG_BN_RE = Regexp.new(IMG_BN_RE_STR)
+    IMG_URL_RE  = Regexp.new(%{((https?|ftp):)?(#{PURE_PATH_RE_STR})?(#{IMG_BN_RE_STR})\??(.*=.*)*$})
+    
+    ImagePath_RE = Regexp.new(%{imagePath=(#{PURE_PATH_RE_STR}#{IMG_BN_RE_STR})})
+
 
     def self.is_a_image_url?(str)
         nil != (IMG_URL_RE =~ str)
@@ -10,6 +17,18 @@ module Image
 
     def self.basen_in_url(url)
         if self.is_a_image_url? url
+            uri = URI(url)
+
+            # special: image in query params
+            li = uri.query.split('&').select {|i| i =~ ImagePath_RE}
+            # @@logger.debug li
+            # STDIN.gets
+            if  li.length > 0
+                url = ImagePath_RE.match(url)[1]
+                # @@logger.debug url
+                # STDIN.gets
+            end
+
             Pathname(URI(url).path).basename.to_s
         else
             nil
