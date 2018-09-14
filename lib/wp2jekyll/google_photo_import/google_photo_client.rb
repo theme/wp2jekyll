@@ -28,9 +28,12 @@ module Wp2jekyll
     attr_reader   :key_store_fp
 
     attr_reader   :media_item_store
+    attr_reader   :drop_credentials_count
 
     # https://developers.google.com/photos/library/guides/authentication-authorization
     OAuth2_SCOPE_read_photo = 'https://www.googleapis.com/auth/photoslibrary.readonly'
+
+    OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
     def initialize
       @known_images = {} # img_fn => img_id
@@ -42,9 +45,9 @@ module Wp2jekyll
 
       @media_item_store = MediaItemStore.new("#{secret_dir}/media_item_store.json")
       # File.delete @token_store_fp # TODO debug
-    end
 
-    OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
+      @drop_credentials_count = 0
+    end
 
     def get_api_key
       YAML.load(File.read(@key_store_fp))['google_photo']
@@ -62,6 +65,7 @@ module Wp2jekyll
         url = authorizer.get_authorization_url(base_url: OOB_URI )
         puts "Open #{url} in your browser and enter the resulting code:"
         code = gets
+        @@logger.debug "gets code : #{code.inspect}".green
         credentials = authorizer.get_and_store_credentials_from_code(
           user_id: user_id, code: code, base_url: OOB_URI)
       end
@@ -69,6 +73,18 @@ module Wp2jekyll
       # OK to use credentials
       @@logger.debug "Google API credentials : #{credentials.inspect}"
       credentials
+    end
+
+    def drop_credentials
+      if @drop_credentials_count > 2
+        raise StandardError.new
+      end
+      client_id = Google::Auth::ClientId.from_file(credential_fpath)
+      token_store = Google::Auth::Stores::FileTokenStore.new( :file => token_store_fp)
+      authorizer = Google::Auth::UserAuthorizer.new(client_id, OAuth2_SCOPE_read_photo, token_store)
+      authorizer.revoke_authorization(ENV['USER'])
+      @@logger.debug "!Got error 401 UNAUTHENTICATED, revoke_authorization".yellow
+      drop_credentials_count += 1
     end
     
     # TODO: no api to search by image file name, now fetching one year's.
@@ -158,6 +174,12 @@ module Wp2jekyll
         else
           @@logger.debug "!Got #{res.inspect} when search Google Photo Image.".yellow
           @@logger.debug res.body.yellow
+          res_hash = JSON.parse res.body
+          if res.body.include?('"code": 401') && res.body.include?('"status": "UNAUTHENTICATED"')
+
+            drop_credentials
+            next
+          end
           break
         end
       end
