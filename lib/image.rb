@@ -18,21 +18,29 @@ module Image
     def self.basen_in_url(url)
         if self.is_a_image_url? url
             uri = URI(url)
-
-            # special: image in query params
-            li = uri.query.split('&').select {|i| i =~ ImagePath_RE}
-            # @@logger.debug li
-            # STDIN.gets
-            if  li.length > 0
-                url = ImagePath_RE.match(url)[1]
-                # @@logger.debug url
-                # STDIN.gets
+            if nil != uri
+                # special: image in query params
+                if nil != uri.query
+                    # @@logger.debug uri
+                    li = uri.query.split('&').select {|i| i =~ ImagePath_RE}
+                    # @@logger.debug li
+                    # STDIN.gets
+                    if  li.length > 0
+                        return File.basename(ImagePath_RE.match(url)[1])
+                        # @@logger.debug url
+                        # STDIN.gets
+                    end
+                end
+                
+                if nil != uri.path
+                    bn = File.basename(uri.path)
+                    if bn =~ IMG_BN_RE
+                        return bn
+                    end
+                end
             end
-
-            Pathname(URI(url).path).basename.to_s
-        else
-            nil
         end
+        nil
     end
 
     def self.is_img_fn_exist?(img_fn, in_dir)
