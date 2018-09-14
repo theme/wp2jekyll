@@ -42,8 +42,8 @@ module Wp2jekyll
 
                     # download
                     tmp_f = Tempfile.new(bn)
-                    prev_year = Date.parse(jk_md.datef).prev_year.to_s
-                    post_year = Date.parse(jk_md.datef).next_year.to_s
+                    prev_year = (Date.parse(jk_md.datef) << 6).to_s
+                    post_year = (Date.parse(jk_md.datef) >> 6).to_s
                     if nil != @google_photo_client.search_and_download(img_fn:bn,
                         from_date:prev_year, to_date:post_year, to_path:tmp_f.path)
                         # merge
