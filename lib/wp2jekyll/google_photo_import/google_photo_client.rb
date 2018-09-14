@@ -132,8 +132,22 @@ module Wp2jekyll
 
         if res.is_a?(Net::HTTPSuccess)
           res_hash = JSON.parse res.body
-          media_items =  media_items + res_hash['mediaItems']
+          
+          # inspect respond to find image
+          img_id = nil
 
+          res_hash['mediaItems'].each do |mih|
+            @media_item_store.store mih['id'], mih
+
+            if mih['filename'].include? img_fn
+              @@logger.info "!found #{mih['filename']}, search Google Photo for #{img_fn}".green
+              img_id = mih['id']
+            end
+          end
+
+          return img_id if nil != img_id
+
+          # image not found, continue quering next page
           nextPageToken = res_hash['nextPageToken']
           if nil != nextPageToken
             req_body_hash["pageToken"] = nextPageToken
@@ -146,17 +160,9 @@ module Wp2jekyll
           @@logger.debug res.body.yellow
           break
         end
-
       end
 
-      # process returned items
-      images = {}
-      media_items.each do |i|
-        # @@logger.debug i
-        @known_images[i['filename']] = i['id']
-        images[img_fn] = i['id'] if i['filename'].include? img_fn
-      end
-      return images
+      nil
     end
 
     # @img_fn [String]: image file name to search in Google Library
@@ -168,12 +174,10 @@ module Wp2jekyll
     #   - [nil]; image not found
     def search_img_id(img_fn:, from_date:, to_date:)
       id = @media_item_store.load(img_fn)
-      if nil != id
-        id 
-      else
-        hash = search_image_in_period(img_fn, Date.parse(from_date), Date.parse(to_date))
-        id = hash[img_fn]
-      end
+
+      return id if nil != id
+      
+      id = search_image_in_period(img_fn, Date.parse(from_date), Date.parse(to_date))
     end
 
     def stream_image(img_uri, sav_fpath)
