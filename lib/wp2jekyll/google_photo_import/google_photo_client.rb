@@ -78,7 +78,7 @@ module Wp2jekyll
     end
 
     def drop_credentials
-      if @drop_credentials_count > RETRY_LIMIT
+      if @drop_credentials_count >= RETRY_LIMIT
         raise StandardError.new("Too many retry drop_credentials")
       end
       client_id = Google::Auth::ClientId.from_file(credential_fpath)
