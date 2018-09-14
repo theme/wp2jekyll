@@ -2,32 +2,13 @@
 
 This ruby gem is used for importing posts to jekyll:
 1. Import Wordpress exported markdown file (yaml + markdown + xhtml) to jekyll post markdown format. (try & hint usr confirming for duplicat posts, using similarity algorithm. e.g. diff/lcs)
-2. Transform xhtml elements inside imported markdown, as more as possible, to plain jekyll markdown format. (e.g. <a> <p> <table> etc.)
-3. Modify image and image link insde imported markdown, to plain jekyll markdown format. (e.g. <img src> --> ![img]({{src | relative_url}}))
+2. Transform xhtml elements inside imported markdown, as more as possible, to plain jekyll markdown format. (e.g. `<a>` `<p>` `<table>`etc.)
+3. Modify image and image link insde imported markdown, to plain jekyll markdown format. (e.g. `<img src>` --> ![img]({{src | relative_url}}))
     supported images refering source are:
         - `wp-content/uploads` in Wordpress's file storage.
         - blogger post, saved by crawler script, as separate parts: `title`, `author`, `timestamp`, `body`, `images/o[img-file-name]`.
-        - local `~/.wp2jekyll/usr/[usrname]/google-photo-api-credentials.json` identified Google Photo Library. (by image file name)
-    if image is missing from all sources, then importer does not modify url of image.
+        - Google Photo Library, identified by local `~/.wp2jekyll/usr/[usrname]/google-photo-api-credentials.json`  . (search by image file name)
 
-
-## Installation
-
-As ordinary bundled gem.
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'wp2jekyll'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install wp2jekyll
 
 ## Setup
 - Google Photo API client credential
@@ -38,24 +19,43 @@ then put json file to
 
 ## Usage
 
-For details see the code.
+Sample Rakefile:
 
-Overview:
+```
 
-- import posts: `Wp2jekyll::PostMerger.new.merge_dir(d, File.join(source_dir, '_posts/'))`
-- `**/*.md` to jekyll format: `Wp2jekyll.process_wordpress_md_dir(source_dir)`
-- import posts saved as separated parts (in dirs), checking Google Photo: `Wp2jekyll::BloggerGrabbedImporter.new.import(blogspot_archive_dir,File.join(source_dir, '_posts'),File.join(source_dir, '_images'))`
+require 'wp2jekyll'
 
-## Development
+task :rn_wp_md do
+  Wp2jekyll.rename_md_posts_indir(wp_md_dir)
+end
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+task :wp_to_jekyll_md do # TODO : automatically do convertion in import step
+  Wp2jekyll.process_wordpress_md_in_dir(jekyll_post_dir)
+end
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+task :import_wp_post do
+  Wp2jekyll.merge_markdown_posts(from_dir: wp_md_dir, to_jekyll_posts_dir: jekyll_post_dir)
+end
 
-## Contributing
+task :import_google_photo do
+    Wp2jekyll.import_google_photo(posts_dir: jekyll_post_dir, image_dir: jekyll_image_dir)
+end
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/wp2jekyll.
+task :import_markdown_posts do
 
-## License
+  merge_md_dir.each do |d|
+    Wp2jekyll.merge_markdown_posts(from_dir: d, to_jekyll_posts_dir: jekyll_post_dir)
+  end
+end
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+task :import_blogger_post do
+
+    Wp2jekyll.import_blogger_post(from_grabbed_dir: blogspot_archive_dir,
+                                  to_dir: jekyll_post_dir,
+                                  to_img_dir: jekyll_image_dir,
+                                  replace_meta: { 'author' => 'a_author_name' }
+                                 )
+
+end
+
+```
