@@ -196,10 +196,10 @@ module Wp2jekyll
       end
 
       system "open #{sav_fpath}" # TODO DEBUG
-      true
+      sav_fpath
     end
 
-    def search_and_download(img_id, fpath)
+    def download_image(img_id, fpath)
       uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems')
       req = Net::HTTP::Post.new(uri)
       req['Content-type'] = 'application/json'
@@ -221,7 +221,7 @@ module Wp2jekyll
         return stream_image(original_uri, fpath)
       else
         @@logger.warn "!Save image to #{fpath} failed."
-        return false
+        return nil
       end
     end
 
