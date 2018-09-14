@@ -13,6 +13,7 @@ module Wp2jekyll
 
         def process_posts_dir(posts_dir, image_dir)
             Dir.glob(File.join(posts_dir, '**/*.{md,markdown}')).each do |pfp|
+                @@logger.debug "... import Google Photo for post : #{pfp}"
 
                 # for each URI in `jk_md`
                 # search URI.basename in Google Photo
@@ -28,12 +29,18 @@ module Wp2jekyll
                         uri = URI(v)
                     rescue ArgumentError => e
                         @@logger.debug "urls_hash : #{urls_hash.inspect}"
-                        @@logger.debug  "url in jk_md : #{k} => #{v}".red
                         next
                     end
+
+                    @@logger.debug "import image for : #{k} => #{v}".yellow
                     
                     # if v is image
                     bn = Pathname(uri).basename.to_s
+                    if im.is_img_exist(bn, image_dir)
+                        @@logger.debug "image exist : #{bn}"
+                        next
+                    end
+
                     # download
                     tmp_f = Tempfile.new(bn)
                     if nil != @google_photo_client.search_and_download(img_fn:bn, to_path:tmp_f) # TODO

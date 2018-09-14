@@ -41,7 +41,7 @@ module Wp2jekyll
           liquid_filter: m[3] || '')
 
         o.parsed_str = str
-        @@logger.debug info.green
+        @@logger.debug o.info.green
 
         return o
       end
