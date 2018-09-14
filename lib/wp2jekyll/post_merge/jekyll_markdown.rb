@@ -44,14 +44,14 @@ module Wp2jekyll
         h.merge({ mdlk.parsed_str => mdlk.link })
         h.merge(extract_md_link_urls(mdlk.cap))
       end
+      h
     end
 
     # @return [Hash] of { match_string => url_inside }
     def extract_urls_hash
       h = {}
       # markdown_link
-      # h.merge(extract_md_link_urls(body_str))
-      h.merge({}) # debug
+      h.merge(extract_md_link_urls(body_str))
 
       # liquid_url
       LiquidUrl.extract(@body_str).each do |lqlk|
@@ -67,6 +67,7 @@ module Wp2jekyll
           h.merge({ uri => uri})
         end
       end
+      h
     end
 
     # search link that contains img_fn, replace its path with provided path
