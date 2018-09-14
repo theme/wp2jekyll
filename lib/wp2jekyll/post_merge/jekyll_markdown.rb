@@ -50,19 +50,20 @@ module Wp2jekyll
     def extract_urls_hash
       h = {}
       # markdown_link
-      h.merge(extract_md_link_urls(body_str))
+      # h.merge(extract_md_link_urls(body_str))
+      h.merge({}) # debug
 
       # liquid_url
-      LiquidUrl.extract(body_str).each do |lqlk|
+      LiquidUrl.extract(@body_str).each do |lqlk|
         if !h.keys.include? lqlk.parsed_str
           h.merge({ lqlk.parsed_str => lqlk.uri })
         end
       end
 
       # simple_url
-      URI.extract(body_str).each do |uri|
+      URI.extract(@body_str).each do |uri|
         uri.gsub!(/\)$/,'')
-        if !h.keys.include? uri then
+        if Image.is_a_image_url? uri then
           h.merge({ uri => uri})
         end
       end

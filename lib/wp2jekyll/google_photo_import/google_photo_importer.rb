@@ -28,7 +28,7 @@ module Wp2jekyll
                     begin
                         uri = URI(v)
                     rescue ArgumentError => e
-                        @@logger.debug "urls_hash : #{urls_hash.inspect}"
+                        @@logger.debug "#{e} , v=#{v}, urls_hash : #{urls_hash.inspect}".red
                         next
                     end
 
