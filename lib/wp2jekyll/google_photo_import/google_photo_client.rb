@@ -30,6 +30,8 @@ module Wp2jekyll
     attr_reader   :media_item_store
     attr_reader   :drop_credentials_count
 
+    RETRY_LIMIT = 2
+
     # https://developers.google.com/photos/library/guides/authentication-authorization
     OAuth2_SCOPE_read_photo = 'https://www.googleapis.com/auth/photoslibrary.readonly'
 
@@ -64,27 +66,27 @@ module Wp2jekyll
       if credentials.nil?
         url = authorizer.get_authorization_url(base_url: OOB_URI )
         puts "Open #{url} in your browser and enter the resulting code:"
-        code = gets
-        @@logger.debug "gets code : #{code.inspect}".green
+        code = STDIN.gets
+        # @@logger.debug "gets code : #{code.inspect  }".green
         credentials = authorizer.get_and_store_credentials_from_code(
           user_id: user_id, code: code, base_url: OOB_URI)
       end
       
       # OK to use credentials
-      @@logger.debug "Google API credentials : #{credentials.inspect}"
+      # @@logger.debug "Google API credentials : #{credentials.inspect}"
       credentials
     end
 
     def drop_credentials
-      if @drop_credentials_count > 2
-        raise StandardError.new
+      if @drop_credentials_count > RETRY_LIMIT
+        raise StandardError.new("Too many retry drop_credentials")
       end
       client_id = Google::Auth::ClientId.from_file(credential_fpath)
       token_store = Google::Auth::Stores::FileTokenStore.new( :file => token_store_fp)
       authorizer = Google::Auth::UserAuthorizer.new(client_id, OAuth2_SCOPE_read_photo, token_store)
       authorizer.revoke_authorization(ENV['USER'])
       @@logger.debug "!Got error 401 UNAUTHENTICATED, revoke_authorization".yellow
-      drop_credentials_count += 1
+      @drop_credentials_count += 1
     end
     
     # TODO: no api to search by image file name, now fetching one year's.
@@ -137,6 +139,10 @@ module Wp2jekyll
       count = 0
       loop do
         @@logger.debug "#{count = count + 1 } query Google Photo Library for image items"
+        if count > 3 # TODO debug
+          Process.exit
+        end
+
         req.body = JSON.generate(req_body_hash)
 
         http = Net::HTTP.new(uri.hostname, uri.port)
@@ -248,6 +254,7 @@ module Wp2jekyll
     end
 
     def search_and_download(img_fn:, from_date:, to_date:, to_path:)
+      @@logger.info "search_and_download #{img_fn} from #{from_date} to #{to_date} to_path #{to_path}".white
       if id = search_img_id(img_fn: img_fn, from_date: from_date, to_date: to_date)
         download_image_by_id(id, to_path)
       end
