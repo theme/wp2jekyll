@@ -48,19 +48,19 @@ module Wp2jekyll
     end
 
     # @return [Hash] of { match_string => url_inside }
-    def extract_urls_hash
+    def extract_urls_hash(txt)
       h = {}
       # markdown_link
-      h = h.merge(extract_md_link_urls(body_str))
+      h = h.merge(extract_md_link_urls(txt))
       # liquid_url
-      LiquidUrl.extract(@body_str).each do |lqlk|
+      LiquidUrl.extract(txt).each do |lqlk|
         if !h.keys.include? lqlk.parsed_str
           h = h.merge({ lqlk.parsed_str => lqlk.uri.to_s })
         end
       end
 
       # simple_url
-      URI.extract(@body_str).each do |uri|
+      URI.extract(txt).each do |uri|
         uri.gsub!(/\)$/,'')
         if !h.keys.include? uri
           h = h.merge({ uri => uri})
@@ -71,14 +71,18 @@ module Wp2jekyll
       h
     end
 
+    def all_urls_hash
+      extract_urls_hash(@body_str)
+    end
+
     # search link that contains img_fn, replace its path with provided path
     def relink_image_in_txt(img_fn, to_path, in_txt)
 
-      extract_urls_hash.each do |mstr, url|
+      extract_urls_hash(in_txt).each do |mstr, url|
         if url.include? img_fn
           if mdlk = MarkdownLink.parse(mstr)
             mdlk.cap = relink_image_in_txt(img_fn, to_path, mdlk.cap)
-            mdlk.link = LiquidUrl.new(to_path)
+            mdlk.link = LiquidUrl.new(uri:to_path)
             in_txt.gsub!(mstr, mdlk.to_s)
           end
 
@@ -89,7 +93,7 @@ module Wp2jekyll
 
           begin
             uri = URI.parse(url)
-            in_txt.gsub!(mstr, LiquidUrl.new(to_path).to_s)
+            in_txt.gsub!(mstr, LiquidUrl.new(uri:to_path).to_s)
           rescue URI::InvalidURIError => e
             nil
           end
