@@ -37,8 +37,8 @@ module Wp2jekyll
     def self.parse(str)
       if m = RE.match(str)
         o = self.new(
-          uri: m[1] || '',
-          liquid_filter: m[2] || '')
+          uri: m[2] || '',
+          liquid_filter: m[3] || '')
 
         o.parsed_str = str
         @@logger.debug info.green

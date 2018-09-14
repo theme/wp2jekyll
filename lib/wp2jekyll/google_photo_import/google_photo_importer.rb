@@ -3,6 +3,7 @@ require 'pathname'
 
 module Wp2jekyll
     class GooglePhotoImporter
+        include DebugLogger
 
         attr_reader :google_photo_client
 
@@ -21,9 +22,18 @@ module Wp2jekyll
 
                 im = ImageMerger.new
                 jk_md = Post.new(pfp)
-                jk_md.extract_urls_hash.each do |k,v|
+                urls_hash = jk_md.extract_urls_hash
+                urls_hash.each do |k,v|
+                    begin
+                        uri = URI(v)
+                    rescue ArgumentError => e
+                        @@logger.debug "urls_hash : #{urls_hash.inspect}"
+                        @@logger.debug  "url in jk_md : #{k} => #{v}".red
+                        next
+                    end
+                    
                     # if v is image
-                    bn = Pathname(URI(v)).basename.to_s
+                    bn = Pathname(uri).basename.to_s
                     # download
                     tmp_f = Tempfile.new(bn)
                     if nil != @google_photo_client.search_and_download(img_fn:bn, to_path:tmp_f) # TODO

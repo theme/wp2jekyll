@@ -67,7 +67,7 @@ module Wp2jekyll
           h.merge({ uri => uri})
         end
       end
-
+      h
     end
 
     # search link that contains img_fn, replace its path with provided path
