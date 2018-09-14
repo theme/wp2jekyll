@@ -176,7 +176,7 @@ module Wp2jekyll
       end
     end
 
-    def download_image(img_uri, sav_fpath)
+    def stream_image(img_uri, sav_fpath)
       uri = URI(img_uri)
       Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
         req = Net::HTTP::Get.new uri
@@ -195,7 +195,7 @@ module Wp2jekyll
       true
     end
 
-    def save_img(img_id, fpath)
+    def search_and_download(img_id, fpath)
       uri = URI('https://photoslibrary.googleapis.com/v1/mediaItems')
       req = Net::HTTP::Post.new(uri)
       req['Content-type'] = 'application/json'
@@ -214,7 +214,7 @@ module Wp2jekyll
         res_hash = JSON.parse res.body
         img_meta = res_hash['mediaMetadata']
         original_uri = res_hash['baseUrl'] + "=w#{img_meta['width']}-h#{img_meta['height']}"
-        return download_image(original_uri, fpath)
+        return stream_image(original_uri, fpath)
       else
         @@logger.warn "!Save image to #{fpath} failed."
         return false

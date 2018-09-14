@@ -26,7 +26,7 @@ module Wp2jekyll
                     bn = Pathname(URI(v)).basename.to_s
                     # download
                     tmp_f = Tempfile.new(bn)
-                    if @google_photo_client.save_img(bn, tmp_f) # TODO
+                    if @google_photo_client.search_and_download(bn, tmp_f) # TODO
                         # merge
                         new_relative_path = jk_md.date.strftime('%Y/%m/%d')
                         im.merge_img_prepend_path(image:temp_f, to_dir:image_dir, prepend_path:new_relative_path)
