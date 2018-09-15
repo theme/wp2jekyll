@@ -38,10 +38,12 @@ module Wp2jekyll
       highest_similarity = 0
       nearest_file = nil
       Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
-        c = FileCompare.new(fp, fpath)
-        if c.similar? && c.binary_similarity > highest_similarity
-            highest_similarity = c.binary_similarity
-            nearest_file = fpath
+        if File.file?(fp) && File.file?(fpath)
+          c = FileCompare.new(fp, fpath)
+          if c.similar? && c.binary_similarity > highest_similarity
+              highest_similarity = c.binary_similarity
+              nearest_file = fpath
+          end
         end
       end
 
@@ -54,7 +56,7 @@ module Wp2jekyll
     #
     # if file is already exist, mv to desired path
     # @return [String] final existing full path of file
-    def merge_file(fp:, from_dir:, to_dir:, prepend_path: nil, keep_rela_path: false, rename: nil)
+    def merge_file(fp:, from_dir:, to_dir:, prepend_path: '', keep_rela_path: false, rename: nil)
 
       @@logger.debug "merge_file #{fp}"
       @try_counter += 1
@@ -88,7 +90,7 @@ module Wp2jekyll
       end
 
       if do_merge
-        if nil != rename
+        if nil != rename && '' != rename
           new_bn = rename
         else
           new_bn = File.basename(fp)
@@ -96,6 +98,7 @@ module Wp2jekyll
 
         rel_path = Pathname.new(File.dirname(fp)).relative_path_from(Pathname.new(from_dir))
         if keep_rela_path
+          @@logger.debug "prepend_path #{prepend_path} rel_path #{rel_path}"
           new_path = File.join(prepend_path, rel_path)
         else
           new_path = prepend_path
@@ -128,12 +131,12 @@ module Wp2jekyll
             next
           end
         end
-        if File.exist(fpath)
+        if File.file?(fpath)
           merge_file(fp:fpath, from_dir: from_dir, to_dir: to_dir, keep_rela_path: true)
         end
       end
 
-      @@logger.info "merge_file dir #{stat}."
+      @@logger.info "merge_files (dir) #{stat}."
     end
   end
 end

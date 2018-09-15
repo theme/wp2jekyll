@@ -14,6 +14,15 @@ module Wp2jekyll
     end
   end
 
+  class NotFileError < StandardError
+    attr_reader :f
+
+    def initialize(msg: "Not a file.", f:)
+      super "#{msg} #{f}"
+      @f = f
+    end
+  end
+
   class FileCompare
     include DebugLogger
 
@@ -36,8 +45,16 @@ module Wp2jekyll
     @@cache = FileCompareCache.new
 
     def initialize(a, b)
-      @a = a
-      @b = b
+      if !File.file?(a)
+        raise NotFileError.new(f:a)
+      else
+        @a = a
+      end
+      if !File.file?(b)
+        raise NotFileError.new(f:b)
+      else
+        @b = b
+      end
       @similarity = nil
     end
 
@@ -80,17 +97,19 @@ module Wp2jekyll
       end
 
       # step for scan file
-      step_a = @fa.size / BINARY_SAMPLE_POINTS_NUM
-      step_b = @fb.size / BINARY_SAMPLE_POINTS_NUM
+      sa = File.size(@a)
+      sb = File.size(@b)
+      step_a = sa / BINARY_SAMPLE_POINTS_NUM
+      step_b = sb / BINARY_SAMPLE_POINTS_NUM
       step = step_a < step_b ? step_a : step_b
       if step == 0
         step = 1
       end
 
-      min_size = @fa.size < @fb.size ? @fa.size : @fb.size
+      min_size = sa < sb ? sa : sb
 
-      fda = File.open(@fa, 'rb')
-      fdb = File.open(@fb, 'rb')
+      fda = File.open(@a, 'rb')
+      fdb = File.open(@b, 'rb')
 
       bytes_read = 0
       bytes_same = 0
@@ -127,9 +146,7 @@ module Wp2jekyll
       elsif (SIMILAR_LV_HINT < bs) && (bs < SIMILAR_LV_AUTO)
         nil # uncertain
       else # similarity < SIMILAR_LV_HINT
-        if !meta_same
-          return false
-        end
+        return false
       end
 
       # uncertain
