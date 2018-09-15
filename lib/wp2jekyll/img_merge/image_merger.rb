@@ -124,7 +124,7 @@ module Wp2jekyll
         if user_confirm("Do merge_img_keep_path #{image}", true) # TODO
           rel_path = Pathname.new(File.dirname(image)).relative_path_from(Pathname.new(from_dir))
           new_path = File.join(to_dir, rel_path)
-          to_fp = File.join(to_path, basefn(image))
+          to_fp = File.join(new_path, basefn(image))
           FileUtils.mkdir_p(new_path)
           FileUtils.cp(image, to_fp)
           @merge_count += 1

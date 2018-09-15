@@ -18,8 +18,12 @@ require "wp2jekyll/version"
 
 module Wp2jekyll
   require 'debug_logger'
-  require 'image'
 
+  # lower api
+  require 'image'
+  require 'wp2jekyll/file_merge'
+
+  # higher api
   require 'wp2jekyll/wp_import'
   require 'wp2jekyll/google_photo_import'
   require 'wp2jekyll/blogspot_import'
@@ -34,6 +38,14 @@ module Wp2jekyll
 
   def self.merge_markdown_posts(from_dir:, to_jekyll_posts_dir:)
     PostMerger.new.merge_dir(from_dir, to_jekyll_posts_dir)
+  end
+
+  def self.merge_local_images(from_dir:, to_image_dir:)
+    if Dir.exist? from_dir then
+      Dir.glob(File.join(from_dir + Image::FP_WILDCARD)) do |img_fp|
+        ImageMerger.new.merge_img_keep_path(from_dir: from_dir, image:img_fp, to_dir:to_image_dir)
+      end
+    end
   end
 
   def self.import_blogger_post(from_grabbed_dir:, to_dir:, to_img_dir:, replace_meta:)

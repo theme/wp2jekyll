@@ -17,7 +17,12 @@ module Image
 
     def self.basen_in_url(url)
         if self.is_a_image_url? url
-            uri = URI(url)
+            begin
+                uri = URI(url)
+            rescue URI::InvalidURIError => e
+                uri = nil
+            end
+
             if nil != uri
                 # special: image in query params
                 if nil != uri.query
