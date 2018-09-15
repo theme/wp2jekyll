@@ -83,7 +83,7 @@ module Wp2jekyll
       step_a = @fa.size / BINARY_SAMPLE_POINTS_NUM
       step_b = @fb.size / BINARY_SAMPLE_POINTS_NUM
       step = step_a < step_b ? step_a : step_b
-      if step = 0
+      if step == 0
         step = 1
       end
 

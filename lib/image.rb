@@ -6,7 +6,7 @@ module Image
     PURE_PATH_RE_STR = '[^\s]*'
     IMG_BN_RE_STR = '[^\/\s]*\.(jpg|jpeg|png|gif|svg|bmp)'
     IMG_BN_RE = Regexp.new(IMG_BN_RE_STR)
-    IMG_URL_RE  = Regexp.new(%{((https?|ftp):)?(#{PURE_PATH_RE_STR})?(#{IMG_BN_RE_STR})\??(.*=.*)*$})
+    IMG_URL_RE  = Regexp.new(%{((https?|ftp)://)?(#{PURE_PATH_RE_STR})?(#{IMG_BN_RE_STR})(\\?(.+=.+)+)?$})
     
     ImagePath_RE = Regexp.new(%{imagePath=(#{PURE_PATH_RE_STR}#{IMG_BN_RE_STR})})
 
@@ -15,11 +15,15 @@ module Image
         nil != (IMG_URL_RE =~ str)
     end
 
+    def self.is_a_image_fp?(fp)
+        self.is_a_image_url? fp
+    end
+
     def self.basen_in_url(url)
         if self.is_a_image_url? url
             begin
                 uri = URI(url)
-            rescue URI::InvalidURIError => e
+            rescue URI::InvalidURIError
                 uri = nil
             end
 

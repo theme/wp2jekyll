@@ -56,6 +56,7 @@ module Wp2jekyll
     # @return [String] final existing full path of file
     def merge_file(fp:, from_dir:, to_dir:, prepend_path: nil, keep_rela_path: false, rename: nil)
 
+      @@logger.debug "merge_file #{fp}"
       @try_counter += 1
 
       do_merge = false
@@ -118,10 +119,18 @@ module Wp2jekyll
       "#{@file_trans.length}/#{try_counter}"
     end
 
-    def merge_dir(from_dir, to_dir)
+    def merge_dir(from_dir:, to_dir:, skip_image: true)
 
       Dir.glob(File.join(from_dir, "**/*")) do |fpath|
-        merge_file(fp:fpath, from_dir: from_dir, to_dir: to_dir, keep_rela_path: true)
+        if skip_image
+          if Image.is_a_image_fp? fpath
+            @@logger.debug "merge_file skip #{fpath}"
+            next
+          end
+        end
+        if File.exist(fpath)
+          merge_file(fp:fpath, from_dir: from_dir, to_dir: to_dir, keep_rela_path: true)
+        end
       end
 
       @@logger.info "merge_file dir #{stat}."

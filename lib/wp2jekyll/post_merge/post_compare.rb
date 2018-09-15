@@ -4,20 +4,8 @@ require 'colorize'
 require 'diff/lcs'
 
 module Wp2jekyll
-  class UncertainSimilarityError < StandardError
-    attr_reader :a
-    attr_reader :b
-    attr_reader :user_judge
 
-    def initialize(msg:, a:, b:, user_judge:)
-      super msg
-      @user_judge = user_judge
-      @a = a
-      @b = b
-    end
-  end
-
-  class PostCompare
+  class PostCompare < FileCompare
     include DebugLogger
 
     SIMILAR_LV_USER_SAME = 2.0

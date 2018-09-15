@@ -42,10 +42,14 @@ module Wp2jekyll
 
   def self.merge_local_images(from_dir:, to_image_dir:)
     if Dir.exist? from_dir then
-      Dir.glob(File.join(from_dir + Image::FP_WILDCARD)) do |img_fp|
+      Dir.glob(File.join(from_dir , Image::FP_WILDCARD)) do |img_fp|
         ImageMerger.new.merge_img_keep_path(from_dir: from_dir, image:img_fp, to_dir:to_image_dir)
       end
     end
+  end
+
+  def self.merge_files(from_dir:, to_dir:)
+    FileMerger.new.merge_dir(from_dir:from_dir, to_dir:to_dir, skip_image: true)
   end
 
   def self.import_blogger_post(from_grabbed_dir:, to_dir:, to_img_dir:, replace_meta:)

@@ -35,12 +35,12 @@ task :rn_wp_md do
   Wp2jekyll.rename_md_posts_indir(wp_md_dir)
 end
 
-task :wp_to_jekyll_md do # TODO : automatically do convertion in import step
-  Wp2jekyll.process_wordpress_md_in_dir(jekyll_post_dir)
-end
-
 task :import_wp_post do
   Wp2jekyll.merge_markdown_posts(from_dir: wp_md_dir, to_jekyll_posts_dir: jekyll_post_dir)
+end
+
+task :wp_to_jekyll_md do NOTE: modify posts inplace
+  Wp2jekyll.process_wordpress_md_in_dir(jekyll_post_dir)
 end
 
 task :import_google_photo do

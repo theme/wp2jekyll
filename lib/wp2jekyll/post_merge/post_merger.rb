@@ -2,19 +2,7 @@ require 'fileutils'
 
 module Wp2jekyll
 
-  class MergeFailError < StandardError
-    attr_reader :reason
-    ALREADY_EXIST = -1
-    USER_DENY = -2
-
-    def initialize(msg:, reason:)
-      super msg
-      @reason = reason
-    end
-
-  end
-
-  class PostMerger
+  class PostMerger < FileMerger
     include DebugLogger
 
     attr_accessor :post_trans
