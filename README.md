@@ -39,35 +39,40 @@ task :import_wp_post do
   Wp2jekyll.merge_markdown_posts(from_dir: wp_md_dir, to_jekyll_posts_dir: jekyll_post_dir)
 end
 
-task :wp_to_jekyll_md do NOTE: modify posts inplace
+task :wp_to_jekyll_md do # NOTE: modify posts inplace
   Wp2jekyll.process_wordpress_md_in_dir(jekyll_post_dir)
+end
+
+task :import_blogger_post do
+    Wp2jekyll.import_blogger_post(from_grabbed_dir: blogspot_archive_dir,
+                                  to_dir: jekyll_post_dir,
+                                  to_img_dir: jekyll_image_dir,
+                                  replace_meta: { 'author' => 'theme' }
+                                 )   
+end
+
+task :import_markdown_posts do
+  merge_md_dir.each do |d| 
+    Wp2jekyll.merge_markdown_posts(from_dir: d, to_jekyll_posts_dir: jekyll_post_dir)
+  end 
+end
+
+task :merge_wp_files do
+  Wp2jekyll.merge_files(from_dir: wp_asset_dir, to_dir:File.join(jekyll_source_dir, File.basename(wp_asset_dir)))
 end
 
 task :import_google_photo do
     Wp2jekyll.import_google_photo(posts_dir: jekyll_post_dir, image_dir: jekyll_image_dir)
 end
 
-task :import_markdown_posts do
-
-  merge_md_dir.each do |d|
-    Wp2jekyll.merge_markdown_posts(from_dir: d, to_jekyll_posts_dir: jekyll_post_dir)
+task :merge_local_images do
+  wp_img_dirs.each do |dir|
+    Wp2jekyll.merge_local_images(from_dir:dir, to_image_dir:jekyll_image_dir)
   end
 end
 
-task :import_blogger_post do
+# -------------------------------------------------------------------------
 
-    Wp2jekyll.import_blogger_post(from_grabbed_dir: blogspot_archive_dir,
-                                  to_dir: jekyll_post_dir,
-                                  to_img_dir: jekyll_image_dir,
-                                  replace_meta: { 'author' => 'a_author_name' }
-                                 )
-
-end
-
-task :merge_local_images do
-   wp_img_dirs.each do |dir|
-    Wp2jekyll.merge_local_images(from_dir:dir, to_image_dir:jekyll_image_dir)
-   end
-end
+task t_wp: [:merge_wp_files, :rn_wp_md, :import_wp_post, :wp_to_jekyll_md]
 
 ```
