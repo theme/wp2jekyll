@@ -11,10 +11,16 @@ This ruby gem is used for importing posts to jekyll:
 
 
 ## Setup
-- Google Photo API client credential
-request a OAuth2 client credential, as described at https://developers.google.com/photos/library/guides/get-started#request-id, 
-then put json file to 
+
+### Google Photo API client credential
+
+request a OAuth2 client credential, as described at https://developers.google.com/photos/library/guides/get-started#request-id,
+then put json file to
 `~/.wp2jekyll/usr/$USER/google-photo-api-oauth2-client-credentials.json`
+
+### Gemfile
+
+`gem "wp2jekyll", path: "../wp2jekyll"`
 
 
 ## Usage
@@ -56,6 +62,12 @@ task :import_blogger_post do
                                   replace_meta: { 'author' => 'a_author_name' }
                                  )
 
+end
+
+task :merge_local_images do
+   wp_img_dirs.each do |dir|
+    Wp2jekyll.merge_local_images(from_dir:dir, to_image_dir:jekyll_image_dir)
+   end
 end
 
 ```
