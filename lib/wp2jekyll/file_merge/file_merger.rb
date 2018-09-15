@@ -47,8 +47,8 @@ module Wp2jekyll
       end
       
       m = s_h.max { |a, b|
-        va = a[0] || -1
-        vb = b[0] || -1
+        va = (nil != a ? a[0] : -1)
+        vb = (nil != b ? b[0] : -1)
         va <=> vb
       }
       nearest_file = m[1]

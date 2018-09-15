@@ -34,6 +34,7 @@ module Wp2jekyll
     # @return [String] the post in target dir after merge.
     def merge_post(fp, to_dir)
       @try_counter += 1
+      @@logger.info "try merge_post #{@try_counter} "
 
       post = Post.new fp
       do_merge = false
@@ -87,10 +88,16 @@ module Wp2jekyll
     def stat
       "#{@post_trans.length}/#{try_counter}"
     end
-    def merge_dir(from_dir, to_dir)
 
+    def merge_dir(from_dir, to_dir)
       Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|
-        merge_post(fpath, to_dir)
+        begin
+          p = Post.new fpath # test Post parse successful
+          merge_post(fpath, to_dir)
+        rescue ArgumentError => e # handle exception
+          # degrade to file
+          merge_file(fp: fpath, from_dir:from_dir, to_dir:to_dir)
+        end
       end
 
       @@logger.info "post merge_dir #{stat}."
