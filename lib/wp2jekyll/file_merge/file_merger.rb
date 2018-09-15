@@ -37,7 +37,7 @@ module Wp2jekyll
     def most_similar_file(fp, in_dir)
       highest_similarity = 0
       nearest_file = nil
-      Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
+      Dir.glob(File.join(in_dir, '**/*')) do |fpath|
         if File.file?(fp) && File.file?(fpath)
           c = FileCompare.new(fp, fpath)
           if c.similar? && c.binary_similarity > highest_similarity
@@ -125,13 +125,13 @@ module Wp2jekyll
     def merge_dir(from_dir:, to_dir:, skip_image: true)
 
       Dir.glob(File.join(from_dir, "**/*")) do |fpath|
-        if skip_image
-          if Image.is_a_image_fp? fpath
-            @@logger.debug "merge_file skip #{fpath}"
-            next
-          end
-        end
         if File.file?(fpath)
+          if skip_image
+            if Image.is_a_image_fp? fpath
+              # @@logger.debug "merge_file skip #{fpath}"
+              next
+            end
+          end
           merge_file(fp:fpath, from_dir: from_dir, to_dir: to_dir, keep_rela_path: true)
         end
       end
