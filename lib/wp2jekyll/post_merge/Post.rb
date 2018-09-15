@@ -18,6 +18,11 @@ module Wp2jekyll
       super fp
       split_fulltxt(@@fcache.read(fp))
       parse_yaml_front_matter(@yaml_front_matter_str)
+
+      if @date_str.empty?
+        # try guess date from fp
+        @date_str = /^\d\d\d\d-\d\d-\d\d/.match(File.basename(fp)).to_s
+      end
     end
 
     def parse_yaml_front_matter(yaml_txt)
