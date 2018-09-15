@@ -35,21 +35,40 @@ module Wp2jekyll
       'y' == c
     end
 
+    # ver. Parallel
     def most_similar_file(fp, in_dir)
-      highest_similarity = 0
-      nearest_file = nil
-      Parallel.map(Dir.glob(File.join(in_dir, '**/*'))) do |fpath|
+      s_h = Parallel.map(Dir.glob(File.join(in_dir, '**/*')), in_process: 8) do |fpath|
         if File.file?(fp) && File.file?(fpath)
           c = FileCompare.new(fp, fpath)
-          if c.similar? && c.binary_similarity > highest_similarity
-              highest_similarity = c.binary_similarity
-              nearest_file = fpath
-          end
+          [c.binary_similarity , fpath]
+        else
+          nil
         end
       end
-
-      nearest_file
+      
+      m = s_h.max { |a, b|
+        va = a[0] || -1
+        vb = b[0] || -1
+        va <=> vb
+      }
+      nearest_file = m[1]
     end
+
+    # def most_similar_file(fp, in_dir)
+    #   highest_similarity = 0
+    #   nearest_file = nil
+    #   Dir.glob(File.join(in_dir, '**/*')) do |fpath|
+    #     if File.file?(fp) && File.file?(fpath)
+    #       c = FileCompare.new(fp, fpath)
+    #       if c.similar? && c.binary_similarity > highest_similarity
+    #           highest_similarity = c.binary_similarity
+    #           nearest_file = fpath
+    #       end
+    #     end
+    #   end
+
+    #   nearest_file
+    # end
 
     # merge file
     #   from from_dir/relativs_fath/basename (file)
@@ -66,7 +85,7 @@ module Wp2jekyll
 
       begin
         s_f = most_similar_file(fp, to_dir)
-        if nil == s_f 
+        if !(FileCompare.new(fp, s_f).similar?)
           # not exist, do merge, return target
           @@logger.info "merge_file new! #{fp}".green
           do_merge = true
