@@ -28,16 +28,24 @@ module Wp2jekyll
   require 'wp2jekyll/google_photo_import'
   require 'wp2jekyll/blogspot_import'
   
+  def self.merge_markdown_posts(from_dir:, to_jekyll_posts_dir:)
+    PostMerger.new.merge_dir(from_dir, to_jekyll_posts_dir)
+  end
+
+  def self.import_wordpress_md_posts(from_dir:, to_jekyll_posts_dir:)
+    if Dir.exist? from_dir then
+      Dir.glob (from_dir + '/**/*.{md,markdown}') do |fpath|
+        WordpressImporter.new.import_post(fpath:fpath, jekyll_posts_dir:to_jekyll_posts_dir)
+      end
+    end
+  end
+
   def self.process_wordpress_md_in_dir(d)
     if Dir.exist? d then
       Dir.glob (d + '/**/*.md') do |fpath|
         WordpressMarkdown.new(fpath).write_jekyll_md!
       end
     end
-  end
-
-  def self.merge_markdown_posts(from_dir:, to_jekyll_posts_dir:)
-    PostMerger.new.merge_dir(from_dir, to_jekyll_posts_dir)
   end
 
   def self.merge_local_images(from_dir:, to_image_dir:)

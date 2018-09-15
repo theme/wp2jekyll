@@ -34,7 +34,6 @@ module Wp2jekyll
     # @return [String] the post in target dir after merge.
     def merge_post(fp, to_dir)
       @try_counter += 1
-      @@logger.info "try merge_post #{@try_counter} "
 
       post = Post.new fp
       do_merge = false

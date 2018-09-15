@@ -5,6 +5,11 @@ module Wp2jekyll
   
     class WordpressImporter
       include DebugLogger
+
+      attr_reader :post_merger
+      def initialize
+        @post_merger = PostMerger.new
+      end
         
       def import_post(fpath:, jekyll_posts_dir:)
         # comvert wordpress markdown to jekyll format
@@ -14,7 +19,7 @@ module Wp2jekyll
         wpmd_tmp.write_jekyll_md!
 
         # merge (test if already exists?)
-        PostMerger.new.merge_post(Post.new(jkmd_tmp.path), jekyll_posts_dir)
+        @post_merger.merge_post(jkmd_tmp.path, jekyll_posts_dir)
       end
 
       def import_posts_in_dir(wp_exported_posts_dir:, jekyll_posts_dir:)
