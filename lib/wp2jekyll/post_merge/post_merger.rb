@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'parallel'
 
 module Wp2jekyll
 
@@ -25,7 +26,7 @@ module Wp2jekyll
     def most_similar_post(fp, in_dir)
       highest_similarity = 0
       nearest_post = nil
-      Dir.glob(File.join(in_dir, '**/*.md')) do |fpath|
+      Parallel.map(Dir.glob(File.join(in_dir, '**/*.md'))) do |fpath|
         c = PostCompare.new(fp, fpath)
         if c.similar? && c.body_similarity > highest_similarity
             highest_similarity = c.body_similarity

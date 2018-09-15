@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'parallel'
 
 module Wp2jekyll
 
@@ -37,7 +38,7 @@ module Wp2jekyll
     def most_similar_file(fp, in_dir)
       highest_similarity = 0
       nearest_file = nil
-      Dir.glob(File.join(in_dir, '**/*')) do |fpath|
+      Parallel.map(Dir.glob(File.join(in_dir, '**/*'))) do |fpath|
         if File.file?(fp) && File.file?(fpath)
           c = FileCompare.new(fp, fpath)
           if c.similar? && c.binary_similarity > highest_similarity
