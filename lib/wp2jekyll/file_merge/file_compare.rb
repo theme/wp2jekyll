@@ -134,6 +134,8 @@ module Wp2jekyll
       }
 
       @similarity = 1.0 * bytes_same / bytes_read
+      @@cache.record_similarity(@a, @b, @similarity)
+
       return @similarity
     end
 
