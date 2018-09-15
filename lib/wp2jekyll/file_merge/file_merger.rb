@@ -50,14 +50,12 @@ module Wp2jekyll
 
     # merge file
     #   from from_dir/relativs_fath/basename (file)
-    #   to to_dir/prepend_path/keep_path?/rename?_basename
+    #   to to_dir/prepend_path/keep_rela_path?/rename?_basename
     #
     # if file is already exist, mv to desired path
     # @return [String] final existing full path of file
-    def merge_file(fp:, from_dir:, to_dir:, prepend_path:, keep_path: false, rename: nil)
+    def merge_file(fp:, from_dir:, to_dir:, prepend_path: nil, keep_rela_path: false, rename: nil)
 
-      ### TODO
-      
       @try_counter += 1
 
       do_merge = false
@@ -66,43 +64,51 @@ module Wp2jekyll
         s_f = most_similar_file(fp, to_dir)
         if nil == s_f 
           # not exist, do merge, return target
-          @@logger.info "merge_file new! #{post.post_info} ".green
+          @@logger.info "merge_file new! #{fp}".green
           do_merge = true
         else
           # exist
-          @@logger.info "merge_file exist. #{s_f} ".yellow
-          # s_f = Post.new fpath
-          # s_f.hint_contents
-          # @@logger.info "\n+ #{fp}".yellow
-          # post.hint_contents
-          # do_merge = user_confirm("Do merge post ? #{post.post_info}".yellow)
+          @@logger.info "merge_file exist. #{s_f}".yellow
           do_merge = false
         end
       rescue UncertainSimilarityError => e  # not sure,  user decided
-        if !e.user_judge # posts are not the same
-          @@logger.info "merge_file new! #{post.post_info} ".green
+        if !e.user_judge # files are not the same
+          @@logger.info "merge_file new! #{fp} ".green
           do_merge = true
-        else # posts are the same
+        else # files are the same
           if user_confirm("Force merge and overwrite ???".red)
             File.delete(e.b)
             do_merge = true
           else
             do_merge = false
-            @@logger.info "user skip merge_file #{s_f}"
+            @@logger.info "user skip merge_file #{fp}"
           end
         end
       end
 
       if do_merge
-        post.usr_input_title
-
-        if !Dir.exist?(to_dir)
-          FileUtils.mkdir_p(to_dir)
+        if nil != rename
+          new_bn = rename
+        else
+          new_bn = File.basename(fp)
         end
 
-        wrote_fpath = post.write_to_dir(to_dir, force: true)
-        @file_trans.add(from:fp, to:wrote_fpath)
-        wrote_fpath
+        rel_path = Pathname.new(File.dirname(fp)).relative_path_from(Pathname.new(from_dir))
+        if keep_rela_path
+          new_path = File.join(prepend_path, rel_path)
+        else
+          new_path = prepend_path
+        end
+
+        new_fp = File.join(to_dir, new_path, new_bn)
+
+        if !Dir.exist?(File.join(to_dir, new_path))
+          FileUtils.mkdir_p(File.join(to_dir, new_path))
+        end
+
+        FileUtils.cp(fp, new_fp, verbose: true)
+        @file_trans.add(from:fp, to:new_fp)
+        new_fp
       else
         nil
       end
@@ -114,11 +120,12 @@ module Wp2jekyll
 
     def merge_dir(from_dir, to_dir)
 
-      Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|
-        merge_file(fpath, to_dir)
+      Dir.glob(File.join(from_dir, "**/*")) do |fpath|
+        merge_file(fp:fpath, from_dir: from_dir, to_dir: to_dir, keep_rela_path: true)
       end
 
-      @@logger.info "post merge_dir #{stat}."
+      @@logger.info "merge_file dir #{stat}."
     end
   end
 end
+

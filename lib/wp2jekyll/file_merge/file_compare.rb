@@ -108,6 +108,8 @@ module Wp2jekyll
         fdb.seek(step, :CUR)
 
         if bytes_read == BINARY_SAMPLE_POINTS_NUM || fda.eof? || fdb.eof?
+          fda.close
+          fdb.close
           break
         end
       }
