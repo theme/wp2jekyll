@@ -74,7 +74,7 @@ module Wp2jekyll
 
       user_input = ''
       until user_input == 'y' || user_input == 'n' do
-        puts "Regards them as the same post ?".yellow
+        puts "Regards them as the same file ?".yellow
         user_input = STDIN.getc
         STDIN.gets # flush
       end
