@@ -6,7 +6,8 @@ module Wp2jekyll
   class MarkdownLink
     include DebugLogger
 
-    RE = %r{((\!)?\[([^\n]*)\]\(\s*([^"\s]*?)\s*("([^"]*?)")?\)(\{.*?\})?)}
+    # TODO embedded link
+    RE = %r{((\!)?\[([^\n]*)\]\(\s*?([^"\s]*?)\s*?("([^"]*?)")?\)(\{.*?\})?)}
     #E = %r{12--2--[3------3-]-(   4--------4   5"6-------6"5-)7-{----}7-1}
     attr_accessor :cap
     attr_accessor :link

@@ -43,7 +43,7 @@ module Wp2jekyll
 
       user_input = ''
       until user_input == 'y' || user_input == 'n' do
-        puts "Regards them as the same post (as that you want to publish)?".yellow
+        puts "Regards them as the same post (same content)?".yellow
         user_input = STDIN.getc
         STDIN.gets # flush
       end
@@ -67,7 +67,13 @@ module Wp2jekyll
       
       # body diff
       lcs = Diff::LCS.lcs(@pa.body_str, @pb.body_str)
-      @similarity = lcs.length * 1.0 / [@pa.body_str.length, @pb.body_str.length].max
+      max_len = [@pa.body_str.length, @pb.body_str.length].max
+      same_len = lcs.length
+      if 0 == max_len
+        @similarity = 1
+      else
+        @similarity = 1.0 * same_len / max_len
+      end
       @@cache.record_similarity(@a, @b, similarity)
       return @similarity
     end
