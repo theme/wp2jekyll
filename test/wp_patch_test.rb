@@ -12,6 +12,8 @@ class TestWpMarkdown2jekyll < MiniTest::Test
   include Wp2jekyll
   include DebugLogger
 
+  @@wp = WordpressPost.new(File.expand_path('../sample/post.md', __FILE__))
+
     def test_patch_code
         # a invisible character is there, DO NOT FORMAT
         s1 = '''
@@ -61,8 +63,8 @@ class TestWpMarkdown2jekyll < MiniTest::Test
 ```
 
         '''
-        assert_equal(s2, WordpressPost.new.patch_code(s1))
-        # assert_equal(s2, WordpressPost.new.process_md_body(s1))
+        assert_equal(s2, @@wp.patch_code(s1))
+        # assert_equal(s2, @@wp.process_md_body(s1))
     end
 
     def test_patch_quote
@@ -105,13 +107,13 @@ class TestWpMarkdown2jekyll < MiniTest::Test
   
 5 text should not be effected
         '''
-        assert_equal(s2, WordpressPost.new.patch_quote(s1))
+        assert_equal(s2, @@wp.patch_quote(s1))
     end
 
     def test_unescape_xml_char
         s1 = '&lt; ' # targeted effect
         s2 = '< '
-        assert_equal(s2, WordpressPost.new.patch_unescape_html_char(s1))
+        assert_equal(s2, @@wp.patch_unescape_html_char(s1))
     end
 
     def test_patch_h1h2_space
@@ -139,7 +141,7 @@ h2 title
 
 some other text
 """
-        assert_equal(s2, WordpressPost.new.patch_h1h2_space(s1))
+        assert_equal(s2, @@wp.patch_h1h2_space(s1))
     end
 
     def test_xml_figure_to_md_s
@@ -147,7 +149,7 @@ some other text
       <figure id="attachment_1133" style="width: 400px" class="wp-caption aligncenter">[<img class="wp-image-1133 size-full" src="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg" alt="alice_liddell" width="400" height="500" srcset="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg 400w, http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1-240x300.jpg 240w" sizes="(max-width: 400px) 85vw, 400px" />](http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg)<figcaption class="wp-caption-text">Alice Liddell</figcaption></figure>'
       s2 = '![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})
       ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})'
-      assert_equal(s2, WordpressPost.new.process_md!(s1))
+      assert_equal(s2, @@wp.process_md!(s1))
     end
 
     def test_xml_in_md_img_cap
@@ -155,49 +157,49 @@ some other text
 
         s2 = '[![screenshot-from-2016-12-01-22-43-26]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})'
 
-        assert_equal(s2, WordpressPost.new.process_md!(s1))
+        assert_equal(s2, @@wp.process_md!(s1))
     end
 
     def test_rm_bug_img
         s1 = '''![](///home/theme/Downloads/How%20Chromium%20Displays%20Web%20Pages-%20Conceptual%20application%20layers.svg)'''
         s2 = ''
 
-        assert_equal(s2, WordpressPost.new.modify_md_link(s1))
+        assert_equal(s2, @@wp.modify_md_link(s1))
     end
 
     def test_patch_link_bug
         s1 = '''[https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome](https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome "https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome"){.https}'''
         s2 = '''[https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome](https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome "https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome")'''
 
-        assert_equal(s2, WordpressPost.new.modify_md_link(s1))
+        assert_equal(s2, @@wp.modify_md_link(s1))
     end
 
     def test_keep_normal_link
       s1 = '![](https://some.site.com/path/to/a.jpg)'
       s2 = '![](https://some.site.com/path/to/a.jpg)'
 
-      assert_equal(s2, WordpressPost.new.process_md!(s1))
+      assert_equal(s2, @@wp.process_md!(s1))
     end
 
     def test_keep_jekyll_filter
       s1 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
       s2 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
 
-      assert_equal(s2, WordpressPost.new.process_md!(s1))
-      assert_equal(s2, WordpressPost.new.patch_char(s1))
+      assert_equal(s2, @@wp.process_md!(s1))
+      assert_equal(s2, @@wp.patch_char(s1))
     end
 
     def test_patch_body_seimi_jekyll_code
       s1 = 'some body text 1 = {{}} is axiom set'
       s2 = 'some body text 1 = { {} } is axiom set'
 
-      assert_equal(s2, WordpressPost.new.patch_char(s1))
+      assert_equal(s2, @@wp.patch_char(s1))
     end
 
     def test_patch_xml_escape_char
       s1 = '&nbsp;'
       s2 = ''
-      assert_equal(s2, WordpressPost.new.patch_char(s1))
+      assert_equal(s2, @@wp.patch_char(s1))
     end
 
     def test_patch_xml_escape_char2
@@ -208,7 +210,7 @@ some other text
       s2 = '''passage
 
       passage2'''
-      assert_equal(s2, WordpressPost.new.patch_char(s1))
+      assert_equal(s2, @@wp.patch_char(s1))
     end
 
     def test_p_unfold_divs
@@ -228,7 +230,7 @@ unfold_div passage 1
 
 unfold_div passage 2
 '''
-      assert_equal(s2, WordpressPost.new.process_md!(s1))
+      assert_equal(s2, @@wp.process_md!(s1))
     end
 
     def test_whole_md
@@ -279,12 +281,12 @@ tags:
 [![aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093]({{ "/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg" | relative_url }})]({{ \"/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg\" | relative_url }})
 
 EOS
-      wm = WordpressPost.new
+      wm = @@wp
       tmp = wm.process_md!(md) # xml elements
       tmp = wm.patch_char(tmp)
 
       assert_equal(md_patched.inspect, tmp.inspect)
-      # assert_equal(md_patched, WordpressPost.new.xml_to_md(md))
+      # assert_equal(md_patched, @@wp.xml_to_md(md))
     end
 
     def test_xml_table_a_img
@@ -317,10 +319,10 @@ EOS
 | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgKJiLCjb5pTGW5H7oVR85NNxTi8Y-XtMitykXZ6KiV_cQS5gkjpzuz8)](http://byfiles.storage.live.com/y1pOuOqrLjYZXwQLQQHARHtgE9ceFr1Ko7xiFewupeHyffx_ZL94_xQTGhktuaLMECX1eZxq8yhMOU) | [![](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-LxobLZDNk3ngbFhU69Eu3RAGD8TeHISQMbvuerQ6snf5AcNuKCGvCc)](http://byfiles.storage.live.com/y1pOuOqrLjYZXxSr9_K-pT1-C5LTIzg3WLyMIV2Z75Swyki7cHOZzJ822mOEbDmERFtutZVR7lZc4A) |
 
 EOS
-    # txt =  WordpressPost.new.xml_to_md(xml)
-    # txt2 = WordpressPost.new.modify_md_link(txt)
+    # txt =  @@wp.xml_to_md(xml)
+    # txt2 = @@wp.modify_md_link(txt)
     # assert_equal(md, txt2)
-    assert_equal(md, WordpressPost.new.process_md!(xml))
+    assert_equal(md, @@wp.process_md!(xml))
     end
 
     def test_comment_in_code_should_not_change
@@ -342,12 +344,12 @@ EOS
     
     PATH=/d/bin:$PATH
 EOS
-    assert_equal(md, WordpressPost.new.patch_code(txt))
+    assert_equal(md, @@wp.patch_code(txt))
     end
 
     def test_patch_div
       src = File.read(File.expand_path('../sample/post div src.md', __FILE__))
-      a = WordpressPost.new.process_md!(src)
+      a = @@wp.process_md!(src)
       b = File.read(File.expand_path('../sample/post div.md', __FILE__))
 
       lcs = Diff::LCS.lcs(a, b)
@@ -473,7 +475,7 @@ Text before code.
 
 After code text.
 '''
-      out = WordpressPost.new.process_md!(txt)
+      out = @@wp.process_md!(txt)
       # puts out.yellow if !out.include?('[Unit]')
       assert(out.include?('[Unit]'))
     end
