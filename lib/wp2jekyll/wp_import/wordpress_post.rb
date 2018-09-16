@@ -8,7 +8,7 @@ require 'nokogiri'
 require 'colorize'
 
 module Wp2jekyll
-  class WordpressMarkdown < Post
+  class WordpressPost < Post
     attr_accessor :suspicious_url_contains
     attr_accessor :relative_url_contains
 
