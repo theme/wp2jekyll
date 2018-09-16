@@ -15,7 +15,7 @@ module Wp2jekyll
         # comvert wordpress markdown to jekyll format
         jkmd_tmp = Tempfile.new('jkmd_tmp')
         FileUtils.cp(fpath, jkmd_tmp.path, :verbose => false)
-        wpmd_tmp = WordpressMarkdown.new(jkmd_tmp.path)
+        wpmd_tmp = WordpressPost.new(jkmd_tmp.path)
         wpmd_tmp.write_jekyll_md!
 
         # merge (test if already exists?)

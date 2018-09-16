@@ -7,8 +7,9 @@ module Wp2jekyll
     include DebugLogger
 
     # TODO embedded link
-    RE = %r{((\!)?\[([^\n]*)\]\(\s*?([^"\s]*?)\s*?("([^"]*?)")?\)(\{.*?\})?)}
-    #E = %r{12--2--[3------3-]-(   4--------4   5"6-------6"5-)7-{----}7-1}
+    RE_INNER_STR = ''
+    RE = %r~((\!)?\[(#{RE_INNER_STR})\]\(\s*?([^"\s]*?)\s*?("([^"]*?)")?\)(\{.*?\})?)~
+    #E = %r~12--2  [3---------------3 ] (    4--------4    5-6------6-5  )7 {----}7 1~
     attr_accessor :cap
     attr_accessor :link
     attr_accessor :title

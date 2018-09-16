@@ -29,7 +29,7 @@ module Wp2jekyll
         [c.body_similarity , fpath]
       end
       m = s_h.max { |a,b|
-        @@logger.debug "max #{a} #{b}".red
+        # @@logger.debug "max #{a} #{b}".red
         a[0] <=> b[0] # failed when [NaN, Number]
       }
       nearest_post = m[1]

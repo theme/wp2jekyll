@@ -8,10 +8,10 @@ require 'nokogiri'
 require 'colorize'
 
 module Wp2jekyll
-  class WordpressMarkdown < JekyllMarkdown
+  class WordpressMarkdown < Post
     attr_accessor :suspicious_url_contains
     attr_accessor :relative_url_contains
-    attr_reader :wp_md_str
+
     def initialize(fp = '')
       super(fp)
       @@code_cnt = 0

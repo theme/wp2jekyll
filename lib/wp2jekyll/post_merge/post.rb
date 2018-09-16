@@ -10,7 +10,8 @@ module Wp2jekyll
   class Post < JekyllMarkdown # TODO: JekyllPost
     attr_accessor :title
     attr_accessor :permalink_title
-    attr_accessor :date_str
+    attr_accessor :date
+    attr_accessor :style
 
     @@fcache = FileCache.new
 
@@ -19,9 +20,13 @@ module Wp2jekyll
       split_fulltxt(@@fcache.read(fp))
       parse_yaml_front_matter(@yaml_front_matter_str)
 
-      if @date_str.empty?
-        # try guess date from fp
-        @date_str = /^\d\d\d\d-\d\d-\d\d/.match(File.basename(fp)).to_s
+      if nil == @date
+        begin
+          # try guess date from fp
+          @date = Date.parse(/^\d\d\d\d-\d\d-\d\d/.match(File.basename(fp)).to_s)
+        rescue ArgumentError => e
+          @date = nil
+        end
       end
     end
 
@@ -31,8 +36,9 @@ module Wp2jekyll
       begin
         if @yaml_hash = YAML.load(yaml_txt)
           @title = @yaml_hash['title']
-          @date_str = @yaml_hash['date'].to_s
+          @date = @yaml_hash['date']
           @permalink_title = @yaml_hash['permalink_title']
+          @style = @yaml_hash['style']
         end
       rescue Psych::SyntaxError => e
         @@logger.error e.message.red
@@ -42,12 +48,16 @@ module Wp2jekyll
     end
 
     def post_info
-      "[Post #{@fp} #{@date_str} #{@title}]"
+      "[Post #{@fp} #{@date} #{@title}]"
     end
 
     def datef
-      # @@logger.debug "datef #{@date_str}".red
-      Date.parse(@date_str).strftime('%Y-%m-%d')
+      # @@logger.debug "datef #{@date}".red
+      if !@date.empty?
+        Date.parse(@date).strftime('%Y-%m-%d')
+      else
+        ''
+      end
     end
 
     def post_fn_base

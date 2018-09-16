@@ -43,7 +43,7 @@ module Wp2jekyll
   def self.process_wordpress_md_in_dir(d)
     if Dir.exist? d then
       Dir.glob (d + '/**/*.md') do |fpath|
-        WordpressMarkdown.new(fpath).write_jekyll_md!
+        WordpressPost.new(fpath).write_jekyll_md!
       end
     end
   end
