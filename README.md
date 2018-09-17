@@ -9,6 +9,13 @@ This ruby gem is used for importing posts to jekyll:
         - blogger post, saved by crawler script, as separate parts: `title`, `author`, `timestamp`, `body`, `images/o[img-file-name]`.
         - Google Photo Library, identified by local `~/.wp2jekyll/usr/[usrname]/google-photo-api-credentials.json`  . (search by image file name)
 
+# bug
+- Markdown Link is now matched using 
+```
+    RE_INNER_STR = ''
+    RE = %r~((\!)?\[(#{RE_INNER_STR})\]\(\s*?([^"\s]*?)\s*?("([^"]*?)")?\)(\{.*?\})?)~
+```
+which is insufficient for nested structure in theory.
 
 ## Setup
 
