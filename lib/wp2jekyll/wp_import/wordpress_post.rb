@@ -372,6 +372,8 @@ module Wp2jekyll
     def write_jekyll_md!
       if !has_yaml_header?(@fp) then
         @@logger.info "! #{@fp} has no yaml header"
+      elsif 'home' == @style || 'page' == @style
+        nil # skip home and page, they should be already jekyll style.
       else
         @dir = File.dirname(@fp)
         @ext = File.extname(@fp)
