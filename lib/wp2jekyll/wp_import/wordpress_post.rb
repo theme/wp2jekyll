@@ -219,28 +219,43 @@ module Wp2jekyll
     end
 
     def modify_md_link(txt)
-      MarkdownLink.extract(txt).each do |mdlk|
+      loop
+        changes = []
+        li = MarkdownLink.extract_inner(txt)
+        if li.length > 0 # no matching
+          li.each do |mdlk|
 
-        # recursive process embedded markdown link in link cap
-        mdlk.cap = modify_md_link(mdlk.cap)
+          # recursive process embedded markdown link in link cap
+          mdlk.cap = modify_md_link(mdlk.cap)
 
-        if is_url_suspicious? mdlk.link then
-          @@logger.warn 'suspicious: ' + mdlk.link.red
-          txt.gsub!(mdlk.parsed_str, '') # delete to prevent being published
+          if is_url_suspicious? mdlk.link then
+            @@logger.warn 'suspicious: ' + mdlk.link.red
+            txt.gsub!(mdlk.parsed_str, '') # delete to prevent being published
+            changes.append({mdlk.parsed_str => ''})
+          end
+          
+          # relative
+          if is_uri?(mdlk.link) and should_url_relative?(mdlk.link) then
+            @@logger.debug 'url should be relative: ' + mdlk.link.green
+            mdlk.link = LiquidUrl.new(uri: mdlk.link).to_liquid_relative!.to_s
+            txt.gsub!(mdlk.parsed_str, mdlk.to_s)
+            changes.append({mdlk.parsed_str => mdlk.to_s})
+          end
+
+          if nil != mdlk.tail
+            # drop tail {}
+            txt.gsub!(mdlk.parsed_str, mdlk.to_s)
+            changes.append({mdlk.parsed_str => mdlk.to_s})
+          end
+
+          if 0 == changes.length # no change can be made anymore
+            break
+          end
+
+        else
+          break
         end
-        
-        # relative
-        if is_uri?(mdlk.link) and should_url_relative?(mdlk.link) then
-          @@logger.debug 'url should be relative: ' + mdlk.link.green
-          mdlk.link = LiquidUrl.new(uri: mdlk.link).to_liquid_relative!.to_s
-          txt.gsub!(mdlk.parsed_str, mdlk.to_s)
-        end
-
-        # drop tail {}
-        txt.gsub!(mdlk.parsed_str, mdlk.to_s)
-
       end
-
       return txt
     end
 

@@ -7,9 +7,8 @@ module Wp2jekyll
     include DebugLogger
 
     # TODO embedded link
-    RE_INNER_STR = ''
-    RE = %r~((\!)?\[(#{RE_INNER_STR})\]\(\s*?([^"\s]*?)\s*?("([^"]*?)")?\)(\{.*?\})?)~
-    #E = %r~12--2  [3---------------3 ] (    4--------4    5-6------6-5  )7 {----}7 1~
+    RE = %r~((\!)?\[(.*?)\]\(\s*?([^"\s]*?)\s*?("([^"]*?)")?\)(\{.*?\})?)~
+    #E = %r~12--2  [3---3 ] (    4--------4    5-6------6-5  )7 {----}7 1~
     attr_accessor :cap
     attr_accessor :link
     attr_accessor :title
@@ -63,8 +62,8 @@ module Wp2jekyll
       nil
     end
 
-    # return [Array] of MarkdownLink
-    def self.extract(str)
+    # return [Array] of inner most MarkdownLink
+    def self.extract_inner(str)
       li = []
       str.scan(RE).each do |m|
         mdlk = self.parse m[0]
