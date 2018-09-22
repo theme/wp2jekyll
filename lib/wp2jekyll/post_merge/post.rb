@@ -53,8 +53,8 @@ module Wp2jekyll
 
     def datef
       # @@logger.debug "datef #{@date}".red
-      if !@date.empty?
-        Date.parse(@date).strftime('%Y-%m-%d')
+      if nil != @date
+        @date.strftime('%Y-%m-%d')
       else
         ''
       end

@@ -24,14 +24,20 @@ module Wp2jekyll
     end
 
     def most_similar_post(fp, in_dir)
-      s_h = Parallel.map(Dir.glob(File.join(in_dir, '**/*.{md,markdown}')), in_process: 8) do |fpath|
+      f_li = Dir.glob(File.join(in_dir, '**/*.{md,markdown}'))
+      
+      return nil if 0 == f_li.length
+
+      s_h = Parallel.map(f_li, in_process: 8) do |fpath|
         c = PostCompare.new(fp, fpath)
         [c.body_similarity , fpath]
       end
+
       m = s_h.max { |a,b|
         # @@logger.debug "max #{a} #{b}".red
         a[0] <=> b[0] # failed when [NaN, Number]
       }
+      
       nearest_post = m[1]
     end
 
@@ -44,7 +50,7 @@ module Wp2jekyll
 
       begin
         e_p = most_similar_post(fp, to_dir)
-        if !(PostCompare.new(fp, e_p).similar?)
+        if nil == e_p || !(PostCompare.new(fp, e_p).similar?)
           # not exist, do merge, return target
           @@logger.info "merge_post new! #{post.post_info} ".green
           do_merge = true
