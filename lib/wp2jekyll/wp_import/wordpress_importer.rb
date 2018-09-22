@@ -12,6 +12,7 @@ module Wp2jekyll
       end
         
       def import_post(fpath:, jekyll_posts_dir:)
+        @@logger.info "#{fpath} #{'>'.green} #{jekyll_posts_dir}"
         # comvert wordpress markdown to jekyll format
         jkmd_tmp = Tempfile.new('jkmd_tmp')
         FileUtils.cp(fpath, jkmd_tmp.path, :verbose => false)
