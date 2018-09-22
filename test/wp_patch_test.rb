@@ -160,6 +160,13 @@ some other text
         assert_equal(s2, @@wp.process_md!(s1))
     end
 
+    def test_xhtml_link
+      xht = '''<a href="http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUrNu8Ua6DNBcMMafPeYnCh8n0RPcGhDwlewznWsbv3Fqb2RYclIxkbM" target="_blank" rel="WLPP;url=http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUrNu8Ua6DNBcMMafPeYnCh8n0RPcGhDwlewznWsbv3Fqb2RYclIxkbM;cnsid=cns&#033;61AD2A9245CB7941&#033;520"><img src="http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUqtVLzIKyUvy9Fz-ZUHhoHqPdLlX4KAL3bzdd3ed1yDKn_ZrZp5DdVo" border="0" /></a>'''
+      md_link = '[![](http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUqtVLzIKyUvy9Fz-ZUHhoHqPdLlX4KAL3bzdd3ed1yDKn_ZrZp5DdVo)](http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUrNu8Ua6DNBcMMafPeYnCh8n0RPcGhDwlewznWsbv3Fqb2RYclIxkbM)'
+
+      assert_equal(md_link, @@wp.process_md!(xht))
+    end
+
     def test_rm_bug_img
         s1 = '''![](///home/theme/Downloads/How%20Chromium%20Displays%20Web%20Pages-%20Conceptual%20application%20layers.svg)'''
         s2 = ''
