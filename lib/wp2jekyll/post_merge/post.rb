@@ -60,8 +60,16 @@ module Wp2jekyll
       end
     end
 
+    def get_title
+      (@permalink_title || @title.gsub(' ', '_').downcase)
+    end
+
     def post_fn_base
-      datef + '-' + (@permalink_title || @title.gsub(' ', '_').downcase)
+      if 'post' == @style
+        datef + '-' + get_title
+      else
+        get_title
+      end
     end
 
     def yaml_hash_write_back
