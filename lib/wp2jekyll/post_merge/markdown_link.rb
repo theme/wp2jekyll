@@ -102,7 +102,9 @@ module Wp2jekyll
     #   - [String] value of nearest symbol to root
     #   - nil
     def v(symbol)
-      traverse(self) do |ast_node|
+      @@logger.debug "v #{symbol}"
+      traverse(ast:self) do |ast_node|
+        @@logger.debug "traverse #{ast_node.symbol}"
         if ast_node.symbol == symbol
           return ast_node.to_s
         end
@@ -110,7 +112,7 @@ module Wp2jekyll
       nil
     end
 
-    def traverse(order: :pre)
+    def traverse(order: :pre, ast:)
       case order
       when :pre
         yield self
@@ -138,26 +140,26 @@ module Wp2jekyll
         [nil]
       ],
       :CAP => [
-        ['[', :CAP_STR, ']'],
-        ['[', :MLINK, ']']
+        ['[', /\s*/, :CAP_STR, /\s*/, ']'],
+        ['[', /\s*/, :MLINK, /\s*/, ']']
       ],
-      :CAP_STR => [/[^\]]*/],
+      :CAP_STR => [[/[^\]]*/]],
       :LINK => [
-        ['(', :URL, ')'],
-        ['(', :URL, :TITLE_STR, ')']
+        ['(', /\s*/, :URL, /\s*/, ')'],
+        ['(', /\s*/, :URL, /\s*/, :TITLE_STR, /\s*/, ')']
       ],
-      :TITLE_STR => [/(\'[^\']*\'|\"[^\"]*\")/],
+      :TITLE_STR => [[/(\'[^\']*\'|\"[^\"]*\")/]],
       :URL => [
         [:URL_PLAIN_STR],
         [:URL_LIQUID]
       ],
-      :URL_PLAIN_STR => [URI.regexp],
-      :URL_LIQUID => [['{{', :URL_PLAIN_STR, '|', :URL_LIQUID_TYPE_STR, '}}']],
-      :URL_LIQUID_TYPE_STR => [/(relative_url|absolute_url)/],
+      :URL_PLAIN_STR => [[URI.regexp]],
+      :URL_LIQUID => [['{{', /\s*/, :URL_PLAIN_STR, /\s*/, '|', /\s*/, :URL_LIQUID_TYPE_STR, /\s*/, '}}']],
+      :URL_LIQUID_TYPE_STR => [[/(relative_url|absolute_url)/]],
       :TAIL => [
-        ['{', :TAIL_STR, '}'],
+        ['{', /\s*/, :TAIL_STR, /\s*/, '}'],
       ],
-      :TAIL_STR => [/\{[^\}]*\}/]
+      :TAIL_STR => [[/[^\}]*/]]
     }
 
     # return [Array] of 
@@ -176,8 +178,8 @@ module Wp2jekyll
 
           li.append ast # symbol derived ast tree
 
-          offset = ast.offset_e
-          offset_s = ast.offset_e
+          offset = ast.offset_e + 1
+          offset_s = ast.offset_e + 1
         else
           offset += 1 # scan text
         end
@@ -226,19 +228,24 @@ module Wp2jekyll
     end
 
     # @return
-    #   - offset (of matching end + 1)
+    #   - offset (of matching end)
     #   - nil (else)
     def match_rule(rule:, txt:, offset:, ast_parent:)
       return nil if nil == rule
 
-      for component in rule
-        offset = match_rule_component(component: component, txt: txt, offset:offset, ast_parent:ast_parent)
-        if nil == offset # mismatched
+      @@logger.debug "match_rule #{rule} offset #{offset}"
+      
+      offset_e = offset
+      rule.each { |component|
+        offset_e = match_rule_component(component: component, txt: txt, offset:offset, ast_parent:ast_parent)
+        if nil == offset_e # mismatched
           return nil
         end
-      end
+        offset = offset_e + 1
+      }
 
-      return offset # the whole rule is matched
+      # the whole rule is matched
+      return offset_e
     end
 
     # @return
@@ -246,16 +253,29 @@ module Wp2jekyll
     #   - nil (else)
     def match_rule_component(component:, txt:, offset:, ast_parent:)
       return nil if nil == component
-
+      @@logger.debug "match_rule_component #{component} offset #{offset}"
       case component
       when Regexp
-        m = txt[offset..-1].match(component)
+        m = component.match(txt, offset)
+        # m = txt[offset..-1].match(component)
         if nil != m and m.offset(0)[0] == offset
-          return m.offset(0)[1]
+          offset_e = m.offset(0)[1] - 1
+
+          if nil != ast_parent
+            ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[], offset_s:offset, offset_e:offset_e)
+          end
+
+          return offset_e
         end
       when String
-        offset_e = offset + component.length
+        offset_e = offset + component.length - 1
+        @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}"
         if txt[offset..offset_e] == component
+
+          if nil != ast_parent
+            ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[], offset_s:offset, offset_e:offset_e)
+          end
+
           return offset_e
         end
       when Symbol
