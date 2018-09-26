@@ -112,9 +112,9 @@ module Wp2jekyll
     #   - [String] value of nearest symbol to root
     #   - nil
     def v(symbol)
-      @@logger.debug "v #{symbol}"
+      # @@logger.debug "v #{symbol}"
       traverse() { |ast_node|
-        @@logger.debug "traverse #{ast_node.symbol}"
+        # @@logger.debug "traverse #{ast_node.symbol}"
         if ast_node.symbol == symbol
           return ast_node.to_s
         end
@@ -123,7 +123,7 @@ module Wp2jekyll
     end
 
     def traverse(order: :pre, &block)
-      @@logger.info "traverse #{self.symbol}"
+      # @@logger.debug "traverse #{self.symbol}"
 
       if :pre == order
         block.call self
@@ -221,7 +221,7 @@ module Wp2jekyll
     #   - ast (if matched)
     #   - nil (else)
     def expand_and_match(symbol:, in_txt:, offset:, ast_parent:)
-      @@logger.debug "expand_and_match #{symbol} offset #{offset}"
+      # @@logger.debug "expand_and_match #{symbol} offset #{offset}"
       ast_node = ASTnode.new(symbol:symbol, parent: ast_parent, children:[], offset_s:offset, offset_e:nil, str:nil)
 
       for ru in GRAMMAR[symbol] # will any rule match ?
@@ -248,7 +248,7 @@ module Wp2jekyll
     def match_rule(rule:, txt:, offset:, ast_parent:)
       return nil if nil == rule
 
-      @@logger.debug "match_rule #{rule} offset #{offset}"
+      # @@logger.debug "match_rule #{rule} offset #{offset}"
       
       offset_e = offset
       rule.each { |component|
@@ -268,7 +268,7 @@ module Wp2jekyll
     #   - nil (else)
     def match_rule_component(component:, txt:, offset:, ast_parent:)
       return nil if nil == component
-      @@logger.debug "match_rule_component #{component} offset #{offset}"
+      # @@logger.debug "match_rule_component #{component} offset #{offset}"
       case component
       when Regexp
         m = component.match(txt, offset)
@@ -285,7 +285,7 @@ module Wp2jekyll
         end
       when String
         offset_e = offset + component.length - 1
-        @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}"
+        # @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}"
         if txt[offset..offset_e] == component
 
           if nil != ast_parent
