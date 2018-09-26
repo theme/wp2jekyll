@@ -42,5 +42,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "googleauth", "~> 0.6"
   spec.add_dependency "parallel", "~> 1.12"
 
-  
+  spec.required_ruby_version = ">= 2.5" # for Struct.new(..., keyword_init: true)
 end
