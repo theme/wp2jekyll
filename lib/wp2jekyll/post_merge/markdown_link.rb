@@ -39,17 +39,18 @@ module Wp2jekyll
       "MarkdownLink: #{@is_img ? '!' : ''}[#{(@cap || '').red}](#{(@link || '').green} \"#{(@title || '').blue}\")#{(@tail || '').magenta}"
     end
 
-    # @return
-    #   - [String] for plain text part
-    #   - [Struct] ASTnode, AST tree for parsed markdown link # WIP
+    # parse possible single markdown link
     def self.parse(str)
-      if m = RE.match(str) # TOOD: this is not possible in theory
+      parsed_li = MarkdownLinkParser.new.parse(symbol: :MLINK, in_txt:str.strip)
+
+      if 1 == parsed_li.length && parsed_li.first.is_a?(ASTnode) # matched
+        ast = parsed_li.first
         o = self.new(
-          is_img: ('!' == m[2]) ? true : false,
-          cap: m[3],
-          link: m[4],
-          title: m[6],
-          tail: m[7]
+          is_img: ('!' == ast.children[0]) ? true : false,
+          cap: ast.v(:CAP_STR),
+          link: ast.v(:URL),
+          title: ast.v(:TITLE_STR),
+          tail: ast.v(:TAIL_STR)
         )
         o.parsed_str = str
         @@logger.debug o.info
@@ -57,6 +58,12 @@ module Wp2jekyll
         return o
       end
       nil
+    end
+
+    # @return [Array] of
+    #   - [String] for plain text part
+    #   - [ASTnode] AST tree for parsed markdown link
+    def self.parse_txt(txt)
     end
 
     # return [Array] of inner most MarkdownLink
@@ -90,6 +97,33 @@ module Wp2jekyll
     def to_s
       @children.map {|i| i.to_s } .join
     end
+
+    # return
+    #   - [String] value of nearest symbol to root
+    #   - nil
+    def v(symbol)
+      traverse(self) do |ast_node|
+        if ast_node.symbol == symbol
+          return ast_node.to_s
+        end
+      end
+      nil
+    end
+
+    def traverse(order: :pre)
+      case order
+      when :pre
+        yield self
+        @children.each do |c|
+          yield c
+        end
+      when :post
+        @children.each do |c|
+          yield c
+        end
+        yield self
+      end
+    end
   end
 
   class MarkdownLinkParser
@@ -103,7 +137,6 @@ module Wp2jekyll
         ['!'],
         [nil]
       ],
-      :TAIL => [/\{[^\}]*\}/],
       :CAP => [
         ['[', :CAP_STR, ']'],
         ['[', :MLINK, ']']
@@ -120,23 +153,12 @@ module Wp2jekyll
       ],
       :URL_PLAIN_STR => [URI.regexp],
       :URL_LIQUID => [['{{', :URL_PLAIN_STR, '|', :URL_LIQUID_TYPE_STR, '}}']],
-      :URL_LIQUID_TYPE_STR => [/(relative_url|absolute_url)/]
+      :URL_LIQUID_TYPE_STR => [/(relative_url|absolute_url)/],
+      :TAIL => [
+        ['{', :TAIL_STR, '}'],
+      ],
+      :TAIL_STR => [/\{[^\}]*\}/]
     }
-
-    # def first_markdown_link_in_ast(ast)
-    #   deep_first_traverse_ast(ast) do |ast_node|
-    #     if :MLINK == ast_node.symbol
-    #       # construct
-    # end
-
-    # def deep_first_traverse_ast(ast)
-    #   if ast.children.length > 0 then
-    #     for c in ast.children
-    #       traverse_ast c
-    #     end
-    #   end
-    #   yield ast
-    # end
 
     # return [Array] of 
     #   - ASTnode : of every markdown link
@@ -183,9 +205,10 @@ module Wp2jekyll
     #   - ast (if matched)
     #   - nil (else)
     def expand_and_match(symbol:, in_txt:, offset:, ast_parent:)
+      @@logger.debug "expand_and_match #{symbol} offset #{offset}"
       ast_node = ASTnode.new(symbol:symbol, parent: ast_parent, children:[], offset_s:offset, offset_e:nil)
 
-      for ru in grammar[symbol] # will any rule match ?
+      for ru in GRAMMAR[symbol] # will any rule match ?
         offset_e = match_rule(rule: ru, txt: in_txt, offset: offset, ast_parent: ast_node)
         if nil != offset_e # rule is matched
           if nil != ast_parent
