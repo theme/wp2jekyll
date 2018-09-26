@@ -36,7 +36,7 @@ module Wp2jekyll
     end
     
     def info
-      "MarkdownLink: #{@is_img ? '!' : ''}[#{(@cap || '').red}](#{(@link || '').green} \"#{(@title || '').blue}\")#{(@tail || '').magenta}"
+      "MarkdownLink: #{@is_img ? '!' : ''}[#{(@cap || '').red}](#{(@link || '').green} \"#{(@title || '').blue}\"){#{(@tail || '').magenta}}"
     end
 
     # parse possible single markdown link
