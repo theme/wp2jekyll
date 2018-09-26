@@ -76,7 +76,21 @@ module Wp2jekyll
 
   end # class MarkdownLink
 
-  
+  class ASTnode
+    include DebugLogger
+    attr_accessor :symbol, :parent, :children, :offset_s, :offset_e
+    def initialize(symbol:, parent:, children:, offset_s:, offset_e:)
+      @symbol = symbol
+      @parent = parent
+      @children = children || []
+      @offset_s = offset_s
+      @offset_e = offset_e
+    end
+
+    def to_s
+      @children.map {|i| i.to_s } .join
+    end
+  end
 
   class MarkdownLinkParser
     include DebugLogger
@@ -108,8 +122,6 @@ module Wp2jekyll
       :URL_LIQUID => [['{{', :URL_PLAIN_STR, '|', :URL_LIQUID_TYPE_STR, '}}']],
       :URL_LIQUID_TYPE_STR => [/(relative_url|absolute_url)/]
     }
-
-    ASTnode = Struct.new(:symbol, :parent, :children, :offset_s, :offset_e, keyword_init: true)
 
     # def first_markdown_link_in_ast(ast)
     #   deep_first_traverse_ast(ast) do |ast_node|
