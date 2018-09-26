@@ -45,11 +45,16 @@ module Wp2jekyll
 
       if 1 == parsed_li.length && parsed_li.first.is_a?(ASTnode) # matched
         ast = parsed_li.first
+
+        tq = ast.v(:TITLE_QUOTE)
+        tq.gsub!(/^[\'\"]*/, '')
+        tq.gsub!(/[\'\"]*$/, '')
+        
         o = self.new(
           is_img: ('!' == ast.children[0]) ? true : false,
           cap: ast.v(:CAP_STR),
           link: ast.v(:URL),
-          title: ast.v(:TITLE_STR),
+          title: tq,
           tail: ast.v(:TAIL_STR)
         )
         o.parsed_str = str
@@ -155,9 +160,9 @@ module Wp2jekyll
       :CAP_STR => [[/[^\]]*/]],
       :LINK => [
         ['(', /\s*/, :URL, /\s*/, ')'],
-        ['(', /\s*/, :URL, /\s*/, :TITLE_STR, /\s*/, ')']
+        ['(', /\s*/, :URL, /\s*/, :TITLE_QUOTE, /\s*/, ')']
       ],
-      :TITLE_STR => [[/(\'[^\']*\'|\"[^\"]*\")/]],
+      :TITLE_QUOTE => [[/(\'[^\']*\'|\"[^\"]*\")/]],
       :URL => [
         [:URL_PLAIN_STR],
         [:URL_LIQUID]
