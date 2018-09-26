@@ -40,8 +40,8 @@ module Wp2jekyll
     end
 
     # @return
-    #   - [nil] if failed
-    #   - [MarkdownLink] if success
+    #   - [String] for plain text part
+    #   - [Struct] ASTnode, AST tree for parsed markdown link # WIP
     def self.parse(str)
       if m = RE.match(str) # TOOD: this is not possible in theory
         o = self.new(
@@ -62,6 +62,7 @@ module Wp2jekyll
     # return [Array] of inner most MarkdownLink
     def self.extract_inner(str)
       # TODO : refactoring : include useage of this function
+      li = []
       str.scan(RE).each do |m|  # TOOD: this is not possible in theory
         mdlk = self.parse m[0]
         li.append mdlk if nil != mdlk
@@ -74,6 +75,8 @@ module Wp2jekyll
     end
 
   end # class MarkdownLink
+
+  
 
   class MarkdownLinkParser
     include DebugLogger
@@ -95,12 +98,12 @@ module Wp2jekyll
       :LINK => [
         ['(', :URL, ')'],
         ['(', :URL, :TITLE_STR, ')']
-      ]
+      ],
       :TITLE_STR => [/(\'[^\']*\'|\"[^\"]*\")/],
       :URL => [
         [:URL_PLAIN_STR],
         [:URL_LIQUID]
-      ]
+      ],
       :URL_PLAIN_STR => [URI.regexp],
       :URL_LIQUID => [['{{', :URL_PLAIN_STR, '|', :URL_LIQUID_TYPE_STR, '}}']],
       :URL_LIQUID_TYPE_STR => [/(relative_url|absolute_url)/]
@@ -123,15 +126,24 @@ module Wp2jekyll
     #   yield ast
     # end
 
-    # return [Array] of ASTnode : of every markdown link
-    def extract_ast(symbol: :MLINK, in_txt:)
+    # return [Array] of 
+    #   - ASTnode : of every markdown link
+    #   - String : rest of text
+    def parse(symbol: :MLINK, in_txt:)
       li = []
-      offset = 0
+      offset_s = 0 # last start of parsing loop
+      offset = offset_s
       loop do
         ast = expand_and_match(symbol: :MLINK, in_txt:in_txt, offset: offset, ast_parent:nil)
         if nil != ast
-          li.append ast
+          if offset_s < ast.offset_s # some text is here
+            li.append in_txt[offset_s, ast.offset_s]
+          end
+
+          li.append ast # symbol derived ast tree
+
           offset = ast.offset_e
+          offset_s = ast.offset_e
         else
           offset += 1 # scan text
         end
@@ -162,8 +174,11 @@ module Wp2jekyll
       ast_node = ASTnode.new(symbol:symbol, parent: ast_parent, children:[], offset_s:offset, offset_e:nil)
 
       for ru in grammar[symbol] # will any rule match ?
-        offset_e = match_rule(rule: ru, txt: in_txt, offset: offset, ast_parent: ast_parent)
+        offset_e = match_rule(rule: ru, txt: in_txt, offset: offset, ast_parent: ast_node)
         if nil != offset_e # rule is matched
+          if nil != ast_parent
+            ast_parent.children.append(ast_node)
+          end
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
           return ast_node
         else
