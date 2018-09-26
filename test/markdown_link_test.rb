@@ -18,5 +18,3 @@ class MarkdonwLinkTest < MiniTest::Test
   end
 
 end
-
-#![cap string](http://path/to/file.jpg "title string"){.tail}

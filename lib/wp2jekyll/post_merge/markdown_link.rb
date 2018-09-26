@@ -65,12 +65,6 @@ module Wp2jekyll
       nil
     end
 
-    # @return [Array] of
-    #   - [String] for plain text part
-    #   - [ASTnode] AST tree for parsed markdown link
-    def self.parse_txt(txt)
-    end
-
     # return [Array] of inner most MarkdownLink
     def self.extract_inner(str)
       # TODO : refactoring : include useage of this function
