@@ -85,17 +85,22 @@ module Wp2jekyll
 
   class ASTnode
     include DebugLogger
-    attr_accessor :symbol, :parent, :children, :offset_s, :offset_e
-    def initialize(symbol:, parent:, children:, offset_s:, offset_e:)
+    attr_accessor :symbol, :parent, :children, :offset_s, :offset_e, :str
+    def initialize(symbol:, parent:, children:, offset_s:, offset_e:, str:)
       @symbol = symbol
       @parent = parent
       @children = children || []
       @offset_s = offset_s
       @offset_e = offset_e
+      @str = str
     end
 
     def to_s
-      @children.map {|i| i.to_s } .join
+      if children.empty?
+        @str
+      else
+        @children.map {|c| c.to_s } .join
+      end
     end
 
     # return
@@ -103,28 +108,32 @@ module Wp2jekyll
     #   - nil
     def v(symbol)
       @@logger.debug "v #{symbol}"
-      traverse(ast:self) do |ast_node|
+      traverse() { |ast_node|
         @@logger.debug "traverse #{ast_node.symbol}"
         if ast_node.symbol == symbol
           return ast_node.to_s
         end
-      end
+      }
       nil
     end
 
-    def traverse(order: :pre, ast:)
-      case order
-      when :pre
-        yield self
-        @children.each do |c|
-          yield c
-        end
-      when :post
-        @children.each do |c|
-          yield c
-        end
-        yield self
+    def traverse(order: :pre, &block)
+      @@logger.info "traverse #{self.symbol}"
+
+      if :pre == order
+        block.call self
       end
+
+      self.children.each { |c|
+        if c.is_a? ASTnode
+          c.traverse(order: order, &block)
+        end
+      }
+
+      if :post == order
+        block.call self
+      end
+
     end
   end
 
@@ -208,7 +217,7 @@ module Wp2jekyll
     #   - nil (else)
     def expand_and_match(symbol:, in_txt:, offset:, ast_parent:)
       @@logger.debug "expand_and_match #{symbol} offset #{offset}"
-      ast_node = ASTnode.new(symbol:symbol, parent: ast_parent, children:[], offset_s:offset, offset_e:nil)
+      ast_node = ASTnode.new(symbol:symbol, parent: ast_parent, children:[], offset_s:offset, offset_e:nil, str:nil)
 
       for ru in GRAMMAR[symbol] # will any rule match ?
         offset_e = match_rule(rule: ru, txt: in_txt, offset: offset, ast_parent: ast_node)
@@ -217,6 +226,7 @@ module Wp2jekyll
             ast_parent.children.append(ast_node)
           end
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
+          ast_node.str = in_txt[offset..offset_e]
           return ast_node
         else
           next # rule
@@ -262,7 +272,8 @@ module Wp2jekyll
           offset_e = m.offset(0)[1] - 1
 
           if nil != ast_parent
-            ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[], offset_s:offset, offset_e:offset_e)
+            ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[],
+              offset_s:offset, offset_e:offset_e, str:txt[offset..offset_e])
           end
 
           return offset_e
@@ -273,7 +284,8 @@ module Wp2jekyll
         if txt[offset..offset_e] == component
 
           if nil != ast_parent
-            ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[], offset_s:offset, offset_e:offset_e)
+            ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[], 
+              offset_s:offset, offset_e:offset_e, str:txt[offset..offset_e])
           end
 
           return offset_e
