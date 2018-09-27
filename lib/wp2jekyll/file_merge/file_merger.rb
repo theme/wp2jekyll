@@ -51,24 +51,8 @@ module Wp2jekyll
         vb = (nil != b ? b[0] : -1)
         va <=> vb
       }
-      nearest_file = m[1]
+      return m[1]
     end
-
-    # def most_similar_file(fp, in_dir)
-    #   highest_similarity = 0
-    #   nearest_file = nil
-    #   Dir.glob(File.join(in_dir, '**/*')) do |fpath|
-    #     if File.file?(fp) && File.file?(fpath)
-    #       c = FileCompare.new(fp, fpath)
-    #       if c.similar? && c.binary_similarity > highest_similarity
-    #           highest_similarity = c.binary_similarity
-    #           nearest_file = fpath
-    #       end
-    #     end
-    #   end
-
-    #   nearest_file
-    # end
 
     # merge file
     #   from from_dir/relativs_fath/basename (file)

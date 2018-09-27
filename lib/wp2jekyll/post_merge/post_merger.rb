@@ -38,7 +38,7 @@ module Wp2jekyll
         a[0] <=> b[0] # failed when [NaN, Number]
       }
       
-      nearest_post = m[1]
+      m[1]
     end
 
     # @return [String] the post in target dir after merge.
@@ -101,9 +101,9 @@ module Wp2jekyll
     def merge_dir(from_dir, to_dir)
       Dir.glob(File.join(from_dir, "**/*.{md,markdown}")) do |fpath|
         begin
-          p = Post.new fpath # test Post parse successful
+          Post.new fpath # test Post parse successful
           merge_post(fpath, to_dir)
-        rescue ArgumentError => e # handle exception
+        rescue ArgumentError # handle exception
           # degrade to file
           merge_file(fp: fpath, from_dir:from_dir, to_dir:to_dir)
         end

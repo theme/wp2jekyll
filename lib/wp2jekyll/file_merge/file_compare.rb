@@ -106,7 +106,7 @@ module Wp2jekyll
         step = 1
       end
 
-      min_size = sa < sb ? sa : sb
+      # min_size = sa < sb ? sa : sb
 
       fda = File.open(@a, 'rb')
       fdb = File.open(@b, 'rb')

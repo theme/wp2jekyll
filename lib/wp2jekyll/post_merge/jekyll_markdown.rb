@@ -95,9 +95,9 @@ module Wp2jekyll
           end
 
           begin
-            uri = URI.parse(url)
+            # uri = URI.parse(url)
             in_txt.gsub!(mstr, LiquidUrl.new(uri:new_url).to_s)
-          rescue URI::InvalidURIError => e
+          rescue URI::InvalidURIError
             nil
           end
         end

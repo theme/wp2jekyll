@@ -24,7 +24,7 @@ module Wp2jekyll
         begin
           # try guess date from fp
           @date = Date.parse(/^\d\d\d\d-\d\d-\d\d/.match(File.basename(fp)).to_s)
-        rescue ArgumentError => e
+        rescue ArgumentError
           @date = nil
         end
       end

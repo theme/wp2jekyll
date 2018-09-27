@@ -135,7 +135,6 @@ module Wp2jekyll
       }
 
       # query Google Photo Library for image items
-      media_items = []
       count = 0
       loop do
         @@logger.debug "#{count = count + 1 } query Google Photo Library for image items"
@@ -148,8 +147,8 @@ module Wp2jekyll
         http = Net::HTTP.new(uri.hostname, uri.port)
         # http.set_debug_output($stderr)
         http.use_ssl= true
-        res = http.start {|http|
-          http.request(req)
+        res = http.start {|conn|
+          conn.request(req)
         }
 
         if res.is_a?(Net::HTTPSuccess)
@@ -219,8 +218,8 @@ module Wp2jekyll
       http = Net::HTTP.new(uri.hostname, uri.port)
       # http.set_debug_output($stderr)
       http.use_ssl= true
-      res = http.start {|http|
-        http.request(req)
+      res = http.start {|conn|
+        conn.request(req)
       }
 
       if res.is_a?(Net::HTTPOK)
