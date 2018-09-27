@@ -49,7 +49,7 @@ module Wp2jekyll
     def self.parse(str)
       ast = self.parse_to_ast(str)
       if nil != ast
-        tq = ast.v(:TITLE_QUOTE)
+        tq = ast.first_v(:TITLE_QUOTE)
         tq.gsub!(/^[\'\"]*/, '')
         tq.gsub!(/[\'\"]*$/, '')
         
