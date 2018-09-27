@@ -219,42 +219,46 @@ module Wp2jekyll
     end
 
     def modify_md_link(txt)
+      # @@logger.debug "modify_md_link #{txt}"
       parsed_li = MarkdownLinkParser.new.parse(in_txt:txt)
+      @@logger.info ":parsed_li #{parsed_li}".yellow
 
       parsed_li.each { |i|
-        if i.is_a? ASTnode && i.symbol == :MLINK
-          if nil != (link_node = i.direct_child(:LINK))
-            if nil != (url_plain_str_node = link_node.first_c(:URL_PLAIN_STR)) # MLINK's link url
-              url = url_plain_str_node.to_s
-              if is_url_suspicious?(url)
-                @@logger.warn 'suspicious: ' + url.red
-                url_plain_str_node.str = ''
-                next
-              end
-
-              if is_uri?(url) && should_url_relative?(url)
-
-                @@logger.debug 'url should be relative: ' + url.green
-                # construct liquid url node
-                lqurl = LiquidUrl.new(uri: url)
-                lqurl.to_liquid_relative!
-
-                # is this already a liquid link?
-                lqlk_node = url_plain_str_node.first_p(:URL_LIQUID)
-                if nil == lqlk_node # not inside a liquid node
-                  new_node = MarkdownLink.parse_to_ast(lqurl.to_s) # new node
-                  if nil != new_node
-                    # replace url node with new node
-                    p = url_plain_str_node.parent
-                    p.replace_child(url_plain_str_node, new_node)
-                  end
-                else # inside a liquid node
-                  # change liquid filter to relative
-                  lqlk_node.first_c(:URL_LIQUID_TYPE_STR).str = 'relative_url'
-                  # change link to relative
-                  lqlk_node.first_c(:URL_PLAIN_STR).str = lqurl.link
+        if i.is_a? ASTnode
+          if i.symbol == :MLINK
+            if nil != (link_node = i.direct_child(:LINK))
+              if nil != (url_plain_str_node = link_node.first_c(:URL_PLAIN_STR)) # MLINK's link url
+                url = url_plain_str_node.to_s
+                if is_url_suspicious?(url)
+                  @@logger.warn 'suspicious: ' + url.red
+                  url_plain_str_node.str = ''
+                  next
                 end
 
+                if is_uri?(url) && should_url_relative?(url)
+
+                  @@logger.debug 'url should be relative: ' + url.green
+                  # construct liquid url node
+                  lqurl = LiquidUrl.new(uri: url)
+                  lqurl.to_liquid_relative!
+
+                  # is this already a liquid link?
+                  lqlk_node = url_plain_str_node.first_p(:URL_LIQUID)
+                  if nil == lqlk_node # not inside a liquid node
+                    new_node = MarkdownLink.parse_to_ast(lqurl.to_s) # new node
+                    if nil != new_node
+                      # replace url node with new node
+                      p = url_plain_str_node.parent
+                      p.replace_child(url_plain_str_node, new_node)
+                    end
+                  else # inside a liquid node
+                    # change liquid filter to relative
+                    lqlk_node.first_c(:URL_LIQUID_TYPE_STR).str = 'relative_url'
+                    # change link to relative
+                    lqlk_node.first_c(:URL_PLAIN_STR).str = lqurl.link
+                  end
+
+                end
               end
             end
           end
@@ -362,10 +366,10 @@ module Wp2jekyll
     def process_md!(fulltxt)
       split_fulltxt(fulltxt)
 
-      # @@logger.debug 'yaml_front_matter: ' + yaml_front_matter
+      # @@logger.debug 'yaml_front_matter: ' + @yaml_front_matter_str.yellow
       @yaml_front_matter_str =process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
 
-      # @@logger.debug 'body_str: ' + body_str
+      # @@logger.debug 'body_str: ' + @body_str.green
       @body_str =process_md_body(@body_str) if !!@body_str
 
       patch_char(@yaml_front_matter_str + @body_str)

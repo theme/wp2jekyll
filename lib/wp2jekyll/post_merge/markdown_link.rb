@@ -227,12 +227,13 @@ module Wp2jekyll
     def parse(symbol: :MLINK, in_txt:)
       li = []
       offset_s = 0 # last start of parsing loop
-      offset = offset_s
+      offset = 0
       loop do
         ast = expand_and_match(symbol: :MLINK, in_txt:in_txt, offset: offset, ast_parent:nil)
         if nil != ast
           if offset_s < ast.offset_s # some text is here
-            li.append in_txt[offset_s, ast.offset_s]
+            @@logger.debug "txt piece #{in_txt[offset_s, ast.offset_s]}".yellow
+            li.append in_txt[offset_s, ast.offset_s - 1]
           end
 
           li.append ast # symbol derived ast tree
@@ -243,7 +244,10 @@ module Wp2jekyll
           offset += 1 # scan text
         end
 
-        if offset >= in_txt.length
+        if offset >= in_txt.length # reached text end
+          if offset_s < offset # some text is here
+            li.append in_txt[offset_s.. -1]
+          end
           break
         end
       end
@@ -277,6 +281,7 @@ module Wp2jekyll
           end
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
           ast_node.str = in_txt[offset..offset_e]
+          @@logger.debug "expand_and_matched #{symbol} #{ast_node}".white
           return ast_node
         else
           next # rule
