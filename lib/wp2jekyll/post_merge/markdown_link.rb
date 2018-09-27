@@ -3,9 +3,6 @@ module Wp2jekyll
   class MarkdownLink
     include DebugLogger
 
-    # TODO embedded link
-    RE = %r~((\!)?\[([^\n]*)\]\(\s*?([^"\s]*?)\s*?("([^"]*?)")?\)(\{.*?\})?)~
-    #E = %r~12--2  [3---3 ] (    4--------4    5-6------6-5  )7 {----}7 1~
     attr_accessor :cap
     attr_accessor :link
     attr_accessor :title
@@ -39,23 +36,29 @@ module Wp2jekyll
       "MarkdownLink: #{@is_img ? '!' : ''}[#{(@cap || '').red}](#{(@link || '').green} \"#{(@title || '').blue}\"){#{(@tail || '').magenta}}"
     end
 
+
+    def self.parse_to_ast(str)
+      parsed_li = MarkdownLinkParser.new.parse(symbol: :MLINK, in_txt:str.strip)
+      if (1 == parsed_li.length) && parsed_li.first.is_a?(ASTnode) # matched
+        return parsed_li.first
+      end
+      nil
+    end
+
     # parse possible single markdown link
     def self.parse(str)
-      parsed_li = MarkdownLinkParser.new.parse(symbol: :MLINK, in_txt:str.strip)
-
-      if 1 == parsed_li.length && parsed_li.first.is_a?(ASTnode) # matched
-        ast = parsed_li.first
-
+      ast = self.parse_to_ast(str)
+      if nil != ast
         tq = ast.v(:TITLE_QUOTE)
         tq.gsub!(/^[\'\"]*/, '')
         tq.gsub!(/[\'\"]*$/, '')
         
         o = self.new(
           is_img: ('!' == ast.children[0]) ? true : false,
-          cap: ast.v(:CAP_STR),
-          link: ast.v(:URL),
+          cap: ast.first_v(:CAP_STR),
+          link: ast.direct_child(:LINK).first_v(:URL),
           title: tq,
-          tail: ast.v(:TAIL_STR)
+          tail: ast.first_v(:TAIL_STR)
         )
         o.parsed_str = str
         @@logger.debug o.info
@@ -65,19 +68,8 @@ module Wp2jekyll
       nil
     end
 
-    # return [Array] of inner most MarkdownLink
-    def self.extract_inner(str)
-      # TODO : refactoring : include useage of this function
-      li = []
-      str.scan(RE).each do |m|  # TOOD: this is not possible in theory
-        mdlk = self.parse m[0]
-        li.append mdlk if nil != mdlk
-      end
-      return li
-    end
-
     def test?(str)
-      nil != RE.match(str)
+      nil != self.parse(str)
     end
 
   end # class MarkdownLink
@@ -102,17 +94,76 @@ module Wp2jekyll
       end
     end
 
-    # return
-    #   - [String] value of nearest symbol to root
-    #   - nil
-    def v(symbol)
-      # @@logger.debug "v #{symbol}"
-      traverse() { |ast_node|
-        # @@logger.debug "traverse #{ast_node.symbol}"
-        if ast_node.symbol == symbol
-          return ast_node.to_s
+    def replace_child(from_obj:, to_obj:)
+      index = @children.find_index(from_obj)
+      if (nil != index) && to_obj.is_a?(ASTnode)
+        @children[index] = to_obj
+        return index
+      end
+      nil
+    end
+
+    def drop_child(obj)
+      @children.delete_if { |co|
+        co.equal? obj
+      }
+    end
+
+    def drop_all_symbol_in_children(symbol)
+      @children.delete_if { |c|
+        c.symbol == symbol
+      }
+    end
+
+    def direct_child(symbol)
+      @children.each { |c|
+        if c.symbol == symbol
+          return c
         end
       }
+      nil
+    end
+
+    # return
+    #   - [ASTnode] first parent ASTnode of symbol
+    #   - nil
+    def first_p(symbol)
+      loop do
+        p = @parent
+        if nil == p
+          return nil
+        else
+          if symbol == p.symbol
+            return p
+          else
+            p = p.parent
+          end
+        end
+      end
+    end
+
+    # return
+    #   - [ASTnode] first ASTnode of symbol (nearest from traverse root)
+    #   - nil
+    def first_c(symbol, order: :pre)
+      traverse(order: order) { |ast_node|
+        # @@logger.debug "traverse #{ast_node.symbol}"
+        if ast_node.symbol == symbol
+          return ast_node
+        end
+      }
+      nil
+    end
+
+    # return
+    #   - [String] first value of symbol (nearest from traverse root)
+    #   - nil
+    def first_v(symbol, order: :pre)
+      # @@logger.debug "v #{symbol}"
+      node = first_c(symbol, order: order)
+      if nil != node
+        return node.to_s
+      end
       nil
     end
 
