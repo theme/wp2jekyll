@@ -54,7 +54,7 @@ module Wp2jekyll
         tq.gsub!(/[\'\"]*$/, '')
         
         o = self.new(
-          is_img: ('!' == ast.children[0]) ? true : false,
+          is_img: ('!' == ast.first_v(:IMG_MARK)) ? true : false,
           cap: ast.first_v(:CAP_STR),
           link: ast.direct_child(:LINK).first_v(:URL),
           title: tq,
@@ -190,13 +190,37 @@ module Wp2jekyll
   class MarkdownLinkParser
     include DebugLogger
 
+    # modified URI.regexp
+    RE_URI_MOD = /
+    ([a-zA-Z][\-+.a-zA-Z\d]*):                           (?# 1: scheme)
+    (?:
+       ((?:[\-_.!~*'()a-zA-Z\d;?:@&=+$,]|%[a-fA-F\d]{2})(?:[\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]]|%[a-fA-F\d]{2})*)                    (?# 2: opaque)
+    |
+       (?:(?:
+         \/\/(?:
+             (?:(?:((?:[\-_.!~*'()a-zA-Z\d;:&=+$,]|%[a-fA-F\d]{2})*)@)?        (?# 3: userinfo)
+               (?:((?:(?:[a-zA-Z0-9\-.]|%\h\h)+|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[(?:(?:[a-fA-F\d]{1,4}:)*(?:[a-fA-F\d]{1,4}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:(?:[a-fA-F\d]{1,4}:)*[a-fA-F\d]{1,4})?::(?:(?:[a-fA-F\d]{1,4}:)*(?:[a-fA-F\d]{1,4}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))?)\]))(?::(\d*))?))? (?# 4: host, 5: port)
+           |
+             ((?:[\-_.!~*'()a-zA-Z\d$,;:@&=+]|%[a-fA-F\d]{2})+)                 (?# 6: registry)
+           )
+         |
+         (?!\/\/))                           (?# XXX: '\/\/' is the mark for hostport)
+         (\/(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*(?:;(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*)*(?:\/(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*(?:;(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*)*)*)?                    (?# 7: path)
+       )(?:\?((?:[\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]]|%[a-fA-F\d]{2})*))?                 (?# 8: query)
+    )
+    (?:\#((?:[\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]]|%[a-fA-F\d]{2})*))?                  (?# 9: fragment)
+    [^\)\]]  (?# patch: for url markdown link)
+  /x
+
     # :TOKEN => [rule, rule]
     # rule := [parts, of, conjunction]
     GRAMMAR = {
-      :MLINK => [[:IMG_MARK, :CAP, :LINK, :TAIL]],
+      :MLINK => [
+        [:IMG_MARK, :CAP, :LINK, :TAIL],
+        [:CAP, :LINK, :TAIL]
+      ],
       :IMG_MARK => [
-        ['!'],
-        [nil]
+        ['!']
       ],
       :CAP => [
         ['[', /\s*/, :CAP_STR, /\s*/, ']'],
@@ -212,7 +236,7 @@ module Wp2jekyll
         [:URL_PLAIN_STR],
         [:URL_LIQUID]
       ],
-      :URL_PLAIN_STR => [[URI.regexp]],
+      :URL_PLAIN_STR => [[RE_URI_MOD]],
       :URL_LIQUID => [['{{', /\s*/, :URL_PLAIN_STR, /\s*/, '|', /\s*/, :URL_LIQUID_TYPE_STR, /\s*/, '}}']],
       :URL_LIQUID_TYPE_STR => [[/(relative_url|absolute_url)/]],
       :TAIL => [
@@ -270,7 +294,7 @@ module Wp2jekyll
     #   - ast (if matched)
     #   - nil (else)
     def expand_and_match(symbol:, in_txt:, offset:, ast_parent:)
-      # @@logger.debug "expand_and_match #{symbol} offset #{offset}"
+      # @@logger.debug "expand_and_match #{symbol} offset #{offset}".green
       ast_node = ASTnode.new(symbol:symbol, parent: ast_parent, children:[], offset_s:offset, offset_e:nil, str:nil)
 
       for ru in GRAMMAR[symbol] # will any rule match ?
@@ -298,7 +322,7 @@ module Wp2jekyll
     def match_rule(rule:, txt:, offset:, ast_parent:)
       return nil if nil == rule
 
-      # @@logger.debug "match_rule #{rule} offset #{offset}"
+      # @@logger.debug "match_rule #{rule} offset #{offset}".green
       
       offset_e = offset
       rule.each { |component|
@@ -318,7 +342,7 @@ module Wp2jekyll
     #   - nil (else)
     def match_rule_component(component:, txt:, offset:, ast_parent:)
       return nil if nil == component
-      # @@logger.debug "match_rule_component #{component} offset #{offset}"
+      # @@logger.debug "match_rule_component #{component} offset #{offset}".green
       case component
       when Regexp
         m = component.match(txt, offset)
@@ -335,7 +359,7 @@ module Wp2jekyll
         end
       when String
         offset_e = offset + component.length - 1
-        # @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}"
+        # @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}".green
         if txt[offset..offset_e] == component
 
           if nil != ast_parent
@@ -350,8 +374,6 @@ module Wp2jekyll
         if nil != ast_node
           return ast_node.offset_e
         end
-      when nil
-        return offset
       else
         @@logger.debug "Unknown Grammar rule component. #{component.inspect}".yellow
       end

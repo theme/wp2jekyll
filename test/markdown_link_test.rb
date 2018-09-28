@@ -17,4 +17,7 @@ class MarkdonwLinkTest < MiniTest::Test
     assert(mdlk.tail == '.tail')
   end
 
+  def test_parse2
+    assert (nil != MarkdownLink.parse('![Alice Liddell]({{ \"/wp-content/uploads/2016/11/alice_liddell1.jpg\" | relative_url }})'))
+  end
 end
