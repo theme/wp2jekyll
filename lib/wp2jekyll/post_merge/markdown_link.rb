@@ -54,9 +54,9 @@ module Wp2jekyll
         tq.gsub!(/[\'\"]*$/, '')
         
         o = self.new(
-          is_img: ('!' == ast.first_v(:IMG_MARK)) ? true : false,
+          is_img: (nil != ast.first_v(:IMG_MARK)),
           cap: ast.first_v(:CAP_STR),
-          link: ast.direct_child(:LINK).first_v(:URL),
+          link: ast.direct_child(:LINK).first_v(:URL).strip,
           title: tq,
           tail: ast.first_v(:TAIL_STR)
         )
@@ -342,7 +342,7 @@ module Wp2jekyll
     #   - nil (else)
     def match_rule_component(component:, txt:, offset:, ast_parent:)
       return nil if nil == component
-      # @@logger.debug "match_rule_component #{component} offset #{offset}".green
+      # @@logger.debug "match_rule_component #{component} offset #{offset}"
       case component
       when Regexp
         m = component.match(txt, offset)
@@ -377,7 +377,7 @@ module Wp2jekyll
       else
         @@logger.debug "Unknown Grammar rule component. #{component.inspect}".yellow
       end
-
+      # @@logger.debug "match_rule_component fail offset #{offset}".red
       nil
     end
 

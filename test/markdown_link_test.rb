@@ -6,6 +6,12 @@ class MarkdonwLinkTest < MiniTest::Test
   # include PrettyDiffs
   include Wp2jekyll
   include DebugLogger
+
+  def test_RE
+    str = 'https://host.com/wp-content/uploads/2016/11/alice_liddell1.jpg'
+    assert(nil != URI.regexp.match(str))
+    assert(nil != MarkdownLinkParser::RE_URI_MOD.match(str))
+  end
   
   def test_parse
     str = '![cap string](http://path/to/file.jpg "title string"){.tail}'
@@ -18,6 +24,7 @@ class MarkdonwLinkTest < MiniTest::Test
   end
 
   def test_parse2
-    assert (nil != MarkdownLink.parse('![Alice Liddell]({{ \"/wp-content/uploads/2016/11/alice_liddell1.jpg\" | relative_url }})'))
+    str = '![Alice Liddell]({{ \"/wp-content/uploads/2016/11/alice_liddell1.jpg\" | relative_url }})'
+    assert (nil != MarkdownLink.parse(str))
   end
 end
