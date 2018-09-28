@@ -12,6 +12,11 @@ class MarkdonwLinkTest < MiniTest::Test
     assert(nil != URI.regexp.match(str))
     assert(nil != MarkdownLinkParser::RE_URI_MOD.match(str))
   end
+
+  def test_parse4
+    str = "[](http://wp.docker.localhost:8000/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg)"
+    assert (nil != MarkdownLink.parse(str))
+  end
   
   def test_parse
     str = '![cap string](http://path/to/file.jpg "title string"){.tail}'
