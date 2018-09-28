@@ -41,6 +41,11 @@ module Wp2jekyll
       parsed_li = MarkdownLinkParser.new.parse(symbol: :MLINK, in_txt:str.strip)
       if (1 == parsed_li.length) && parsed_li.first.is_a?(ASTnode) # matched
         return parsed_li.first
+      else
+        @@logger.debug "MarkdownLink.parse_to_ast li.length = #{parsed_li.length}".red
+        parsed_li.each { |i|
+          @@logger.debug "item #{i}".red
+        }
       end
       nil
     end
@@ -258,6 +263,24 @@ module Wp2jekyll
       :TAIL_STR => [[/[^\}]*/]]
     }
 
+    attr_accessor :bts # backtrace stack
+    attr_accessor :txt
+    attr_accessor :offset
+    attr_accessor :str_s
+
+    def initialize
+      reset
+    end
+
+    def reset
+      @bts = []
+      @txt = ''
+      @offset = 0
+      @str_s = 0
+    end
+
+
+
     # return [Array] of 
     #   - ASTnode : of every markdown link
     #   - String : rest of text
@@ -289,6 +312,7 @@ module Wp2jekyll
           break
         end
       end
+
       return li
     end
 
@@ -309,7 +333,7 @@ module Wp2jekyll
     #   - nil (else)
     def expand_and_match(symbol:, in_txt:, offset:, ast_parent:)
       # @@logger.debug "expand_and_match #{symbol} offset #{offset}".green
-      ast_node = ASTnode.new(symbol:symbol, parent: ast_parent, children:[], offset_s:offset, offset_e:nil, str:nil)
+      ast_node = ASTnode.new(symbol:symbol, parent: nil, children:[], offset_s:offset, offset_e:nil, str:nil)
 
       for ru in GRAMMAR[symbol] # will any rule match ?
         offset_e = match_rule(rule: ru, txt: in_txt, offset: offset, ast_parent: ast_node)
@@ -317,8 +341,11 @@ module Wp2jekyll
           if nil != ast_parent
             ast_parent.children.append(ast_node)
           end
+
+          ast_node.parent = ast_parent
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
           ast_node.str = in_txt[offset..offset_e]
+
           @@logger.debug "matched #{symbol} #{ast_node}".white
           return ast_node
         else
@@ -337,10 +364,14 @@ module Wp2jekyll
       return nil if nil == rule
 
       # @@logger.debug "match_rule #{rule} <-> offset #{offset} #{txt[offset..offset]}".green
-      
+
+      if nil != ast_parent
+        fake_parent = ASTnode.new(symbol: ast_parent.symbol, parent: nil, children:[], offset_s:offset, offset_e:nil, str:nil)
+      end
+
       offset_e = offset
       rule.each { |component|
-        offset_e = match_rule_component(component: component, txt: txt, offset:offset, ast_parent:ast_parent)
+        offset_e = match_rule_component(component: component, txt: txt, offset:offset, ast_parent:fake_parent)
         if nil == offset_e # mismatched
           return nil
         end
@@ -348,6 +379,20 @@ module Wp2jekyll
       }
 
       # the whole rule is matched
+
+      # put back every node under fake_parent node
+      if nil != ast_parent
+        fake_parent.children.each { |c|
+          if c.is_a? ASTnode
+            c.parent = ast_parent
+          end
+
+          ast_parent.children.append c
+          update_ast_offset_e(ast: c, offset_e: c.offset_e)
+          # @@logger.debug "append to #{ast_parent.symbol}".red
+        }
+      end
+
       return offset_e
     end
 

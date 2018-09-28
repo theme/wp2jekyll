@@ -38,7 +38,9 @@ class MarkdonwLinkTest < MiniTest::Test
 
     ast = MarkdownLink.parse_to_ast(s1)
     assert nil != ast
-    assert_equal(s2, MarkdownLink.parse(s1).to_s)
+    
+    assert_equal(s2, ast.to_s)
   end
 end
+
 # ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})
