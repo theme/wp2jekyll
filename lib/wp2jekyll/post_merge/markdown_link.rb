@@ -99,6 +99,8 @@ module Wp2jekyll
     def replace_child(from_obj:, to_obj:)
       index = @children.find_index(from_obj)
       if (nil != index) && to_obj.is_a?(ASTnode)
+        # @@logger.debug "replace child #{from_obj} -> #{to_obj}"
+        # gets a
         @children[index] = to_obj
         return index
       end
@@ -261,27 +263,28 @@ module Wp2jekyll
     #   - String : rest of text
     def parse(symbol: :MLINK, in_txt:)
       li = []
-      offset_s = 0 # last start of parsing loop
+      str_s = 0
+      str_e = in_txt.length - 1
       offset = 0
       loop do
         ast = expand_and_match(symbol: :MLINK, in_txt:in_txt, offset: offset, ast_parent:nil)
         if nil != ast
-          if offset_s < ast.offset_s # some text is here
-            # @@logger.debug "txt piece #{in_txt[offset_s, ast.offset_s]}".yellow
-            li.append in_txt[offset_s, ast.offset_s - 1]
+          if str_s < ast.offset_s - 1 # some text is here
+            # @@logger.debug "txt piece #{in_txt[str_s..(ast.offset_s -1)]}".blue
+            li.append in_txt[str_s..(ast.offset_s - 1)]
+            str_s = ast.offset_e + 1
           end
 
           li.append ast # symbol derived ast tree
 
           offset = ast.offset_e + 1
-          offset_s = ast.offset_e + 1
         else
           offset += 1 # scan text
         end
 
         if offset >= in_txt.length # reached text end
-          if offset_s < offset # some text is here
-            li.append in_txt[offset_s.. -1]
+          if str_s < str_e # some text is here
+            li.append in_txt[str_s..str_e]
           end
           break
         end
@@ -316,7 +319,7 @@ module Wp2jekyll
           end
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
           ast_node.str = in_txt[offset..offset_e]
-          # @@logger.debug "matched #{symbol} #{ast_node}".white
+          @@logger.debug "matched #{symbol} #{ast_node}".white
           return ast_node
         else
           next # rule
@@ -371,7 +374,7 @@ module Wp2jekyll
       when String
         if component.length > 0
           offset_e = offset + component.length - 1 # 'abc'[0..0] => 'a'
-          # @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}".green
+          @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}".green
           if txt[offset..offset_e] == component # 'abc'[0..0] => 'a'
 
             if nil != ast_parent

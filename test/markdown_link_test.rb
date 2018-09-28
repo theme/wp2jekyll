@@ -31,5 +31,14 @@ class MarkdonwLinkTest < MiniTest::Test
     assert (nil != MarkdownLinkParser::RE_PATH.match(path_str))
     assert (nil != MarkdownLink.parse(str))
   end
+
+  def test_parse3
+    s1 = '''[https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome](https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome "https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome")'''
+    s2 = '''[https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome](https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome "https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome")'''
+
+    ast = MarkdownLink.parse_to_ast(s1)
+    assert nil != ast
+    assert_equal(s2, MarkdownLink.parse(s1).to_s)
+  end
 end
 # ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})

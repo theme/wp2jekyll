@@ -209,21 +209,12 @@ module Wp2jekyll
       return md_pieces
     end
 
-    def is_uri?(str)
-      begin
-        URI(str)
-        return true
-      rescue
-        return false
-      end
-    end
-
     def modify_md_link(txt)
       # @@logger.debug "modify_md_link #{txt}"
       parsed_li = MarkdownLinkParser.new.parse(in_txt:txt)
-      # @@logger.info ":parsed_li #{parsed_li}".yellow
 
       parsed_li.each { |i|
+        # @@logger.debug "parsed_li i #{i}"
         if i.is_a? ASTnode
           if i.symbol == :MLINK
             if nil != (link_node = i.direct_child(:LINK))
@@ -235,7 +226,7 @@ module Wp2jekyll
                   next
                 end
 
-                if is_uri?(url) && should_url_relative?(url)
+                if should_url_relative?(url)
 
                   @@logger.debug 'url should be relative: ' + url.green
                   # construct liquid url node
@@ -245,7 +236,8 @@ module Wp2jekyll
                   # is this already a liquid link?
                   lqlk_node = url_plain_str_node.first_p(:URL_LIQUID)
                   if nil == lqlk_node # not inside a liquid node
-                    new_node = MarkdownLink.parse_to_ast(lqurl.to_s) # new node
+                    tmp_ast = MarkdownLink.parse_to_ast("[](#{lqurl.to_s})") # new node
+                    new_node = tmp_ast.first_c(:URL_LIQUID)
                     if nil != new_node
                       # replace url node with new node
                       p = url_plain_str_node.parent
@@ -270,6 +262,7 @@ module Wp2jekyll
         end
       }
       
+      @@logger.info ":parsed_li #{parsed_li}".yellow
       parsed_li.map {|i| i.to_s } .join
     end
 
