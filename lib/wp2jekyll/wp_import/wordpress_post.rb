@@ -250,7 +250,7 @@ module Wp2jekyll
                 new_node = tmp_ast.first_c(:URL_LIQUID)
                 if nil != new_node && nil != p
                   # replace url node with new node
-                  p.replace_child(url_plain_str_node, new_node)
+                  p.replace_child(from_obj:url_plain_str_node, to_obj:new_node)
                 end
               end
 
