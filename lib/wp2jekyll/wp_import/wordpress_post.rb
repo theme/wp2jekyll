@@ -227,7 +227,7 @@ module Wp2jekyll
         if i.is_a? ASTnode
           if i.symbol == :MLINK
             if nil != (link_node = i.direct_child(:LINK))
-              if nil != (url_plain_str_node = link_node.first_c(:URL_PLAIN_STR)) # MLINK's link url
+              if nil != (url_plain_str_node = link_node.first_c(:URL_STR)) # MLINK's link url
                 url = url_plain_str_node.to_s
                 if is_url_suspicious?(url)
                   @@logger.warn 'suspicious: ' + url.red
@@ -255,7 +255,7 @@ module Wp2jekyll
                     # change liquid filter to relative
                     lqlk_node.first_c(:URL_LIQUID_TYPE_STR).str = 'relative_url'
                     # change link to relative
-                    lqlk_node.first_c(:URL_PLAIN_STR).str = lqurl.link
+                    lqlk_node.first_c(:URL_STR).str = lqurl.link
                   end
 
                 end

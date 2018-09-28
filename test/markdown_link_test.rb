@@ -24,7 +24,12 @@ class MarkdonwLinkTest < MiniTest::Test
   end
 
   def test_parse2
-    str = '![Alice Liddell]({{ \"/wp-content/uploads/2016/11/alice_liddell1.jpg\" | relative_url }})'
+    path_str = "/wp-content/uploads/2016/11/alice_liddell1.jpg"
+    str = '![Alice Liddell]({{ "' + path_str + '" | relative_url }})'
+    # @@logger.debug str.red
+    # assert (nil != URI.regexp.match(str))
+    assert (nil != MarkdownLinkParser::RE_PATH.match(path_str))
     assert (nil != MarkdownLink.parse(str))
   end
 end
+# ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})

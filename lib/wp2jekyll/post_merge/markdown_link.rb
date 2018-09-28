@@ -50,8 +50,10 @@ module Wp2jekyll
       ast = self.parse_to_ast(str)
       if nil != ast
         tq = ast.first_v(:TITLE_QUOTE)
-        tq.gsub!(/^[\'\"]*/, '')
-        tq.gsub!(/[\'\"]*$/, '')
+        if nil != tq
+          tq.gsub!(/^[\'\"]*/, '')
+          tq.gsub!(/[\'\"]*$/, '')
+        end
         
         o = self.new(
           is_img: (nil != ast.first_v(:IMG_MARK)),
@@ -191,6 +193,10 @@ module Wp2jekyll
     include DebugLogger
 
     # modified URI.regexp
+    RE_PATH = /
+    \/(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*(?:;(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*)*(?:\/(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*(?:;(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*)*)*                    (?# 7: path)
+    [^\{\"\'\)\]]  (?# patch: for url markdown link)
+    /x
     RE_URI_MOD = /
     ([a-zA-Z][\-+.a-zA-Z\d]*):                           (?# 1: scheme)
     (?:
@@ -217,7 +223,9 @@ module Wp2jekyll
     GRAMMAR = {
       :MLINK => [
         [:IMG_MARK, :CAP, :LINK, :TAIL],
-        [:CAP, :LINK, :TAIL]
+        [:IMG_MARK, :CAP, :LINK],
+        [:CAP, :LINK, :TAIL],
+        [:CAP, :LINK]
       ],
       :IMG_MARK => [
         ['!']
@@ -233,11 +241,14 @@ module Wp2jekyll
       ],
       :TITLE_QUOTE => [[/(\'[^\']*\'|\"[^\"]*\")/]],
       :URL => [
-        [:URL_PLAIN_STR],
+        [:URL_STR],
         [:URL_LIQUID]
       ],
-      :URL_PLAIN_STR => [[RE_URI_MOD]],
-      :URL_LIQUID => [['{{', /\s*/, :URL_PLAIN_STR, /\s*/, '|', /\s*/, :URL_LIQUID_TYPE_STR, /\s*/, '}}']],
+      :URL_STR => [
+        [RE_PATH], # local
+        [RE_URI_MOD] # remote
+      ],
+      :URL_LIQUID => [['{{', /\s*['"]/, :URL_STR, /['"]\s*/, '|', /\s*/, :URL_LIQUID_TYPE_STR, /\s*/, '}}']],
       :URL_LIQUID_TYPE_STR => [[/(relative_url|absolute_url)/]],
       :TAIL => [
         ['{', /\s*/, :TAIL_STR, /\s*/, '}'],
@@ -305,7 +316,7 @@ module Wp2jekyll
           end
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
           ast_node.str = in_txt[offset..offset_e]
-          @@logger.debug "expand_and_matched #{symbol} #{ast_node}".white
+          @@logger.debug "matched #{symbol} #{ast_node}".white
           return ast_node
         else
           next # rule
@@ -322,7 +333,7 @@ module Wp2jekyll
     def match_rule(rule:, txt:, offset:, ast_parent:)
       return nil if nil == rule
 
-      # @@logger.debug "match_rule #{rule} offset #{offset}".green
+      @@logger.debug "match_rule #{rule} <-> offset #{offset} #{txt[offset..offset]}".green
       
       offset_e = offset
       rule.each { |component|
@@ -358,16 +369,18 @@ module Wp2jekyll
           return offset_e
         end
       when String
-        offset_e = offset + component.length - 1
-        # @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}".green
-        if txt[offset..offset_e] == component
+        if component.length > 0
+          offset_e = offset + component.length - 1 # 'abc'[0..0] => 'a'
+          # @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}".green
+          if txt[offset..offset_e] == component # 'abc'[0..0] => 'a'
 
-          if nil != ast_parent
-            ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[], 
-              offset_s:offset, offset_e:offset_e, str:txt[offset..offset_e])
+            if nil != ast_parent
+              ast_parent.children.append ASTnode.new(symbol:component, parent: ast_parent, children:[], 
+                offset_s:offset, offset_e:offset_e, str:txt[offset..offset_e])
+            end
+
+            return offset_e
           end
-
-          return offset_e
         end
       when Symbol
         ast_node = expand_and_match(symbol: component, in_txt: txt, offset: offset, ast_parent: ast_parent)
