@@ -93,13 +93,31 @@ module Wp2jekyll
       @str = str
     end
 
+    def gen_str
+      @children.map {|c| c.to_s } .join
+    end
+
+    def update_str
+      @str = gen_str
+    end
+
+    def update_str_all_p
+      p = @parent
+      loop do
+        if nil != p
+          p.update_str
+          p = p.parent
+        else
+          break
+        end
+      end
+    end
+
     def to_s
       if nil != @str
         @str
-      elsif !@children.empty?
-        @children.map {|c| c.to_s } .join
       else
-        ''
+        gen_str
       end
     end
 
@@ -137,8 +155,8 @@ module Wp2jekyll
     #   - [ASTnode] first parent ASTnode of symbol
     #   - nil
     def first_p(symbol)
+      p = @parent
       loop do
-        p = @parent
         if nil == p
           return nil
         else
@@ -148,6 +166,7 @@ module Wp2jekyll
             p = p.parent
           end
         end
+        # @@logger.debug p
       end
     end
 
@@ -162,6 +181,17 @@ module Wp2jekyll
         end
       }
       nil
+    end
+
+    def all_c_of_symbol(symbol)
+      li = []
+      traverse() { |ast_node|
+        if ast_node.symbol == symbol
+          li.append ast_node
+        end
+      }
+
+      return li
     end
 
     # return
@@ -222,7 +252,7 @@ module Wp2jekyll
        )(?:\?((?:[\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]]|%[a-fA-F\d]{2})*))?                 (?# 8: query)
     )
     (?:\#((?:[\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]]|%[a-fA-F\d]{2})*))?                  (?# 9: fragment)
-    [^\)\]]  (?# patch: for url markdown link)
+    [^\{\"\'\)\]]  (?# patch: for url markdown link)
   /x
 
     # :TOKEN => [rule, rule]
