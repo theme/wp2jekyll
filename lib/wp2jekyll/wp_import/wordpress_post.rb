@@ -222,7 +222,7 @@ module Wp2jekyll
                 url = url_plain_str_node.to_s
                 if is_url_suspicious?(url)
                   @@logger.warn 'suspicious: ' + url.red
-                  url_plain_str_node.str = ''
+                  i.str = ''
                   next
                 end
 
@@ -262,7 +262,7 @@ module Wp2jekyll
         end
       }
       
-      @@logger.info ":parsed_li #{parsed_li}".yellow
+      # @@logger.info ":parsed_li #{parsed_li}".yellow
       parsed_li.map {|i| i.to_s } .join
     end
 

@@ -41,6 +41,13 @@ class MarkdonwLinkTest < MiniTest::Test
     
     assert_equal(s2, ast.to_s)
   end
+
+  def test_parse3
+    str = "![](///home/theme/Downloads/How%20Chromium%20Displays%20Web%20Pages-%20Conceptual%20application%20layers.svg)"
+    s2  = "![](///home/theme/Downloads/How%20Chromium%20Displays%20Web%20Pages-%20Conceptual%20application%20layers.svg)"
+    ast = MarkdownLink.parse_to_ast(str)
+    assert_equal(s2, ast.to_s)
+  end
 end
 
 # ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})

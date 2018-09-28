@@ -294,7 +294,7 @@ module Wp2jekyll
         if nil != ast
           if str_s < ast.offset_s - 1 # some text is here
             # @@logger.debug "txt piece #{in_txt[str_s..(ast.offset_s -1)]}".blue
-            @@logger.debug "str_s => #{str_s}, ast.offset_s - 1 => #{ast.offset_s - 1}".blue
+            # @@logger.debug "str_s => #{str_s}, ast.offset_s - 1 => #{ast.offset_s - 1}".blue
             li.append in_txt[str_s..(ast.offset_s - 1)]
           end
 
@@ -349,7 +349,7 @@ module Wp2jekyll
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
           ast_node.str = in_txt[offset..offset_e]
 
-          @@logger.debug "matched #{symbol} #{ast_node}".white
+          # @@logger.debug "matched #{symbol} #{ast_node}".white
           return ast_node
         else
           next # rule
@@ -422,7 +422,7 @@ module Wp2jekyll
       when String
         if component.length > 0
           offset_e = offset + component.length - 1 # 'abc'[0..0] => 'a'
-          @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}".green
+          # @@logger.debug "match_rule_component #{component} <-> #{txt[offset..offset_e]}".green
           if txt[offset..offset_e] == component # 'abc'[0..0] => 'a'
 
             if nil != ast_parent

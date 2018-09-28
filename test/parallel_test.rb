@@ -15,7 +15,7 @@ class ParallelTest < MiniTest::Test
         Parallel.map(li, in_threads:3) do |i|
             li_2.append i
         end
-        @@logger.debug "li_2 #{li_2}".cyan
+        # @@logger.debug "li_2 #{li_2}".cyan
         assert(li.sort == li_2.sort)
     end
 end
