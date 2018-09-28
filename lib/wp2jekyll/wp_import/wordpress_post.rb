@@ -259,6 +259,7 @@ module Wp2jekyll
           # drop tail
           if nil != (tail_node = i.direct_child(:TAIL))
             i.drop_child tail_node
+            i.str = nil
           end
         end
       }
