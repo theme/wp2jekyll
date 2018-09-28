@@ -94,18 +94,18 @@ module Wp2jekyll
     end
 
     def to_s
-      if children.empty?
+      if nil != @str
         @str
-      else
+      elsif !@children.empty?
         @children.map {|c| c.to_s } .join
+      else
+        ''
       end
     end
 
     def replace_child(from_obj:, to_obj:)
       index = @children.find_index(from_obj)
       if (nil != index) && to_obj.is_a?(ASTnode)
-        # @@logger.debug "replace child #{from_obj} -> #{to_obj}"
-        # gets a
         @children[index] = to_obj
         return index
       end
