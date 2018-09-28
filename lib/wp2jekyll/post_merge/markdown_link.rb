@@ -267,7 +267,7 @@ module Wp2jekyll
         ast = expand_and_match(symbol: :MLINK, in_txt:in_txt, offset: offset, ast_parent:nil)
         if nil != ast
           if offset_s < ast.offset_s # some text is here
-            @@logger.debug "txt piece #{in_txt[offset_s, ast.offset_s]}".yellow
+            # @@logger.debug "txt piece #{in_txt[offset_s, ast.offset_s]}".yellow
             li.append in_txt[offset_s, ast.offset_s - 1]
           end
 
@@ -316,7 +316,7 @@ module Wp2jekyll
           end
           update_ast_offset_e(ast:ast_node, offset_e: offset_e)
           ast_node.str = in_txt[offset..offset_e]
-          @@logger.debug "matched #{symbol} #{ast_node}".white
+          # @@logger.debug "matched #{symbol} #{ast_node}".white
           return ast_node
         else
           next # rule
@@ -333,7 +333,7 @@ module Wp2jekyll
     def match_rule(rule:, txt:, offset:, ast_parent:)
       return nil if nil == rule
 
-      @@logger.debug "match_rule #{rule} <-> offset #{offset} #{txt[offset..offset]}".green
+      # @@logger.debug "match_rule #{rule} <-> offset #{offset} #{txt[offset..offset]}".green
       
       offset_e = offset
       rule.each { |component|

@@ -85,7 +85,7 @@ module Wp2jekyll
         if url.include? img_fn
           if mdlk = MarkdownLink.parse(mstr)
             mdlk.cap = relink_image_in_txt(img_fn, to_path, mdlk.cap)
-            mdlk.link = LiquidUrl.new(uri:new_url)
+            mdlk.link = LiquidUrl.new(url:new_url)
             in_txt.gsub!(mstr, mdlk.to_s)
           end
 
@@ -96,7 +96,7 @@ module Wp2jekyll
 
           begin
             # uri = URI.parse(url)
-            in_txt.gsub!(mstr, LiquidUrl.new(uri:new_url).to_s)
+            in_txt.gsub!(mstr, LiquidUrl.new(url:new_url).to_s)
           rescue URI::InvalidURIError
             nil
           end

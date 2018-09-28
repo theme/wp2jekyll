@@ -10,21 +10,21 @@ module Wp2jekyll
 
     RE = %r{(\{\{\s*\"(.*?)\"\s*(\|\s?(relative_url|absolute_url))?\s*\}\})}
     #E = %r{0---------1---1-----2-----3-------------------------32--------0}
-    attr_accessor :uri #1
+    attr_accessor :url #1
     attr_accessor :liquid_filter #2
     attr_reader :parsed_str # last string parsed
 
-    def initialize(uri:, liquid_filter: 'relative_url', parsed_str: nil)
-      @uri = URI(uri)
+    def initialize(url:, liquid_filter: 'relative_url', parsed_str: nil)
+      @url = URI(url)
       @liquid_filter = liquid_filter
       @parsed_str = parsed_str
     end
 
     def to_s
       if (nil == @liquid_filter) || @liquid_filter.empty?
-        @uri.to_s
+        @url.to_s
       else
-        "{{ \"#{@uri.to_s}\" | #{@liquid_filter} }}"
+        "{{ \"#{@url.to_s}\" | #{@liquid_filter} }}"
       end
     end
 
@@ -38,7 +38,7 @@ module Wp2jekyll
     def self.parse(str)
       if m = RE.match(str)
         o = self.new(
-          uri: m[2] || '',
+          url: m[2] || '',
           liquid_filter: m[4] || '',
           parsed_str: str
           )
@@ -65,14 +65,14 @@ module Wp2jekyll
     end
 
     def change_path_to!(to_path)
-      @uri.path = to_path
+      @url.path = to_path
     end
 
     def drop_scheme_host!
-      @uri.scheme = nil
-      @uri.host = ''
-      @uri.port = ''
-      @uri = URI.join(@uri.to_s) # reduce // to /
+      @url.scheme = nil
+      @url.host = ''
+      @url.port = ''
+      @url = URI.join(@url.to_s) # reduce // to /
     end
 
     def to_liquid_relative!

@@ -221,7 +221,7 @@ module Wp2jekyll
     def modify_md_link(txt)
       # @@logger.debug "modify_md_link #{txt}"
       parsed_li = MarkdownLinkParser.new.parse(in_txt:txt)
-      @@logger.info ":parsed_li #{parsed_li}".yellow
+      # @@logger.info ":parsed_li #{parsed_li}".yellow
 
       parsed_li.each { |i|
         if i.is_a? ASTnode
@@ -239,7 +239,7 @@ module Wp2jekyll
 
                   @@logger.debug 'url should be relative: ' + url.green
                   # construct liquid url node
-                  lqurl = LiquidUrl.new(uri: url)
+                  lqurl = LiquidUrl.new(url: url)
                   lqurl.to_liquid_relative!
 
                   # is this already a liquid link?
@@ -255,7 +255,7 @@ module Wp2jekyll
                     # change liquid filter to relative
                     lqlk_node.first_c(:URL_LIQUID_TYPE_STR).str = 'relative_url'
                     # change link to relative
-                    lqlk_node.first_c(:URL_STR).str = lqurl.link
+                    lqlk_node.first_c(:URL_STR).str = lqurl.url.path
                   end
 
                 end
