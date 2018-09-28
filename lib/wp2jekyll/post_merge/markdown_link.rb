@@ -294,16 +294,19 @@ module Wp2jekyll
         if nil != ast
           if str_s < ast.offset_s - 1 # some text is here
             # @@logger.debug "txt piece #{in_txt[str_s..(ast.offset_s -1)]}".blue
+            @@logger.debug "str_s => #{str_s}, ast.offset_s - 1 => #{ast.offset_s - 1}".blue
             li.append in_txt[str_s..(ast.offset_s - 1)]
-            str_s = ast.offset_e + 1
           end
 
           li.append ast # symbol derived ast tree
+          str_s = ast.offset_e + 1
 
           offset = ast.offset_e + 1
         else
           offset += 1 # scan text
         end
+
+        # @@logger.debug "offset => #{offset}, str_s => #{str_s}".blue
 
         if offset >= in_txt.length # reached text end
           if str_s < str_e # some text is here
