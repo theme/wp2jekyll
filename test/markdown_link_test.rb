@@ -7,6 +7,8 @@ class MarkdonwLinkTest < MiniTest::Test
   include Wp2jekyll
   include DebugLogger
 
+  @@wp = WordpressPost.new(File.expand_path('../sample/post.md', __FILE__))
+
   def test_RE
     str = 'https://host.com/wp-content/uploads/2016/11/alice_liddell1.jpg'
     assert(nil != URI.regexp.match(str))
@@ -55,7 +57,8 @@ class MarkdonwLinkTest < MiniTest::Test
   end
 
   def test_embeded_link
-    txt = "some text [![](http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png)](http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png)"
+    txt = 'some text [![aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093](http://wp.docker.localhost:8000/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg)](http://wp.docker.localhost:8000/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg)'
+    # txt = "some text [![](http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png)](http://wp.docker.localhost:8000/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png)"
     parsed_li = MarkdownLinkParser.new.parse(in_txt:txt)
     url_str_c = 0
     mlink_c = 0
@@ -72,7 +75,7 @@ class MarkdonwLinkTest < MiniTest::Test
     }
     assert(2 == url_str_c)
     assert(2 == mlink_c)
+
+    @@logger.debug @@wp.modify_md_link(txt).red
   end
 end
-
-# ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})

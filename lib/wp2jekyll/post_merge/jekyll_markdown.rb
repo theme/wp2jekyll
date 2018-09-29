@@ -80,6 +80,7 @@ module Wp2jekyll
 
     # search link that contains img_fn, replace its path with provided path
     def relink_image_in_txt(img_fn, to_path, in_txt)
+      @@logger.info "relink_image_in_txt img_fn #{img_fn} to_path #{to_path}"
       new_url = URI.join(File.join(to_path, img_fn))
       extract_urls_hash(in_txt).each do |mstr, url|
         if url.include? img_fn

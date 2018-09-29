@@ -293,6 +293,7 @@ module Wp2jekyll
       :TAIL_STR => [[/[^\}]*/]]
     }
 
+    # TODO : cleanup
     attr_accessor :bts # backtrace stack
     attr_accessor :txt
     attr_accessor :offset
@@ -329,6 +330,9 @@ module Wp2jekyll
           end
 
           li.append ast # symbol derived ast tree
+
+          # @@logger.info "MarkdownLinkParser: #{ast}".yellow if ast.symbol == :MLINK
+
           str_s = ast.offset_e + 1
 
           offset = ast.offset_e + 1

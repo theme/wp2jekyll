@@ -153,7 +153,7 @@ module Wp2jekyll
 
       frag.children.each do |n|
         case n.type
-        when Nokogiri::XML::Node::TEXT_NODE
+        when Nokogiri::XML::Node::TEXT_NODE 
           md_pieces.append n
           # puts n.text.yellow
           # @@logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
@@ -217,6 +217,7 @@ module Wp2jekyll
         if i.is_a? ASTnode
           i.all_c_of_symbol(:URL_STR).each { |url_plain_str_node|
             @@logger.debug url_plain_str_node.to_s.cyan
+            @@logger.debug url_plain_str_node.first_p(:MLINK).to_s.cyan
             
             p = url_plain_str_node.parent
             url = url_plain_str_node.to_s
@@ -244,8 +245,8 @@ module Wp2jekyll
                 lqlk_node.first_c(:URL_LIQUID_TYPE_STR).str = 'relative_url'
                 # change link to relative
                 lqlk_node.first_c(:URL_STR).str = lqurl.url.to_s
-                # lqlk_node.update_str
-                # lqlk_node.update_str_all_p
+                lqlk_node.update_str
+                lqlk_node.update_str_all_p
               else # not inside a liquid node
                 tmp_ast = MarkdownLink.parse_to_ast("[tmp_ast](#{lqurl.to_s})") # new node
                 new_node = tmp_ast.first_c(:URL_LIQUID)
@@ -254,14 +255,10 @@ module Wp2jekyll
                   @@logger.debug "replace_child \n#{url_plain_str_node.to_s} \n-> #{new_node.to_s}".yellow
 
                   p.replace_child(from_obj:url_plain_str_node, to_obj:new_node)
+                  p.update_str
+                  p.update_str_all_p
                 end
               end
-
-              if nil != p
-                p.update_str
-                p.update_str_all_p
-              end
-
 
               pp = p.parent
               loop do
@@ -331,11 +328,9 @@ module Wp2jekyll
       cs.li.each { |o| o[:text] = parse_html_to_md_array(o[:text]).join if !!o[:text] }
 
       # markdown link
-      # body_str = modify_md_link(body_str)
       cs.li.each { |o| o[:text] = modify_md_link(o[:text]) if !!o[:text] }
-      #
+      
       # markdown quote
-      # body_str = patch_quote(body_str)
       cs.li.each { |o| o[:text] = patch_quote(o[:text]) if !!o[:text] }
 
       # # markdown list

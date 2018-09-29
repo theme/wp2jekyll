@@ -292,8 +292,8 @@ EOS
       tmp = wm.process_md!(md) # xml elements
       # tmp = wm.patch_char(tmp)
 
-      assert_equal(md_patched.inspect, tmp.inspect)
-      # assert_equal(md_patched, @@wp.xml_to_md(md))
+      # assert_equal(md_patched.inspect, tmp.inspect)
+      assert_equal(md_patched, tmp)
     end
 
     def test_xml_table_a_img
