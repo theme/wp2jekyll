@@ -247,7 +247,7 @@ module Wp2jekyll
                 # lqlk_node.update_str
                 # lqlk_node.update_str_all_p
               else # not inside a liquid node
-                tmp_ast = MarkdownLink.parse_to_ast("[](#{lqurl.to_s})") # new node
+                tmp_ast = MarkdownLink.parse_to_ast("[tmp_ast](#{lqurl.to_s})") # new node
                 new_node = tmp_ast.first_c(:URL_LIQUID)
                 if nil != new_node && nil != p
                   # replace url node with new node
@@ -260,6 +260,17 @@ module Wp2jekyll
               if nil != p
                 p.update_str
                 p.update_str_all_p
+              end
+
+
+              pp = p.parent
+              loop do
+                if nil != pp
+                  @@logger.debug "pp #{pp}"
+                else
+                  break
+                end
+                pp = pp.parent
               end
 
             end
