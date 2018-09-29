@@ -38,11 +38,6 @@ module Wp2jekyll
       false
     end
 
-    # def extract_md_link_urls(str)
-    #   h = {}
-    #   h
-    # end
-
     # @return [Hash] of { match_string => url_inside }
     def extract_urls_hash(txt)
       h = {}

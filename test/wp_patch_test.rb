@@ -285,7 +285,7 @@ tags:
 
 会想到 Littlewitch 吧
 
-[![aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093]({{ "/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg" | relative_url }})]({{ \"/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg\" | relative_url }})
+[![aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093]({{ "/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg" | relative_url }})]({{ "/wp-content/uploads/2016/11/aria-vaneleef-from-girlish-grimoire-littlewitch-romanesque-4758-836436093.jpg" | relative_url }})
 
 EOS
       wm = @@wp

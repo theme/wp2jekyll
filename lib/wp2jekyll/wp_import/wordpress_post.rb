@@ -206,18 +206,20 @@ module Wp2jekyll
           end
         end
       end
+      @@logger.debug "md_pieces.join \n#{md_pieces.join}".red
       return md_pieces
     end
 
     def modify_md_link(txt)
-      # @@logger.debug "modify_md_link #{txt}"
+      @@logger.debug "modify_md_link \n#{txt.red}"
       parsed_li = MarkdownLinkParser.new.parse(in_txt:txt)
       parsed_li.each { |i|
         # @@logger.debug "parsed_li i #{i}"
         if i.is_a? ASTnode
+
           i.all_c_of_symbol(:URL_STR).each { |url_plain_str_node|
             @@logger.debug url_plain_str_node.to_s.cyan
-            @@logger.debug url_plain_str_node.first_p(:MLINK).to_s.cyan
+            @@logger.debug "parent #{url_plain_str_node.first_p(:MLINK).to_s.cyan}"
             
             p = url_plain_str_node.parent
             url = url_plain_str_node.to_s
@@ -282,6 +284,8 @@ module Wp2jekyll
       }
       
       # @@logger.info ":parsed_li #{parsed_li}".yellow
+
+      @@logger.debug "\n\n"
       parsed_li.map {|i| i.to_s } .join
     end
 

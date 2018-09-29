@@ -232,7 +232,7 @@ module Wp2jekyll
     # modified URI.regexp
     RE_PATH = /
     \/(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*(?:;(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*)*(?:\/(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*(?:;(?:[\-_.!~*'()a-zA-Z\d:@&=+$,]|%[a-fA-F\d]{2})*)*)*                    (?# 7: path)
-    [^\{\"\'\)\]]  (?# patch: for url markdown link)
+    [^\{\"\'\)\](\s*)]  (?# patch: for url markdown link)
     /x
     RE_URI_MOD = /
     ([a-zA-Z][\-+.a-zA-Z\d]*):                           (?# 1: scheme)
@@ -252,7 +252,7 @@ module Wp2jekyll
        )(?:\?((?:[\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]]|%[a-fA-F\d]{2})*))?                 (?# 8: query)
     )
     (?:\#((?:[\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]]|%[a-fA-F\d]{2})*))?                  (?# 9: fragment)
-    [^\{\"\'\)\]]  (?# patch: for url markdown link)
+    [^\{\"\'\)\](\s*)]  (?# patch: for url markdown link)
   /x
 
     # :TOKEN => [rule, rule]
