@@ -28,7 +28,7 @@ module Wp2jekyll
     @@cache = PostCompareCache.new
 
     def initialize(a, b)
-      @@logger.info "PostCompare #{a} <-> #{b}"
+      # @@logger.info "PostCompare #{a} <-> #{b}"
       @a = a
       @b = b
       @pa = Post.new(@a)
