@@ -290,7 +290,7 @@ tags:
 EOS
       wm = @@wp
       tmp = wm.process_md!(md) # xml elements
-      tmp = wm.patch_char(tmp)
+      # tmp = wm.patch_char(tmp)
 
       assert_equal(md_patched.inspect, tmp.inspect)
       # assert_equal(md_patched, @@wp.xml_to_md(md))
