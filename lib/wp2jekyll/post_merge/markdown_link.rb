@@ -293,25 +293,6 @@ module Wp2jekyll
       :TAIL_STR => [[/[^\}]*/]]
     }
 
-    # TODO : cleanup
-    attr_accessor :bts # backtrace stack
-    attr_accessor :txt
-    attr_accessor :offset
-    attr_accessor :str_s
-
-    def initialize
-      reset
-    end
-
-    def reset
-      @bts = []
-      @txt = ''
-      @offset = 0
-      @str_s = 0
-    end
-
-
-
     # return [Array] of 
     #   - ASTnode : of every markdown link
     #   - String : rest of text

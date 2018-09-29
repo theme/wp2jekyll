@@ -206,12 +206,12 @@ module Wp2jekyll
           end
         end
       end
-      @@logger.debug "md_pieces.join \n#{md_pieces.join}".red
+      # @@logger.debug "md_pieces.join \n#{md_pieces.join}".red
       return md_pieces
     end
 
     def modify_md_link(txt)
-      @@logger.debug "modify_md_link \n#{txt.red}"
+      # @@logger.debug "modify_md_link \n#{txt.red}"
       parsed_li = MarkdownLinkParser.new.parse(in_txt:txt)
       parsed_li.each { |i|
         # @@logger.debug "parsed_li i #{i}"
@@ -219,7 +219,6 @@ module Wp2jekyll
 
           i.all_c_of_symbol(:URL_STR).each { |url_plain_str_node|
             @@logger.debug url_plain_str_node.to_s.cyan
-            @@logger.debug "parent #{url_plain_str_node.first_p(:MLINK).to_s.cyan}"
             
             p = url_plain_str_node.parent
             url = url_plain_str_node.to_s
@@ -239,7 +238,7 @@ module Wp2jekyll
               # construct liquid url node
               lqurl = LiquidUrl.new(url: url)
               lqurl.to_liquid_relative!
-              @@logger.debug "to_liquid_relative #{lqurl.to_s}".yellow
+              @@logger.debug "to_liquid_relative #{lqurl.to_s}"
 
               # is this already a liquid link?
               if nil != (lqlk_node = url_plain_str_node.first_p(:URL_LIQUID)) # inside a liquid node
@@ -254,22 +253,12 @@ module Wp2jekyll
                 new_node = tmp_ast.first_c(:URL_LIQUID)
                 if nil != new_node && nil != p
                   # replace url node with new node
-                  @@logger.debug "replace_child \n#{url_plain_str_node.to_s} \n-> #{new_node.to_s}".yellow
+                  @@logger.debug "replace_child \n#{url_plain_str_node.to_s} \n-> #{new_node.to_s}"
 
                   p.replace_child(from_obj:url_plain_str_node, to_obj:new_node)
                   p.update_str
                   p.update_str_all_p
                 end
-              end
-
-              pp = p.parent
-              loop do
-                if nil != pp
-                  @@logger.debug "pp #{pp}"
-                else
-                  break
-                end
-                pp = pp.parent
               end
 
             end
