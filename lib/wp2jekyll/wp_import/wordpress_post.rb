@@ -236,20 +236,23 @@ module Wp2jekyll
               # construct liquid url node
               lqurl = LiquidUrl.new(url: url)
               lqurl.to_liquid_relative!
+              @@logger.debug "to_liquid_relative #{lqurl.to_s}".yellow
 
               # is this already a liquid link?
               if nil != (lqlk_node = url_plain_str_node.first_p(:URL_LIQUID)) # inside a liquid node
                 # change liquid filter to relative
                 lqlk_node.first_c(:URL_LIQUID_TYPE_STR).str = 'relative_url'
                 # change link to relative
-                lqlk_node.first_c(:URL_STR).str = lqurl.url.path
-                lqlk_node.update_str
-                lqlk_node.update_str_all_p
+                lqlk_node.first_c(:URL_STR).str = lqurl.url.to_s
+                # lqlk_node.update_str
+                # lqlk_node.update_str_all_p
               else # not inside a liquid node
                 tmp_ast = MarkdownLink.parse_to_ast("[](#{lqurl.to_s})") # new node
                 new_node = tmp_ast.first_c(:URL_LIQUID)
                 if nil != new_node && nil != p
                   # replace url node with new node
+                  @@logger.debug "replace_child \n#{url_plain_str_node.to_s} \n-> #{new_node.to_s}".yellow
+
                   p.replace_child(from_obj:url_plain_str_node, to_obj:new_node)
                 end
               end
