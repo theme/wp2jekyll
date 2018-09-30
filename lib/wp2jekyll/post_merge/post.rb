@@ -53,7 +53,15 @@ module Wp2jekyll
 
     def datef
       # @@logger.debug "datef #{@date}".red
-      if nil != @date
+      if @date.is_a? String
+        begin
+          @date = Date.parse @date
+        rescue RuntimeError
+          @@logger.info "error Date.parse #{@date}"
+        end
+      end
+
+      if @date.respond_to? 'strftime'
         @date.strftime('%Y-%m-%d')
       else
         ''
