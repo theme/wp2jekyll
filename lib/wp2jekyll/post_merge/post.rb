@@ -33,18 +33,16 @@ module Wp2jekyll
     def parse_yaml_front_matter(yaml_txt)
       # @@logger.debug 'parse_yaml_front_matter'
       # @@logger.debug yaml_txt.green
-      begin
-        if @yaml_hash = YAML.load(yaml_txt)
-          @title = @yaml_hash['title']
-          @date = @yaml_hash['date']
-          @permalink_title = @yaml_hash['permalink_title']
-          @style = @yaml_hash['style']
-        end
-      rescue Psych::SyntaxError => e
-        @@logger.error e.message.red
-        @@logger.error "error Post::parse_yaml_front_matter: #{fp}\n#{yaml_txt}".red
-        Process.exit
+      if @yaml_hash = YAML.load(yaml_txt)
+        @title = @yaml_hash['title']
+        @date = @yaml_hash['date']
+        @permalink_title = @yaml_hash['permalink_title']
+        @style = @yaml_hash['style']
       end
+    rescue Psych::SyntaxError => e
+      @@logger.error e.message.red
+      @@logger.error "error Post::parse_yaml_front_matter: #{fp}\n#{yaml_txt}".red
+      Process.exit
     end
 
     def post_info
@@ -91,11 +89,11 @@ module Wp2jekyll
       fpath = File.join(dir, post_fn_base + '.md')
       if !File.exist?(fpath) then
         yaml_hash_write_back
-        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @content)
+        @@fcache.write(fpath, to_s)
         @@logger.info "write file: #{fpath}"
       elsif force
         File.delete(fpath)
-        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @content)
+        @@fcache.write(fpath, to_s)
         @@logger.info "force write file: #{fpath}"
       else
         @@logger.warn "skip write file:  #{fpath}"

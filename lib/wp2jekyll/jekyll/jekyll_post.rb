@@ -49,11 +49,9 @@ module Wp2jekyll
 
     # Returns true if the YAML front matter is present.
     def self.has_yaml_header?(file)
-      begin
       nil != (File.open(file, "rb", &:readline) =~ RE_SEP)
-      rescue EOFError
-        false
-      end
+    rescue EOFError
+      false
     end
 
     # @return [Hash] of { match_string => url_inside }

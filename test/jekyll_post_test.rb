@@ -13,10 +13,6 @@ class JekyllPostTest < MiniTest::Test
 
     jkp.relink_image('relink.jpg', 'parth/to/')
 
-
-    @@logger.debug jkp.to_s
-    @@logger.debug jkp.to_s.white
-
     assert(jkp.to_s == jkp2.to_s)
   end
 
