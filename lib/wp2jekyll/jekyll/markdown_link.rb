@@ -75,6 +75,22 @@ module Wp2jekyll
       nil
     end
 
+    # return [Array] of MarkdownLink
+    def self.extract(in_txt)
+      li = []
+      parsed_li = MarkdownLinkParser.new.parse(in_txt:in_txt)
+      parsed_li.each { |i|
+        if i.is_a? ASTnode
+          mdlk = self.parse(i.to_s)
+          if nil != mdlk
+            mdlk.parsed_str = in_txt[i.offset_s..i.offset_e]
+            li.append mdlk
+          end
+        end
+      }
+      return li
+    end
+
     def test?(str)
       nil != self.parse(str)
     end
