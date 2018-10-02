@@ -5,10 +5,14 @@ require 'logger'
 
 module Wp2jekyll
   
-  class JekyllMarkdown
+  class JekyllPost
     include DebugLogger
+
+    RE_SEP = %r{---\s*\r?\n}
+    RE = Regexp.new %r{\A#{RE_SEP}(.*?)#{RE_SEP}(.*)}m
+
     attr_accessor :yaml_front_matter_str
-    attr_accessor :body_str
+    attr_accessor :content
     attr_reader :fp
 
     def initialize(fp = '')
@@ -16,26 +20,40 @@ module Wp2jekyll
       @links = {}
       
       if File.exist?(@fp)
-        split_fulltxt(File.read(@fp))
+        parse(File.read(@fp))
+      else
+        raise RuntimeError.new("error init JekyllPost: File not exist: #{fp}")
       end
     end
 
     def hint_contents
-      puts @body_str
+      puts @content
     end
 
-    def split_fulltxt(txt)
-      m = /(^(---)?.*?---\s*\r?\n)?(.*)/m.match(txt) # TODO understand yaml format
-      @yaml_front_matter_str  = m[1] || ''
-      @body_str = m[3] || ''
+    # @return [Hash] {:yaml_front_matter => 'yaml_front_matter_str', :content => 'post content string'}
+    def parse(txt)
+      m = RE.match(txt) # TODO understand yaml format
+      if nil != m
+        @yaml_front_matter_str  = m[1]
+        @content = m[2]
+        return {:yaml_front_matter => @yaml_front_matter_str, :content => @content}
+      else
+        raise RuntimeError.new("error parsing Jekyll Post: #{RE} ! =~ \n#{txt}")
+      end
+      nil
+    end
+
+    def to_s
+      "---\n" + @yaml_front_matter_str + "---\n" + @content
     end
 
     # Returns true if the YAML front matter is present.
-    def has_yaml_header?(file)
-      # !! <---- change 0 to true
-      !!(File.open(file, "rb", &:readline) =~ %r!\A---\s*\r?\n!)
-    rescue EOFError
-      false
+    def self.has_yaml_header?(file)
+      begin
+      nil != (File.open(file, "rb", &:readline) =~ RE_SEP)
+      rescue EOFError
+        false
+      end
     end
 
     # @return [Hash] of { match_string => url_inside }
@@ -70,7 +88,7 @@ module Wp2jekyll
     end
 
     def all_urls_hash
-      extract_urls_hash(@body_str)
+      extract_urls_hash(@content)
     end
 
     # search link that contains img_fn, replace its path with provided path
@@ -103,16 +121,16 @@ module Wp2jekyll
 
     def relink_image(img_fn, to_path)
       @@logger.debug "relink_image #{img_fn}".yellow
-      @body_str = relink_image_in_txt(img_fn, to_path, @body_str)
+      @content = relink_image_in_txt(img_fn, to_path, @content)
     end
 
     # write to @fp file
     def write
-      File.write(@fp, @yaml_front_matter_str + @body_str)
+      File.write(@fp, @yaml_front_matter_str + @content)
     end
 
     def info
-      "JekyllMarkdown: #{@fp}\n#{@yaml_front_matter_str}\n#{@body_str}"
+      "JekyllPost: #{@fp}\n#{@yaml_front_matter_str}\n#{@content}"
     end
   end
 

@@ -149,7 +149,7 @@ some other text
       <figure id="attachment_1133" style="width: 400px" class="wp-caption aligncenter">[<img class="wp-image-1133 size-full" src="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg" alt="alice_liddell" width="400" height="500" srcset="http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg 400w, http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1-240x300.jpg 240w" sizes="(max-width: 400px) 85vw, 400px" />](http://wp.docker.localhost:8000/wp-content/uploads/2016/11/alice_liddell1.jpg)<figcaption class="wp-caption-text">Alice Liddell</figcaption></figure>'
       s2 = '![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})
       ![Alice Liddell]({{ "/wp-content/uploads/2016/11/alice_liddell1.jpg" | relative_url }})'
-      assert_equal(s2, @@wp.process_md!(s1))
+      assert_equal(s2, @@wp.process_md_body(s1))
     end
 
     def test_xml_in_md_img_cap
@@ -157,14 +157,14 @@ some other text
 
         s2 = '[![screenshot-from-2016-12-01-22-43-26]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})]({{ "/wp-content/uploads/2016/12/screenshot-from-2016-12-01-22-43-261.png" | relative_url }})'
 
-        assert_equal(s2, @@wp.process_md!(s1))
+        assert_equal(s2, @@wp.process_md_body(s1))
     end
 
     def test_xhtml_link
       xht = '''<a href="http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUrNu8Ua6DNBcMMafPeYnCh8n0RPcGhDwlewznWsbv3Fqb2RYclIxkbM" target="_blank" rel="WLPP;url=http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUrNu8Ua6DNBcMMafPeYnCh8n0RPcGhDwlewznWsbv3Fqb2RYclIxkbM;cnsid=cns&#033;61AD2A9245CB7941&#033;520"><img src="http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUqtVLzIKyUvy9Fz-ZUHhoHqPdLlX4KAL3bzdd3ed1yDKn_ZrZp5DdVo" border="0" /></a>'''
       md_link = '[![](http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUqtVLzIKyUvy9Fz-ZUHhoHqPdLlX4KAL3bzdd3ed1yDKn_ZrZp5DdVo)](http://byfiles.storage.live.com/y1pcRYNaa--p4x5IXVXv70GUrNu8Ua6DNBcMMafPeYnCh8n0RPcGhDwlewznWsbv3Fqb2RYclIxkbM)'
 
-      assert_equal(md_link, @@wp.process_md!(xht))
+      assert_equal(md_link, @@wp.process_md_body(xht))
     end
 
     def test_rm_bug_img
@@ -185,14 +185,14 @@ some other text
       s1 = '![](https://some.site.com/path/to/a.jpg)'
       s2 = '![](https://some.site.com/path/to/a.jpg)'
 
-      assert_equal(s2, @@wp.process_md!(s1))
+      assert_equal(s2, @@wp.process_md_body(s1))
     end
 
     def test_keep_jekyll_filter
       s1 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
       s2 = '![]( {{ "https://some.site.com/path/to/a.jpg" | relative_url }})'
 
-      assert_equal(s2, @@wp.process_md!(s1))
+      assert_equal(s2, @@wp.process_md_body(s1))
       assert_equal(s2, @@wp.patch_char(s1))
     end
 
@@ -237,7 +237,7 @@ unfold_div passage 1
 
 unfold_div passage 2
 '''
-      assert_equal(s2, @@wp.process_md!(s1))
+      assert_equal(s2, @@wp.process_md_body(s1))
     end
 
     def test_whole_md
@@ -329,7 +329,7 @@ EOS
     # txt =  @@wp.xml_to_md(xml)
     # txt2 = @@wp.modify_md_link(txt)
     # assert_equal(md, txt2)
-    assert_equal(md, @@wp.process_md!(xml))
+    assert_equal(md, @@wp.process_md_body(xml))
     end
 
     def test_comment_in_code_should_not_change
@@ -482,7 +482,7 @@ Text before code.
 
 After code text.
 '''
-      out = @@wp.process_md!(txt)
+      out = @@wp.process_md_body(txt)
       # puts out.yellow if !out.include?('[Unit]')
       assert(out.include?('[Unit]'))
     end

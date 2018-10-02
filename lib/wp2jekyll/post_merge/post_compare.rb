@@ -67,8 +67,8 @@ module Wp2jekyll
       end
       
       # body diff
-      lcs = Diff::LCS.lcs(@pa.body_str, @pb.body_str)
-      max_len = [@pa.body_str.length, @pb.body_str.length].max
+      lcs = Diff::LCS.lcs(@pa.content, @pb.content)
+      max_len = [@pa.content.length, @pb.content.length].max
       same_len = lcs.length
       if 0 == max_len
         @similarity = 1

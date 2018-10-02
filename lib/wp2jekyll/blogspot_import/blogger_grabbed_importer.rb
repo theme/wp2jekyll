@@ -29,7 +29,7 @@ module Wp2jekyll
 
         # for post that is now in the to_dir, try import images
         if nil != pfp then
-          jk_md = JekyllMarkdown.new(pfp)
+          jk_md = JekyllPost.new(pfp)
           im = ImageMerger.new
           
           # Handles only blogger_post's known images (that are on the disk at initialzing time),

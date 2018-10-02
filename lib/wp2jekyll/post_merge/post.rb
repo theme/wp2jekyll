@@ -7,7 +7,7 @@ require 'date'
 
 module Wp2jekyll
 
-  class Post < JekyllMarkdown # TODO: JekyllPost
+  class Post < JekyllPost # TODO: JekyllPost
     attr_accessor :title
     attr_accessor :permalink_title
     attr_accessor :date
@@ -17,7 +17,7 @@ module Wp2jekyll
 
     def initialize(fp)
       super fp
-      split_fulltxt(@@fcache.read(fp))
+      parse(@@fcache.read(fp))
       parse_yaml_front_matter(@yaml_front_matter_str)
 
       if nil == @date
@@ -91,11 +91,11 @@ module Wp2jekyll
       fpath = File.join(dir, post_fn_base + '.md')
       if !File.exist?(fpath) then
         yaml_hash_write_back
-        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @body_str)
+        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @content)
         @@logger.info "write file: #{fpath}"
       elsif force
         File.delete(fpath)
-        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @body_str)
+        @@fcache.write(fpath, @yaml_front_matter_str + "---\n" + @content)
         @@logger.info "force write file: #{fpath}"
       else
         @@logger.warn "skip write file:  #{fpath}"

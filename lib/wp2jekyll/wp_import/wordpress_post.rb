@@ -315,8 +315,8 @@ module Wp2jekyll
       header = patch_unescape_html_char(header)
     end
 
-    def process_md_body(body_str)
-      cs = CodeSegmenter.new(body_str)
+    def process_md_body(content)
+      cs = CodeSegmenter.new(content)
 
       cs.li.each { |o| o[:text] = parse_html_to_md_array(o[:text]).join if !!o[:text] }
 
@@ -326,20 +326,16 @@ module Wp2jekyll
       # markdown quote
       cs.li.each { |o| o[:text] = patch_quote(o[:text]) if !!o[:text] }
 
-      # # markdown list
-      # body_str = patch_list_like(body_str, '*', true)
+      # markdown list
       cs.li.each { |o| o[:text] = patch_list_like(o[:text], '*', true) if !!o[:text] }
-      #
-      # # pre formatted
-      # body_str = patch_code(body_str)
+      
+      # pre formatted
       cs.li.each { |o| o[:code] = patch_code(o[:code]) if !!o[:code] }
       #
-      # # section titles
-      # body_str = patch_unescape_html_char(body_str)
       cs.li.each { |o| o[:text] = patch_unescape_html_char(o[:text]) if !!o[:text] }
       cs.li.each { |o| o[:code] = patch_unescape_html_char(o[:code]) if !!o[:code] }
 
-      # body_str = patch_h1h2_space(body_str)
+      # section titles
       cs.li.each { |o| o[:text] = patch_h1h2_space(o[:text]) if !!o[:text] }
 
       # @@logger.debug "cs.join #{cs.join}".cyan
@@ -348,15 +344,15 @@ module Wp2jekyll
     end
 
     def process_md!(fulltxt)
-      split_fulltxt(fulltxt)
+      parse(fulltxt)
 
       # @@logger.debug 'yaml_front_matter: ' + @yaml_front_matter_str.yellow
       @yaml_front_matter_str =process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
 
-      # @@logger.debug 'body_str: ' + @body_str.green
-      @body_str =process_md_body(@body_str) if !!@body_str
+      # @@logger.debug 'content: ' + @content.green
+      @content =process_md_body(@content) if !!@content
 
-      patch_char(@yaml_front_matter_str + @body_str)
+      patch_char(to_s)
     end
 
     def wp_2_jekyll_md_file(i, o)
@@ -368,7 +364,7 @@ module Wp2jekyll
     end
 
     def write_jekyll_md!
-      if !has_yaml_header?(@fp) then
+      if !JekyllPost.has_yaml_header?(@fp) then
         @@logger.info "! #{@fp} has no yaml header"
       elsif 'home' == @style || 'page' == @style
         nil # skip home and page, they should be already jekyll style.
