@@ -14,14 +14,16 @@ module Wp2jekyll
       def import_post(fpath:, jekyll_posts_dir:)
         puts "\n"
         @@logger.info "import_post #{fpath} #{'-->'.green} #{jekyll_posts_dir}"
+
         # comvert wordpress markdown to jekyll format
         jkmd_tmp = Tempfile.new('jkmd_tmp')
-        FileUtils.cp(fpath, jkmd_tmp.path, :verbose => false)
+        FileUtils.cp(fpath, jkmd_tmp.path, :verbose => false) # do not touch import source
+
         wpmd_tmp = WordpressPost.new(jkmd_tmp.path)
         wpmd_tmp.write_jekyll_md!
 
         # merge (test if already exists?)
-        @post_merger.merge_post(jkmd_tmp.path, jekyll_posts_dir)
+        @post_merger.merge_post(wpmd_tmp.path, jekyll_posts_dir)
       end
 
       def import_posts_in_dir(wp_exported_posts_dir:, jekyll_posts_dir:)

@@ -354,12 +354,16 @@ module Wp2jekyll
 
     def write_jekyll_md!
       if !JekyllPost.has_yaml_header?(@fp) then
-        @@logger.info "! #{@fp} has no yaml header"
+        @@logger.info "write_jekyll_md! skip: #{@fp} : has no yaml header."
       elsif 'home' == @style || 'page' == @style
-        @@logger.info "skip #{@fp} : as it should be already in jekyll style."
+        @@logger.info "write_jekyll_md! skip: #{@fp} : it should be already in jekyll style."
       else
         File.write(@fp, process_md!(File.read(@fp)))
       end
+    end
+
+    def path
+      @fp
     end
   end
 end
