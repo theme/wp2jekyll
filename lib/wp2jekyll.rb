@@ -34,7 +34,7 @@ module Wp2jekyll
 
   def self.import_wordpress_md_posts(from_dir:, to_jekyll_posts_dir:)
     if Dir.exist? from_dir then
-      Dir.glob (from_dir + '/**/*.{md,markdown}') do |fpath|
+      Dir.glob (File.join(from_dir , '/**/*.{md,markdown}')) do |fpath|
         WordpressImporter.new.import_post(fpath:fpath, jekyll_posts_dir:to_jekyll_posts_dir)
       end
     end
@@ -42,7 +42,7 @@ module Wp2jekyll
 
   def self.process_wordpress_md_in_dir(d)
     if Dir.exist? d then
-      Dir.glob (d + '/**/*.md') do |fpath|
+      Dir.glob (File.join(d , '/**/*.md')) do |fpath|
         WordpressPost.new(fpath).write_jekyll_md!
       end
     end
@@ -70,7 +70,7 @@ module Wp2jekyll
 
   def self.rename_md_posts_indir(dir)
     if Dir.exist? dir then
-      Dir.glob (dir + '**/*.md') do |fpath|
+      Dir.glob (File.join(dir + '**/*.md')) do |fpath|
         dirn = File.dirname(fpath)
         extn = File.extname(fpath)
         basen = File.basename(fpath, extn)

@@ -1,7 +1,5 @@
-require 'fileutils'
-require 'cgi'
+
 require 'uri'
-require 'logger'
 
 module Wp2jekyll
   
@@ -9,7 +7,7 @@ module Wp2jekyll
     include DebugLogger
 
     RE_SEP = %r{---\s*\r?\n}
-    RE = Regexp.new %r{\A#{RE_SEP}(.*?)#{RE_SEP}(.*)}m
+    RE = Regexp.new %r{(\A#{RE_SEP}.*?)#{RE_SEP}(.*)}m
 
     attr_accessor :yaml_front_matter_str
     attr_accessor :content
@@ -44,7 +42,7 @@ module Wp2jekyll
     end
 
     def to_s
-      "---\n" + @yaml_front_matter_str + "---\n" + @content
+      @yaml_front_matter_str + "---\n" + @content
     end
 
     # Returns true if the YAML front matter is present.
