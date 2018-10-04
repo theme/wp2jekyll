@@ -28,10 +28,10 @@ module Wp2jekyll
       
       return nil if 0 == f_li.length
 
-      s_h = Parallel.map(f_li, in_process: 8) do |fpath|
+      s_h = Parallel.map(f_li, in_process: 8) { |fpath|
         c = PostCompare.new(fp, fpath)
         [c.body_similarity , fpath]
-      end
+      }
 
       m = s_h.max { |a,b|
         # @@logger.debug "max #{a} #{b}".red

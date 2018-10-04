@@ -272,9 +272,6 @@ module Wp2jekyll
         end
       }
       
-      # @@logger.info ":parsed_li #{parsed_li}".yellow
-
-      @@logger.debug "\n\n"
       parsed_li.map {|i| i.to_s } .join
     end
 
@@ -355,31 +352,13 @@ module Wp2jekyll
       patch_char(to_s)
     end
 
-    def wp_2_jekyll_md_file(i, o)
-      # @@logger.info "wp_2_jekyll_md_file > #{ o }"
-
-      wp_md = File.read(o)
-      wp_md = process_md!(wp_md)
-      File.write(o, wp_md)
-    end
-
     def write_jekyll_md!
       if !JekyllPost.has_yaml_header?(@fp) then
         @@logger.info "! #{@fp} has no yaml header"
       elsif 'home' == @style || 'page' == @style
-        nil # skip home and page, they should be already jekyll style.
+        @@logger.info "skip #{@fp} : as it should be already in jekyll style."
       else
-        @dir = File.dirname(@fp)
-        @ext = File.extname(@fp)
-        @base = File.basename(@fp, @ext)
-
-        tmpf = Tempfile.new('wpmd_tmp')
-        
-        FileUtils.cp(@fp, tmpf.path, :verbose => false)
-        wp_2_jekyll_md_file(tmpf.path, @fp)
-
-        tmpf.unlink
-        
+        File.write(@fp, process_md!(File.read(@fp)))
       end
     end
   end

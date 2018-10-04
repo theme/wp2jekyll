@@ -24,6 +24,8 @@ module Wp2jekyll
                 nil
             end
         end
+
+        # TODO : save / load compare result + timestamp to disk
     end
     
 end
