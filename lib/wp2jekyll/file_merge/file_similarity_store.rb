@@ -4,10 +4,14 @@ require 'fileutils'
 module Wp2jekyll
 
     class FileSimilarityStore
+        include DebugLogger
 
         @@store_dir = "#{ENV['HOME']}/.wp2jekyll/usr/#{ENV['USER']}"
         @@store_fp = "#{@@store_dir}/file_similarity_store.yaml"
         @@yaml_hash = {}
+
+        SAV_EVERY_N_RECORD = 50
+        @@record_counter = 0
 
         def self.init(fp = '')
             if File.exist? fp
@@ -36,8 +40,8 @@ module Wp2jekyll
                 self.class.save
                 self.class.init(fp)
             end
-            ObjectSpace.define_finalizer(self,
-                self.class.method(:save).to_proc)
+            # ObjectSpace.define_finalizer(self,
+            #     self.class.method(:save).to_proc)
         end
 
         def record_similarity(a,b,similarity)
@@ -54,6 +58,14 @@ module Wp2jekyll
                     :timestamp => Time.now
                 }
             end
+
+            # @@logger.debug "record #{a}, #{b}, #{similarity}"
+            @@record_counter += 1
+            if @@record_counter > SAV_EVERY_N_RECORD
+                @@logger.debug "save cache".red
+                self.class.save
+                @@record_counter = 0
+            end
         end
 
         # @ctime: last ctime of a, b
@@ -61,11 +73,22 @@ module Wp2jekyll
             if nil != @@yaml_hash[a]
                 if nil != @@yaml_hash[a][b]
                     if @@yaml_hash[a][b][:timestamp] > ctime # a and b is not changed
+                        @@logger.debug "hit"
                         @@yaml_hash[a][b][:similarity]
                     end
                 end
             else
-                nil
+                if nil != @@yaml_hash[b]
+                    if nil != @@yaml_hash[b][a]
+                        if @@yaml_hash[b][a][:timestamp] > ctime # a and b is not changed
+                            @@logger.debug "hit"
+                            @@yaml_hash[b][a][:similarity]
+                        end
+                    end
+                else
+                    @@logger.debug "miss"
+                    nil
+                end
             end
         end
 
