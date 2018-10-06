@@ -62,7 +62,7 @@ module Wp2jekyll
             # @@logger.debug "record #{a}, #{b}, #{similarity}"
             @@record_counter += 1
             if @@record_counter > SAV_EVERY_N_RECORD
-                @@logger.debug "save cache".red
+                # @@logger.debug "save cache".red
                 self.class.save
                 @@record_counter = 0
             end
@@ -73,7 +73,7 @@ module Wp2jekyll
             if nil != @@yaml_hash[a]
                 if nil != @@yaml_hash[a][b]
                     if @@yaml_hash[a][b][:timestamp] > ctime # a and b is not changed
-                        @@logger.debug "hit"
+                        # @@logger.debug "hit"
                         @@yaml_hash[a][b][:similarity]
                     end
                 end
@@ -81,12 +81,12 @@ module Wp2jekyll
                 if nil != @@yaml_hash[b]
                     if nil != @@yaml_hash[b][a]
                         if @@yaml_hash[b][a][:timestamp] > ctime # a and b is not changed
-                            @@logger.debug "hit"
+                            # @@logger.debug "hit"
                             @@yaml_hash[b][a][:similarity]
                         end
                     end
                 else
-                    @@logger.debug "miss"
+                    # @@logger.debug "miss"
                     nil
                 end
             end
