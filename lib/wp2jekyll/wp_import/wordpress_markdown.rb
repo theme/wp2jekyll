@@ -153,7 +153,7 @@ module Wp2jekyll
 
       frag.children.each do |n|
         case n.type
-        when Nokogiri::XML::Node::TEXT_NODE 
+        when Nokogiri::XML::Node::TEXT_NODE
           md_pieces.append n
           # puts n.text.yellow
           # @@logger.debug "Nokogiri:...:TEXT_NODE #{n.text}".yellow
@@ -346,7 +346,7 @@ module Wp2jekyll
       cs.li.each { |o| o[:code] = patch_code(o[:code]) if !!o[:code] }
       #
       cs.li.each { |o| o[:text] = patch_unescape_html_char(o[:text]) if !!o[:text] }
-      cs.li.each { |o| o[:code] = patch_unescape_html_char(o[:code]) if !!o[:code] }
+      # cs.li.each { |o| o[:code] = patch_unescape_html_char(o[:code]) if !!o[:code] }
 
       # section titles
       cs.li.each { |o| o[:text] = patch_h1h2_space(o[:text]) if !!o[:text] }
@@ -356,16 +356,24 @@ module Wp2jekyll
       cs.join
     end
 
+    # test helper
     def process_md!(fulltxt)
-      parse(fulltxt)
+      parse!(fulltxt)
 
       # @@logger.debug 'yaml_front_matter: ' + @yaml_front_matter_str.yellow
-      @yaml_front_matter_str = process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
+      if !!@yaml_front_matter_str
+        @yaml_front_matter_str = process_md_header(@yaml_front_matter_str)
+        @yaml_front_matter_str = patch_char(@yaml_front_matter_str)
+      end
 
       # @@logger.debug 'content: ' + @content.green
-      @content =process_md_body(@content) if !!@content
+      if !!@content
+        @content = process_md_body(@content)
+        @content = patch_char(@content)
+      end
 
-      patch_char(to_s)
+      # @@logger.debug to_s.cyan
+      to_s
     end
 
     def write_jekyll_md!
@@ -374,7 +382,7 @@ module Wp2jekyll
       elsif 'home' == @style || 'page' == @style
         @@logger.info "write_jekyll_md! skip: #{@fp} : it should be already in jekyll style."
       else
-        File.write(@fp, process_md!(File.read(@fp)))
+        File.write(@fp, process_md!(to_s))
       end
     end
 

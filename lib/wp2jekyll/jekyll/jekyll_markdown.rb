@@ -16,7 +16,7 @@ module Wp2jekyll
       @fp = fp # file path
       
       if File.exist?(@fp)
-        parse(File.read(@fp))
+        parse!(File.read(@fp))
       else
         raise RuntimeError.new("error init JekyllMarkdown: File not exist: #{fp}")
       end
@@ -27,15 +27,15 @@ module Wp2jekyll
     end
 
     # @return [Hash] {:yaml_front_matter => 'yaml_front_matter_str', :content => 'post content string'}
-    def parse(txt)
-      m = RE.match(txt) # TODO understand yaml format
+    def parse!(txt)
+      m = RE.match(txt)
       if nil != m
         @yaml_front_matter_str  = m[1] || "---\n"
         @content = m[2] || ''
-        return {
-          :yaml_front_matter => @yaml_front_matter_str,
-          :content => @content
-        }
+        # return {
+        #   :yaml_front_matter => @yaml_front_matter_str,
+        #   :content => @content
+        # }
       else
         @@logger.warn "invalid Jekyll Post:\n#{@fp}\n#{RE} !=~ \n#{txt}"
         @yaml_front_matter_str = "---\n"

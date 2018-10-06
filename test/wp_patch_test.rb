@@ -488,5 +488,18 @@ After code text.
       # puts out.yellow if !out.include?('[Unit]')
       assert(out.include?('[Unit]'))
     end
+
+    def test_code_segment
+
+      wm1 = WordpressMarkdown.new(File.expand_path('../sample/post code.md', __FILE__))
+      wm2 = WordpressMarkdown.new(File.expand_path('../sample/post code 2.md', __FILE__))
+
+      @@logger.debug wm1.process_md!(wm1.to_s).white
+      @@logger.debug wm2.to_s
+      assert( wm2.to_s == wm1.process_md!(wm1.to_s))
+
+
+
+    end
 end
 

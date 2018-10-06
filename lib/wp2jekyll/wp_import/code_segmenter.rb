@@ -25,19 +25,25 @@ module Wp2jekyll
       @li.clear
       pos = 0
       while m = RE.match(txt, pos) do
-        text = txt[pos .. m.begin(0) -1]
-        @li.append({:text => text, :rage => [pos, m.begin(0)-1]}) if !text.empty?
-        # @@logger.debug "text #{text}".red
+        if 0 < m.begin(0) # some text here
+          text = txt[pos .. m.begin(0) -1]
+          @li.append({:text => text, :rage => [pos, m.begin(0)-1]})
+          # @@logger.debug "text #{text}".red
+        end
 
-        code = txt[m.begin(0) .. m.end(0)-1]
-        @li.append({:code => code, :rage => [m.begin(0), m.end(0)-1]}) if !code.empty?
-        # @@logger.debug "code end-1 = #{m.end(0)-1} #{code}".red
+        if m.begin(0) < m.end(0) # some code here
+          code = txt[m.begin(0) .. m.end(0)-1]
+          @li.append({:code => code, :rage => [m.begin(0), m.end(0)-1]})
+          # @@logger.debug "code end-1 = #{m.end(0)-1} #{code}".red
+        end
 
         pos = m.end(0)
       end
 
-      @li.append({:text => txt[pos .. -1], :rage => [pos, -1]}) if pos < (txt.length - 1)
-      # @@logger.debug "final text pos = #{pos } #{txt[pos .. -1]}".red
+      if pos < (txt.length - 1)
+        @li.append({:text => txt[pos .. -1], :rage => [pos, -1]})
+        # @@logger.debug "final text pos = #{pos } #{txt[pos .. -1]}".red
+      end
 
       @li
     end
@@ -46,6 +52,5 @@ module Wp2jekyll
       @li.map {|o| o[:text] || o[:code] }.join
     end
   end
-  
 end
 
