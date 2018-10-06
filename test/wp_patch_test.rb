@@ -7,7 +7,7 @@ require "logger"
 #
 
 class TestWpMarkdown2jekyll < MiniTest::Test
-  # make_my_diffs_pretty!
+  make_my_diffs_pretty!
   # include PrettyDiffs
   include Wp2jekyll
   include DebugLogger
@@ -492,14 +492,14 @@ After code text.
     def test_code_segment
 
       wm1 = WordpressMarkdown.new(File.expand_path('../sample/post code.md', __FILE__))
-      wm2 = WordpressMarkdown.new(File.expand_path('../sample/post code 2.md', __FILE__))
 
-      @@logger.debug wm1.process_md!(wm1.to_s).white
-      @@logger.debug wm2.to_s
-      assert( wm2.to_s == wm1.process_md!(wm1.to_s))
+      t1 = wm1.process_md!(wm1.to_s)
+      t2 = File.read(File.expand_path('../sample/post code 2.md', __FILE__))
 
+      # @@logger.debug t1.white
+      # @@logger.debug t2
 
-
+      assert_equal( t2 , t1)
     end
 end
 

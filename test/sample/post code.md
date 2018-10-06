@@ -10,8 +10,9 @@ categories:
 - Software
 ---
 [code]
+#include <stdio.h>
 
-#include unsigned long id = 0, a = 0;
+unsigned long id = 0, a = 0;
 
 int main() {
 

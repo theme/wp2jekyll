@@ -280,6 +280,8 @@ module Wp2jekyll
         @@code_cnt += 1
 
         code = m[1]
+        code.rstrip!
+
         # code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
         tab = 1
         code.each_line { |line|
@@ -297,11 +299,11 @@ module Wp2jekyll
           end
         }
 
-        code.rstrip!
         code.gsub!(/^\s*$\n/m, '') # empty line (note Ruby ~/m meaning)
         code.gsub!(/(?=^\s*)\\#/m, "#")
 
         code = "\n```\n" + code + "\n```\n"
+
         txt.gsub!(m[0], code)
       end
 
@@ -346,7 +348,7 @@ module Wp2jekyll
       cs.li.each { |o| o[:code] = patch_code(o[:code]) if !!o[:code] }
       #
       cs.li.each { |o| o[:text] = patch_unescape_html_char(o[:text]) if !!o[:text] }
-      # cs.li.each { |o| o[:code] = patch_unescape_html_char(o[:code]) if !!o[:code] }
+      cs.li.each { |o| o[:code] = patch_unescape_html_char(o[:code]) if !!o[:code] }
 
       # section titles
       cs.li.each { |o| o[:text] = patch_h1h2_space(o[:text]) if !!o[:text] }
