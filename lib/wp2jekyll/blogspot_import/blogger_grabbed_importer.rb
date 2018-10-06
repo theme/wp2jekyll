@@ -22,14 +22,14 @@ module Wp2jekyll
         File.write(tmp_fpath, blogger_post.to_s)
 
         # patch post body format to markdown using wp_import
-        WordpressPost.new(tmp_fpath).write_jekyll_md!
+        WordpressMarkdown.new(tmp_fpath).write_jekyll_md!
 
         # try import
         pfp = pm.merge_post(tmp_fpath, to_dir) # may be imported, may be not.
 
         # for post that is now in the to_dir, try import images
         if nil != pfp then
-          jk_md = JekyllPost.new(pfp)
+          jk_md = JekyllMarkdown.new(pfp)
           im = ImageMerger.new
           
           # Handles only blogger_post's known images (that are on the disk at initialzing time),

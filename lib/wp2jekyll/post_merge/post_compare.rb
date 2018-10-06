@@ -82,7 +82,7 @@ module Wp2jekyll
     def similar?
 
       # meta check, incase of duplicate import
-      meta_same = (@pa.title == @pb.title) && (@pa.datef == @pb.datef)
+      meta_same = (@pa.title == @pb.title) && (@pa.date == @pb.date)
 
       bs = body_similarity
 

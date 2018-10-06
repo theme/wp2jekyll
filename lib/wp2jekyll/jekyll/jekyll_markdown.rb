@@ -1,9 +1,8 @@
-
 require 'uri'
 
 module Wp2jekyll
   
-  class JekyllPost
+  class JekyllMarkdown
     include DebugLogger
 
     RE_SEP = %r{---\s*\r?\n}
@@ -15,28 +14,32 @@ module Wp2jekyll
 
     def initialize(fp = '')
       @fp = fp # file path
-      @links = {}
       
       if File.exist?(@fp)
         parse(File.read(@fp))
       else
-        raise RuntimeError.new("error init JekyllPost: File not exist: #{fp}")
+        raise RuntimeError.new("error init JekyllMarkdown: File not exist: #{fp}")
       end
     end
 
     def hint_contents
-      puts @content
+      puts to_s
     end
 
     # @return [Hash] {:yaml_front_matter => 'yaml_front_matter_str', :content => 'post content string'}
     def parse(txt)
       m = RE.match(txt) # TODO understand yaml format
       if nil != m
-        @yaml_front_matter_str  = m[1]
-        @content = m[2]
-        return {:yaml_front_matter => @yaml_front_matter_str, :content => @content}
+        @yaml_front_matter_str  = m[1] || "---\n"
+        @content = m[2] || ''
+        return {
+          :yaml_front_matter => @yaml_front_matter_str,
+          :content => @content
+        }
       else
-        raise RuntimeError.new("error parsing Jekyll Post: #{RE} ! =~ \n#{txt}")
+        @@logger.warn "invalid Jekyll Post:\n#{@fp}\n#{RE} !=~ \n#{txt}"
+        @yaml_front_matter_str = "---\n"
+        @content = txt
       end
       nil
     end
@@ -122,11 +125,11 @@ module Wp2jekyll
 
     # write to @fp file
     def write
-      File.write(@fp, @yaml_front_matter_str + @content)
+      File.write(@fp, to_s)
     end
 
     def info
-      "JekyllPost: #{@fp}\n#{@yaml_front_matter_str}\n#{@content}"
+      "JekyllMarkdown: #{@fp}\n#{@yaml_front_matter_str}\n#{@content}"
     end
   end
 

@@ -8,7 +8,7 @@ require 'nokogiri'
 require 'colorize'
 
 module Wp2jekyll
-  class WordpressPost < Post
+  class WordpressMarkdown < JekyllMarkdown
     attr_accessor :suspicious_url_contains
     attr_accessor :relative_url_contains
 
@@ -344,7 +344,7 @@ module Wp2jekyll
       parse(fulltxt)
 
       # @@logger.debug 'yaml_front_matter: ' + @yaml_front_matter_str.yellow
-      @yaml_front_matter_str =process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
+      @yaml_front_matter_str = process_md_header(@yaml_front_matter_str) if !!@yaml_front_matter_str
 
       # @@logger.debug 'content: ' + @content.green
       @content =process_md_body(@content) if !!@content
@@ -353,7 +353,7 @@ module Wp2jekyll
     end
 
     def write_jekyll_md!
-      if !JekyllPost.has_yaml_header?(@fp) then
+      if !JekyllMarkdown.has_yaml_header?(@fp) then
         @@logger.info "write_jekyll_md! skip: #{@fp} : has no yaml header."
       elsif 'home' == @style || 'page' == @style
         @@logger.info "write_jekyll_md! skip: #{@fp} : it should be already in jekyll style."

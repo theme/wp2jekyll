@@ -19,7 +19,7 @@ module Wp2jekyll
         jkmd_tmp = Tempfile.new('jkmd_tmp')
         FileUtils.cp(fpath, jkmd_tmp.path, :verbose => false) # do not touch import source
 
-        wpmd_tmp = WordpressPost.new(jkmd_tmp.path)
+        wpmd_tmp = WordpressMarkdown.new(jkmd_tmp.path)
         wpmd_tmp.write_jekyll_md!
 
         # merge (test if already exists?)

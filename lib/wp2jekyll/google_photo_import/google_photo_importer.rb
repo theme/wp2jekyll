@@ -37,8 +37,7 @@ module Wp2jekyll
                     # download
                     tmp_f = Tempfile.new(bn)
 
-                    datestr = jk_md.datef
-                    post_date = Date.parse(datestr)
+                    post_date = jk_md.date || Time.now
                     prev_year = (post_date << 6).to_s
                     post_year = (post_date >> 6).to_s
 

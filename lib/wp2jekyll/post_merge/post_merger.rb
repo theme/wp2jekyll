@@ -29,6 +29,7 @@ module Wp2jekyll
       return nil if 0 == f_li.length
 
       s_h = Parallel.map(f_li, in_process: 8) { |fpath|
+        # @@logger.debug fpath
         c = PostCompare.new(fp, fpath)
         [c.body_similarity , fpath]
       }
