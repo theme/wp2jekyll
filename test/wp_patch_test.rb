@@ -44,6 +44,7 @@ class TestWpMarkdown2jekyll < MiniTest::Test
         '''
         # targeted effect
         s2 = '''
+
 ```
         int main(int argc, char * argc[]) {
             int a = sqrt(b);
@@ -56,6 +57,7 @@ class TestWpMarkdown2jekyll < MiniTest::Test
    some text
 
    other code:
+
 ```
         #int a = sqrt(b);
         console.log(a);

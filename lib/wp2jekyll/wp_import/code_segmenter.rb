@@ -13,8 +13,6 @@ module Wp2jekyll
     attr_accessor :li
 
     def initialize( txt = '')
-      @@logger = Logger.new(STDERR)
-      @@logger.level = Logger::DEBUG
 
       @li = []
       if !txt.empty?

@@ -281,11 +281,27 @@ module Wp2jekyll
 
         code = m[1]
         # code.gsub!(/^[ \t\r\f]*/m, " "*indent) # indent code
-        # code.gsub!(/^/m, " "*indent) # indent code
+        tab = 1
+        code.each_line { |line|
+          lm = line.match /^\s*/
+          if 0 == lm[0].size # if there is no indent
+            tab_bak = 0
+            if line =~ /^\s*[\}\)]\s*;?,?\s*$/
+              tab_bak += 1
+            end
+            code.gsub!(line, " "*indent*(tab - tab_bak) + line) # indent code
+            tab += line.scan(/\{/).count
+            tab += line.scan(/\(/).count
+            tab -= line.scan(/\}/).count # simple indent code
+            tab -= line.scan(/\)/).count # simple indent code
+          end
+        }
+
         code.rstrip!
-        code = "```\n" + code + "\n```\n"
-        code.gsub!(/^\s*$\n/m, '') # empty line (this is Ruby ~)
+        code.gsub!(/^\s*$\n/m, '') # empty line (note Ruby ~/m meaning)
         code.gsub!(/(?=^\s*)\\#/m, "#")
+
+        code = "\n```\n" + code + "\n```\n"
         txt.gsub!(m[0], code)
       end
 
@@ -302,7 +318,7 @@ module Wp2jekyll
       txt.gsub!(/^\s*?&nbsp;\s*?$/, '') # a blank txt
       txt.gsub!('&nbsp;', ' ')
       txt.gsub!('\_', '_')
-      txt.gsub!(/^`\s*$/, '```')
+      txt.gsub!(/^`\s*$/, "\n```\n")
       return txt
     end
 
