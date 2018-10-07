@@ -1,3 +1,5 @@
+require 'wp2jekyll/task' # core data
+
 require 'wp2jekyll/file_trans'
 require 'wp2jekyll/file_merge'
 

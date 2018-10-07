@@ -25,6 +25,7 @@ module Wp2jekyll
             @@yaml_hash = YAML.load(File.read(@@store_fp))
 
             if !@@yaml_hash
+                # @@logger.debug "new cache".cyan
                 @@yaml_hash = {}
             end
         end
@@ -62,7 +63,7 @@ module Wp2jekyll
             # @@logger.debug "record #{a}, #{b}, #{similarity}"
             @@record_counter += 1
             if @@record_counter > SAV_EVERY_N_RECORD
-                # @@logger.debug "save cache".red
+                @@logger.debug "save cache".cyan
                 self.class.save
                 @@record_counter = 0
             end
@@ -73,23 +74,22 @@ module Wp2jekyll
             if nil != @@yaml_hash[a]
                 if nil != @@yaml_hash[a][b]
                     if @@yaml_hash[a][b][:timestamp] > ctime # a and b is not changed
-                        # @@logger.debug "hit"
-                        @@yaml_hash[a][b][:similarity]
+                        # @@logger.debug "hit #{a} #{b} #{ctime}"
+                        return @@yaml_hash[a][b][:similarity]
                     end
                 end
             else
                 if nil != @@yaml_hash[b]
                     if nil != @@yaml_hash[b][a]
                         if @@yaml_hash[b][a][:timestamp] > ctime # a and b is not changed
-                            # @@logger.debug "hit"
-                            @@yaml_hash[b][a][:similarity]
+                            # @@logger.debug "reverse hit #{a} #{b} #{ctime}"
+                            return @@yaml_hash[b][a][:similarity]
                         end
                     end
-                else
-                    # @@logger.debug "miss"
-                    nil
                 end
             end
+            # @@logger.debug "miss #{a} #{b} #{ctime}"
+            nil
         end
 
     end

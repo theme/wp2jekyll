@@ -5,7 +5,7 @@ require 'diff/lcs'
 
 module Wp2jekyll
 
-  class PostCompare < FileCompare
+  class PostCompare
     include DebugLogger
 
     SIMILAR_LV_USER_SAME = 2.0
@@ -16,7 +16,7 @@ module Wp2jekyll
 
     SIMILAR_LV_USER_DIFF = -1.0
 
-    attr_reader :a
+    attr_reader :a, :ac
     attr_reader :b
     attr_accessor :similarity
 
@@ -27,19 +27,35 @@ module Wp2jekyll
     
     @@cache = PostCompareCache.new
 
-    def initialize(a, b)
+    # @ac: converted a
+    def initialize(a, b, ac: nil)
       # @@logger.info "PostCompare #{a} <-> #{b}"
       @a = a
       @b = b
-      @pa = Post.new(@a)
-      @pb = Post.new(@b)
+      @ac = ac
       @similarity = nil
     end
 
+    def init_pa_pb
+
+      if nil == @pa
+        if nil != @ac
+          @pa = Post.new(@ac)
+        else
+          @pa = Post.new(@a)
+        end
+      end
+      if nil == @pb
+        @pb = Post.new(@b)
+      end
+    end
+
     def ask_usr_same?
-      puts "- #{@a}".yellow
+      init_pa_pb
+
+      puts "- #{@pa.fp}".yellow
       @pa.hint_contents
-      puts "+ #{@b}".yellow
+      puts "+ #{@pb.fp}".yellow
       @pb.hint_contents
 
       user_input = ''
@@ -66,6 +82,9 @@ module Wp2jekyll
         return s
       end
       
+      init_pa_pb
+
+      # @@logger.debug "do lcs #{a} #{b}".red
       # body diff
       lcs = Diff::LCS.lcs(@pa.content, @pb.content)
       max_len = [@pa.content.length, @pb.content.length].max
@@ -80,7 +99,7 @@ module Wp2jekyll
     end
 
     def similar?
-
+      init_pa_pb
       # meta check, incase of duplicate import
       meta_same = (@pa.title == @pb.title) && (@pa.date == @pb.date)
 

@@ -1,0 +1,1 @@
+require 'wp2jekyll/task/importing_task'

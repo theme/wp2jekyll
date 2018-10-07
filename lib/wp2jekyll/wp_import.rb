@@ -1,3 +1,4 @@
+require 'wp2jekyll/task' # core data
 
 require 'wp2jekyll/post_merge'
 require 'wp2jekyll/img_merge'

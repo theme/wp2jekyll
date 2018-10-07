@@ -23,15 +23,22 @@ module Wp2jekyll
       'y' == c
     end
 
-    def most_similar_post(fp, in_dir)
+    def most_similar_post(fp, cp, in_dir)
       f_li = Dir.glob(File.join(in_dir, '**/*.{md,markdown}'))
       
       return nil if 0 == f_li.length
 
-      s_h = Parallel.map(f_li, in_process: 8) { |fpath|
+      # s_h = Parallel.map(f_li, in_process: 8) { |fpath|
+      #   # @@logger.debug fpath
+      #   c = PostCompare.new(fp, fpath, ac: cp)
+      #   [c.body_similarity , fpath]
+      # }
+
+      s_h = []
+      f_li.each { |fpath|
         # @@logger.debug fpath
-        c = PostCompare.new(fp, fpath)
-        [c.body_similarity , fpath]
+        c = PostCompare.new(fp, fpath, ac: cp)
+        s_h << [c.body_similarity , fpath]
       }
 
       m = s_h.max { |a,b|
@@ -42,16 +49,17 @@ module Wp2jekyll
       m[1]
     end
 
-    # @return [String] the post in target dir after merge.
-    def merge_post(fp, to_dir)
+    # @op : original post file path
+    # @cp : converted post file path
+    def merge_converted_post(fp, cp, to_dir)
       @try_counter += 1
 
       post = Post.new fp
       do_merge = false
 
       begin
-        e_p = most_similar_post(fp, to_dir)
-        if nil == e_p || !(PostCompare.new(fp, e_p).similar?)
+        e_p = most_similar_post(fp, cp, to_dir)
+        if nil == e_p || !(PostCompare.new(fp, e_p, ac: cp).similar?)
           # not exist, do merge, return target
           @@logger.info "merge_post new! #{post.post_info} ".green
           do_merge = true
@@ -81,6 +89,7 @@ module Wp2jekyll
       end
 
       if do_merge
+        post = Post.new cp
         post.usr_input_title
 
         if !Dir.exist?(to_dir)
@@ -93,6 +102,11 @@ module Wp2jekyll
       else
         nil
       end
+    end
+
+    # @return [String] the post in target dir after merge.
+    def merge_post(fp, to_dir)
+      merge_converted_post(fp, fp, to_dir)
     end
 
     def stat
